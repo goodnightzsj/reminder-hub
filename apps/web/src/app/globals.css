@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Brand Colors - Classic Blue (Pro Tool) */
+  --color-brand-primary: #2563eb;
+  /* blue-600 */
+  --color-brand-secondary: #4f46e5;
+  /* indigo-600 */
+
+  /* Feature Colors */
+  --color-priority-high: #ef4444;
+  --color-priority-medium: #f59e0b;
+  --color-priority-low: #71717a;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* UI Tokens */
+
+  /* UI Tokens */
+  --radius-card: 1rem;
+  /* 16px */
+  --radius-button: 0.5rem;
+  /* 8px */
+
+  /* === Semantic Color Tokens (Light Mode) === */
+
+  /* Backgrounds */
+  --bg-base: #ffffff;
+  --bg-surface: #f4f4f5;
+  /* zinc-100 */
+  --bg-elevated: #ffffff;
+  /* Cards, Modals */
+  --bg-interactive: transparent;
+  --bg-interactive-hover: rgba(0, 0, 0, 0.05);
+  --bg-danger: #fef2f2;
+  /* red-50 */
+  --bg-danger-hover: #fee2e2;
+  /* red-100 */
+  --bg-success: #f0fdf4;
+  /* green-50 */
+  --bg-success-hover: #dcfce7;
+  /* green-100 */
+  --bg-warning: #fffbeb;
+  /* amber-50 */
+  --bg-warning-hover: #fef3c7;
+  /* amber-100 */
+
+  /* Text */
+  --text-primary: #18181b;
+  /* zinc-900 */
+  --text-secondary: #52525b;
+  /* zinc-600 */
+  --text-muted: #a1a1aa;
+  /* zinc-400 */
+  --text-inverted: #ffffff;
+  --text-danger: #991b1b;
+  /* red-800 */
+  --text-success: #166534;
+  /* green-800 */
+  --text-warning: #92400e;
+  /* amber-800 */
+
+  /* Borders */
+  --border-default: rgba(0, 0, 0, 0.08);
+  --border-emphasis: rgba(0, 0, 0, 0.15);
+  --border-divider: rgba(0, 0, 0, 0.06);
+  --border-danger: #fecaca;
+  /* red-200 */
+  --border-success: #bbf7d0;
+  /* green-200 */
+  --border-warning: #fde68a;
+  /* amber-200 */
+
+  /* Glassmorphism */
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --border-glass: rgba(255, 255, 255, 0.6);
+
+  color-scheme: light;
+}
+
+/* Data-driven dark mode (for next-themes) */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  /* === Semantic Color Tokens (Dark Mode) === */
+
+  /* Backgrounds */
+  --bg-base: #09090b;
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --bg-elevated: #18181b;
+  /* zinc-900 */
+  --bg-interactive: transparent;
+  --bg-interactive-hover: rgba(255, 255, 255, 0.06);
+  --bg-danger: rgba(69, 10, 10, 0.3);
+  /* red-950/30 */
+  --bg-danger-hover: rgba(69, 10, 10, 0.5);
+  /* red-950/50 */
+  --bg-success: rgba(5, 46, 22, 0.3);
+  /* green-950/30 */
+  --bg-success-hover: rgba(5, 46, 22, 0.5);
+  /* green-950/50 */
+  --bg-warning: rgba(69, 26, 3, 0.3);
+  /* amber-950/30 */
+  --bg-warning-hover: rgba(69, 26, 3, 0.5);
+  /* amber-950/50 */
+
+  /* Glassmorphism */
+  --bg-glass: rgba(24, 24, 27, 0.6);
+  /* zinc-900/60 */
+  --border-glass: rgba(255, 255, 255, 0.1);
+
+  /* Text */
+  --text-primary: #fafafa;
+  /* zinc-50 */
+  --text-secondary: #a1a1aa;
+  /* zinc-400 */
+  --text-muted: #71717a;
+  /* zinc-500 */
+  --text-inverted: #18181b;
+  --text-danger: #fee2e2;
+  /* red-100 */
+  --text-success: #dcfce7;
+  /* green-100 */
+  --text-warning: #fef3c7;
+  /* amber-100 */
+
+  /* Borders */
+  --border-default: rgba(255, 255, 255, 0.145);
+  --border-emphasis: rgba(255, 255, 255, 0.25);
+  --border-divider: rgba(255, 255, 255, 0.08);
+  --border-danger: rgba(127, 29, 29, 0.4);
+  /* red-900/40 */
+  --border-success: rgba(20, 83, 45, 0.4);
+  /* green-900/40 */
+  --border-warning: rgba(120, 53, 15, 0.4);
+  /* amber-900/40 */
+
+  color-scheme: dark;
+}
+
+@utility hide-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* === Semantic Utility Classes === */
+
+@utility bg-base {
+  background-color: var(--bg-base);
+}
+
+@utility bg-surface {
+  background-color: var(--bg-surface);
+}
+
+@utility bg-elevated {
+  background-color: var(--bg-elevated);
+}
+
+@utility bg-interactive {
+  background-color: var(--bg-interactive);
+}
+
+@utility bg-interactive-hover {
+  background-color: var(--bg-interactive-hover);
+}
+
+@utility text-primary {
+  color: var(--text-primary);
+}
+
+@utility text-secondary {
+  color: var(--text-secondary);
+}
+
+@utility text-muted {
+  color: var(--text-muted);
+}
+
+@utility text-inverted {
+  color: var(--text-inverted);
+}
+
+@utility border-default {
+  border-color: var(--border-default);
+}
+
+@utility border-emphasis {
+  border-color: var(--border-emphasis);
+}
+
+@utility border-divider {
+  border-color: var(--border-divider);
+}
+
+@utility bg-danger {
+  background-color: var(--bg-danger);
+}
+
+@utility bg-danger-hover {
+  background-color: var(--bg-danger-hover);
+}
+
+@utility text-danger {
+  color: var(--text-danger);
+}
+
+@utility border-danger {
+  border-color: var(--border-danger);
+}
+
+@utility bg-success {
+  background-color: var(--bg-success);
+}
+
+@utility bg-success-hover {
+  background-color: var(--bg-success-hover);
+}
+
+@utility text-success {
+  color: var(--text-success);
+}
+
+@utility border-success {
+  border-color: var(--border-success);
+}
+
+@utility bg-warning {
+  background-color: var(--bg-warning);
+}
+
+@utility bg-warning-hover {
+  background-color: var(--bg-warning-hover);
+}
+
+@utility text-warning {
+  color: var(--text-warning);
+}
+
+@utility border-warning {
+  border-color: var(--border-warning);
+}
+
+@utility bg-glass {
+  background-color: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@utility border-glass {
+  border-color: var(--border-glass);
+}
+
+/* === Stagger Animation Delays === */
+@utility stagger-1 {
+  animation-delay: 50ms;
+}
+
+@utility stagger-2 {
+  animation-delay: 100ms;
+}
+
+@utility stagger-3 {
+  animation-delay: 150ms;
+}
+
+@utility stagger-4 {
+  animation-delay: 200ms;
+}
+
+@utility stagger-5 {
+  animation-delay: 250ms;
+}
+
+/* === Slide Up Animation === */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.3s ease-out both;
+}
+
+/* === Fade In Animation === */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+/* === Safe Area Utilities === */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* === Zoom In Animation === */
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animate-zoom-in {
+  animation: zoom-in 0.2s ease-out both;
+}
+
+/* === Hover & Active Micro-interactions === */
+@utility hover-float {
+  transition-property: transform, box-shadow;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@utility active-press {
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+}
+
+/* === Global Form Elements Polish === */
+input[type="checkbox"],
+input[type="radio"] {
+  @apply transition-transform active:scale-90 cursor-pointer;
+}

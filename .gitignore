@@ -1,0 +1,23 @@
+Plan.md
+.ai_memory/
+.agent/
+
+# macOS
+.DS_Store
+
+# Node / Next.js (monorepo-safe)
+**/node_modules/
+**/.next/
+**/out/
+**/.turbo/
+**/.vercel/
+**/*.tsbuildinfo
+
+# env (commit .env.example only)
+**/.env*
+!**/.env.example
+
+# local sqlite/data dirs
+**/data/
+
+*.sql
