@@ -85,7 +85,7 @@ export default async function TodoPage({ params }: TodoPageProps) {
       : null;
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-2xl p-6 sm:p-10">
         <header className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">

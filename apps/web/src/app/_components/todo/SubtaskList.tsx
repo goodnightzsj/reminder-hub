@@ -96,7 +96,7 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                                 <input type="hidden" name="todoId" value={todoId} />
                                 <ConfirmSubmitButton
                                     confirmMessage="确定删除这个子任务吗？"
-                                    className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                    className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20"
                                 >
                                     删除
                                 </ConfirmSubmitButton>

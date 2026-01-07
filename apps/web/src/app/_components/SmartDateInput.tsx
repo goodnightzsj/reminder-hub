@@ -109,7 +109,7 @@ export function SmartDateInput({
     const inputBaseClass = "bg-transparent text-center outline-none placeholder:text-muted/30 focus:bg-brand-primary/10 rounded px-0.5 transition-colors";
 
     return (
-        <div className={`flex items-center gap-1 rounded-lg border border-default bg-surface px-3 py-2 text-sm text-primary focus-within:ring-2 focus-within:ring-brand-primary/20 ${className}`}>
+        <div className={`flex items-center gap-1 rounded-lg border border-default bg-surface px-3 py-2 text-base text-primary focus-within:ring-2 focus-within:ring-brand-primary/20 md:text-sm ${className}`}>
             {/* Visually hidden but functional native input */}
             <input
                 ref={nativeInputRef}

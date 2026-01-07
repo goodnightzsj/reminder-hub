@@ -25,8 +25,8 @@ export default async function SettingsPage() {
   const settings = await getAppSettings();
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
-      <main className="mx-auto max-w-5xl p-6 sm:p-10">
+    <div className="min-h-dvh bg-base font-sans text-primary">
+      <main className="mx-auto max-w-3xl p-6 sm:p-10">
         <AppHeader
           title="设置"
           description="个人版默认无鉴权，建议仅本机/内网使用。"
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
 
           <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
             当前时区：<code className="font-mono">{settings.timeZone}</code>
-            <span className="mx-2 text-zinc-400">·</span>
+            <span className="mx-2 text-muted">·</span>
             当前时间：{nowText}
           </div>
         </section> 
@@ -99,7 +99,7 @@ export default async function SettingsPage() {
                 name="backupFile"
                 accept="application/json"
                 required
-                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-zinc-700 dark:file:bg-zinc-50 dark:file:text-zinc-900 dark:hover:file:bg-zinc-200"
+                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-surface file:px-3 file:py-2 file:text-xs file:font-medium file:text-primary hover:file:bg-interactive-hover"
               />
             </label>
 

@@ -333,8 +333,8 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary animate-fade-in">
-      <main className="mx-auto max-w-5xl xl:max-w-7xl p-6 sm:p-10">
+    <div className="min-h-dvh bg-base font-sans text-primary animate-fade-in">
+      <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="仪表盘"
           description={

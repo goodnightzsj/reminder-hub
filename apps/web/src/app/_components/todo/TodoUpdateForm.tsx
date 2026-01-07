@@ -219,7 +219,7 @@ export function TodoUpdateForm({
                     <input type="hidden" name="redirectTo" value="/" />
                     <ConfirmSubmitButton
                         confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
-                        className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                        className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20"
                     >
                         删除
                     </ConfirmSubmitButton>

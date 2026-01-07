@@ -34,4 +34,44 @@ export const Icons = {
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
         </svg>
     ),
+    Plus: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M5 12h14" /><path d="M12 5v14" />
+        </svg>
+    ),
+    ChevronRight: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="m9 18 6-6-6-6" />
+        </svg>
+    ),
+    ChevronDown: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="m6 9 6 6 6-6" />
+        </svg>
+    ),
+    Check: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+    ),
+    Trash: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+        </svg>
+    ),
+    Archive: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <rect width="20" height="5" x="2" y="3" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" /><path d="M10 12h4" />
+        </svg>
+    ),
+    Refresh: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 21h5v-5" />
+        </svg>
+    ),
+    X: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+        </svg>
+    ),
 };

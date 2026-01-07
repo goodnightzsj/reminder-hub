@@ -59,8 +59,8 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
         }).format(d);
 
     return (
-        <div className="min-h-screen bg-base font-sans text-primary">
-            <main className="mx-auto max-w-2xl p-6 sm:p-10">
+        <div className="min-h-dvh bg-base font-sans text-primary">
+            <main className="mx-auto max-w-3xl p-6 sm:p-10">
                 <div className="mb-6">
                     <Link href="/settings" className="text-xs text-muted hover:text-primary mb-2 inline-block">
                         ← 返回设置
@@ -119,10 +119,10 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             启用 Telegram
                         </label>
 
-                        <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+                        <label className="flex flex-col gap-1 text-xs text-muted">
                             Bot Token{" "}
                             {settings.telegramBotToken ? (
-                                <span className="ml-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span className="ml-1 text-xs text-muted">
                                     （已保存，留空不修改）
                                 </span>
                             ) : null}
@@ -133,10 +133,10 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             />
                         </label>
 
-                        <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+                        <label className="flex flex-col gap-1 text-xs text-secondary">
                             Chat ID{" "}
                             {settings.telegramChatId ? (
-                                <span className="ml-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                <span className="ml-1 text-xs text-muted">
                                     （当前 {settings.telegramChatId}）
                                 </span>
                             ) : null}
@@ -182,7 +182,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             <input type="hidden" name="channel" value="telegram" />
                             <ConfirmSubmitButton
                                 confirmMessage="确定清理 Telegram 的失败通知记录吗？清理后将允许重新发送。"
-                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 active-press"
                             >
                                 清理失败记录
                             </ConfirmSubmitButton>
@@ -205,7 +205,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             启用 Webhook
                         </label>
 
-                        <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+                        <label className="flex flex-col gap-1 text-xs text-secondary">
                             Webhook URL
                             <Input
                                 name="webhookUrl"
@@ -250,7 +250,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             <input type="hidden" name="channel" value="webhook" />
                             <ConfirmSubmitButton
                                 confirmMessage="确定清理所有失败通知记录吗？清理后将允许重新发送。"
-                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 active-press"
                             >
                                 清理失败记录
                             </ConfirmSubmitButton>
@@ -318,7 +318,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             <input type="hidden" name="channel" value="wecom" />
                             <ConfirmSubmitButton
                                 confirmMessage="确定清理企业微信的失败通知记录吗？清理后将允许重新发送。"
-                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 active-press"
                             >
                                 清理失败记录
                             </ConfirmSubmitButton>
@@ -386,7 +386,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             <label className="flex flex-col gap-1 text-xs text-secondary">
                                 SMTP Pass（可选）{" "}
                                 {settings.smtpPass ? (
-                                    <span className="ml-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                                    <span className="ml-1 text-xs text-muted">
                                         （已保存，留空不修改）
                                     </span>
                                 ) : null}
@@ -451,7 +451,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                             <input type="hidden" name="channel" value="email" />
                             <ConfirmSubmitButton
                                 confirmMessage="确定清理邮件的失败通知记录吗？清理后将允许重新发送。"
-                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                                className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 active-press"
                             >
                                 清理失败记录
                             </ConfirmSubmitButton>
@@ -464,8 +464,8 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
 
                     {recentDeliveries.length > 0 ? (
                         <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
-                            {recentDeliveries.map((d) => (
-                                <li key={d.id} className="flex flex-col gap-2 p-3">
+                            {recentDeliveries.map((d, index) => (
+                                <li key={d.id} className={`flex flex-col gap-2 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""}`}>
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2">
                                             <Badge variant="outline">
@@ -486,7 +486,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                                     </div>
 
                                     {d.error ? (
-                                        <div className="mt-1 break-all text-[11px] text-red-600 dark:text-red-400">
+                                        <div className="mt-1 break-all text-xs text-danger">
                                             {d.error}
                                         </div>
                                     ) : null}

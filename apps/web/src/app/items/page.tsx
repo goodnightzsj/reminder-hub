@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
+import { EmptyState } from "@/app/_components/EmptyState";
 import { createItem, deleteItem, setItemStatus } from "@/app/_actions/items";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { diffDays, formatDateString, getDatePartsInTimeZone, parseDateString } from "@/server/date";
@@ -121,7 +122,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
 
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="物品"
@@ -205,8 +206,11 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
 
 
           {rows.length === 0 ? (
-            <div className="mt-4 rounded-lg border border-divider bg-surface p-3 text-sm text-secondary">
-              还没有物品，先添加一条。
+            <div className="mt-4">
+              <EmptyState
+                title="还没有物品"
+                description="点击上方添加按钮，记录你的物品成本与价值。"
+              />
             </div>
           ) : (
             <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">

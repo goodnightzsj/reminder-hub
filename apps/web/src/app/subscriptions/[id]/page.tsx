@@ -127,14 +127,14 @@ export default async function SubscriptionDetailPage({
   const renewedToDate = addMonthsClampedToDateString(item.nextRenewDate, monthsToAdd);
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-2xl p-6 sm:p-10">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-semibold tracking-tight">
               订阅详情
             </h1>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-1 text-sm text-secondary">
               提醒预览默认按 <code className="font-mono">{timeZone}</code>{" "}
               的 <code className="font-mono">{dateReminderTime}</code>{" "}
               计算；如在设置中开启通知，到点会按提醒规则发送。
@@ -248,7 +248,7 @@ export default async function SubscriptionDetailPage({
                 <input type="hidden" name="redirectTo" value="/subscriptions" />
                 <ConfirmSubmitButton
                   confirmMessage="确定删除这个订阅吗？此操作不可撤销。"
-                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20 active-press"
                 >
                   删除
                 </ConfirmSubmitButton>

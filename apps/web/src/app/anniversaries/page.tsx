@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { AnniversaryCreateForm } from "@/app/_components/anniversary/AnniversaryCreateForm";
+import { EmptyState } from "@/app/_components/EmptyState";
 import {
   createAnniversary,
   deleteAnniversary,
@@ -126,7 +127,7 @@ export default async function AnniversariesPage({
   ).orderBy(asc(anniversaries.isArchived), desc(anniversaries.createdAt));
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="纪念日"
@@ -140,37 +141,42 @@ export default async function AnniversariesPage({
           />
         </section>
 
-        <nav className="mb-3 flex flex-wrap gap-2 text-xs">
-          {(
-            [
-              { key: "active", label: "进行中" },
-              { key: "archived", label: "已归档" },
-              { key: "all", label: "全部" },
-            ] as const
-          ).map((t) => (
-            <Link
-              key={t.key}
-              href={t.key === "active" ? "/anniversaries" : `/anniversaries?filter=${t.key}`}
-              className={[
-                "rounded-lg border px-3 py-2 font-medium active-press",
-                t.key === filter
-                  ? "border-brand-primary bg-brand-primary text-white"
-                  : "border-default hover:bg-interactive-hover",
-              ].join(" ")}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-
         <section className="rounded-xl border border-default bg-elevated shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <h2 className="text-sm font-medium">列表</h2>
+            <nav className="flex flex-wrap gap-2 text-xs">
+              {(
+                [
+                  { key: "active", label: "进行中" },
+                  { key: "archived", label: "已归档" },
+                  { key: "all", label: "全部" },
+                ] as const
+              ).map((t) => (
+                <Link
+                  key={t.key}
+                  href={t.key === "active" ? "/anniversaries" : `/anniversaries?filter=${t.key}`}
+                  className={[
+                    "rounded-lg border px-3 py-2 font-medium active-press",
+                    t.key === filter
+                      ? "border-brand-primary bg-brand-primary text-white"
+                      : "border-default hover:bg-interactive-hover",
+                  ].join(" ")}
+                >
+                  {t.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           {rows.length === 0 ? (
-            <div className="p-4 text-sm text-muted">
-              还没有纪念日，先添加一条。
+            <div className="border-t border-divider">
+              <EmptyState
+                title="还没有纪念日"
+                description="点击上方添加按钮，不再错过重要日子。"
+              />
             </div>
           ) : (
-            <div className="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="border-t border-divider p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {rows.map((item, index) => {
                 const nextDate =
                   item.dateType === "solar"
@@ -210,11 +216,11 @@ export default async function AnniversariesPage({
                 let urgencyBg = "bg-surface";
                 if (daysLeft !== null) {
                   if (daysLeft === 0) {
-                    urgencyColor = "text-red-600 dark:text-red-400";
-                    urgencyBg = "bg-red-50 dark:bg-red-950/20";
+                    urgencyColor = "text-danger";
+                    urgencyBg = "bg-danger/10";
                   } else if (daysLeft <= 3) {
-                    urgencyColor = "text-orange-600 dark:text-orange-400";
-                    urgencyBg = "bg-orange-50 dark:bg-orange-950/20";
+                    urgencyColor = "text-warning";
+                    urgencyBg = "bg-warning/10";
                   } else if (daysLeft <= 7) {
                     urgencyColor = "text-brand-primary";
                     urgencyBg = "bg-brand-primary/5";
@@ -230,7 +236,12 @@ export default async function AnniversariesPage({
                       <div className="flex items-start justify-between">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border ${item.dateType === 'lunar' ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800' : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800'}`}>
+                            <span
+                              className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border ${item.dateType === "lunar"
+                                  ? "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400"
+                                  : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
+                                }`}
+                            >
                               {item.dateType === 'lunar' ? '农历' : '公历'}
                             </span>
                             <span className="text-[10px] text-muted uppercase tracking-wider font-medium">
@@ -284,7 +295,7 @@ export default async function AnniversariesPage({
                                   className={[
                                     "rounded px-1.5 py-0.5 text-[10px]",
                                     isPast
-                                      ? "bg-danger text-danger-foreground"
+                                      ? "bg-danger/20 text-danger border-danger/20"
                                       : "bg-surface text-secondary border border-divider",
                                   ].join(" ")}
                                 >
@@ -307,7 +318,7 @@ export default async function AnniversariesPage({
                         />
                         <button
                           type="submit"
-                          className="h-7 rounded border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover text-secondary active-press"
+                          className="h-7 rounded border border-default px-2 text-xs font-medium hover:bg-interactive-hover text-secondary active-press"
                         >
                           {item.isArchived ? "取消归档" : "归档"}
                         </button>
@@ -317,7 +328,7 @@ export default async function AnniversariesPage({
                         <input type="hidden" name="id" value={item.id} />
                         <ConfirmSubmitButton
                           confirmMessage="确定删除这个纪念日吗？此操作不可撤销。"
-                          className="h-7 rounded border border-transparent px-2 text-[11px] font-medium text-danger hover:bg-danger/10 active-press"
+                          className="h-7 rounded border border-transparent px-2 text-xs font-medium text-danger hover:bg-danger/10 active-press"
                         >
                           删除
                         </ConfirmSubmitButton>

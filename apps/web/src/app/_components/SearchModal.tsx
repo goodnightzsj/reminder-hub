@@ -54,10 +54,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             />
 
             {/* Modal Content */}
-            <div className="relative w-full max-w-lg transform rounded-2xl border border-white/20 bg-white/90 p-4 shadow-2xl backdrop-blur-xl transition-all dark:bg-zinc-900/90 dark:border-white/10 animate-fade-in">
+            <div className="relative w-full max-w-lg transform rounded-2xl border border-white/20 bg-white/90 p-4 shadow-2xl backdrop-blur-xl transition-all dark:bg-zinc-900/90 dark:border-white/10 animate-zoom-in">
                 <form onSubmit={handleSearch} className="flex items-center gap-3">
                     <svg
-                        className="h-5 w-5 text-zinc-500"
+                        className="h-5 w-5 text-muted"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

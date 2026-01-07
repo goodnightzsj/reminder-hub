@@ -89,7 +89,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
     dailyCents <= item.targetDailyCostCents;
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-2xl p-6 sm:p-10">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -155,7 +155,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
         <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
+              <div className="mb-1 flex flex-wrap items-center gap-2 text-xs font-medium text-secondary">
                 <Badge>
                   {statusLabel[item.status]}
                 </Badge>
@@ -246,7 +246,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
                 <input type="hidden" name="redirectTo" value="/items" />
                 <ConfirmSubmitButton
                   confirmMessage="确定删除这个物品吗？此操作不可撤销。"
-                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20 active-press"
                 >
                   删除
                 </ConfirmSubmitButton>
@@ -377,7 +377,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
                 />
               </label>
 
-              <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+              <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">
                 目标日均成本（可选）
                 <Input
                   type="number"

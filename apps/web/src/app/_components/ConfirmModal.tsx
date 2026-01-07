@@ -52,7 +52,7 @@ export function ConfirmModal({
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-sm transform overflow-hidden rounded-2xl border border-default bg-elevated p-6 shadow-2xl transition-all animate-scale-in">
+            <div className="relative w-full max-w-sm transform overflow-hidden rounded-2xl border border-default bg-elevated p-6 shadow-2xl transition-all animate-zoom-in">
                 <div className="mb-4">
                     <h3 className="text-lg font-semibold text-primary">{title}</h3>
                     <p className="mt-2 text-sm text-secondary">{message}</p>

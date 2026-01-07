@@ -8,8 +8,8 @@ import { todos } from "@/server/db/schema";
 
 import { AppHeader } from "../_components/AppHeader";
 import { TodoCreateForm } from "../_components/todo/TodoCreateForm";
-import { TodoFilters } from "../_components/todo/TodoFilters";
 import { TodoItem } from "../_components/todo/TodoItem";
+import { EmptyState } from "../_components/EmptyState";
 
 export const dynamic = "force-dynamic";
 
@@ -134,8 +134,7 @@ export default async function Home({ searchParams }: HomePageProps) {
     ? items.filter((item) => parseStringArrayJson(item.tags).includes(tagFilter))
     : items;
 
-  const emptyMessage =
-    items.length === 0 ? "还没有待办，先添加一条。" : "没有匹配当前筛选的待办。";
+
 
   // Reconstruct href building for Tags section (local helper)
   function buildHomeHref({
@@ -159,59 +158,175 @@ export default async function Home({ searchParams }: HomePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="Todo"
           description="MVP：本地 SQLite + CRUD + 截止/提醒预览/标签/子任务（外部通知后置）。"
         />
 
-        <TodoCreateForm timeZone={settings.timeZone} />
+        <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+          <TodoCreateForm timeZone={settings.timeZone} />
+        </section>
 
-        <TodoFilters
-          filter={filter}
-          priorityFilter={priorityFilter}
-          tagFilter={tagFilter}
-          taskTypeFilter={taskTypeFilter}
-          taskTypes={taskTypes}
-        />
+        <section className="rounded-xl border border-default bg-elevated shadow-sm">
+          <div className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h2 className="text-sm font-medium">列表</h2>
+              <nav className="flex flex-wrap gap-2 text-xs">
+                {(
+                  [
+                    { key: "active", label: "进行中" },
+                    { key: "done", label: "已完成" },
+                    { key: "archived", label: "已归档" },
+                    { key: "all", label: "全部" },
+                  ] as const
+                ).map((t) => (
+                  <Link
+                    key={t.key}
+                    href={buildHomeHref({
+                      filter: t.key,
+                      priority: priorityFilter,
+                      tag: tagFilter,
+                      taskType: taskTypeFilter,
+                    })}
+                    className={[
+                      "rounded-lg border px-3 py-2 font-medium active-press",
+                      t.key === filter
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-default hover:bg-interactive-hover",
+                    ].join(" ")}
+                  >
+                    {t.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
 
-        {tagsSorted.length > 0 ? (
-          <section className="mb-3 rounded-xl border border-default bg-elevated p-3 text-xs shadow-sm">
-            <div className="mb-2 text-muted">标签</div>
-            <div className="flex flex-wrap gap-2">
-              {tagsSorted.map(([t, count]) => (
+            <div className="border-t border-divider pt-4">
+              <nav className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-muted">优先级</span>
+                {(
+                  [
+                    { key: "all", label: "全部" },
+                    { key: "high", label: "高" },
+                    { key: "medium", label: "中" },
+                    { key: "low", label: "低" },
+                  ] as const
+                ).map((p) => (
+                  <Link
+                    key={p.key}
+                    href={buildHomeHref({
+                      filter,
+                      priority: p.key,
+                      tag: tagFilter,
+                      taskType: taskTypeFilter,
+                    })}
+                    className={[
+                      "rounded-lg border px-3 py-2 font-medium active-press",
+                      p.key === priorityFilter
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-default hover:bg-interactive-hover",
+                    ].join(" ")}
+                  >
+                    {p.label}
+                  </Link>
+                ))}
+
+                <span className="ml-2 text-muted">分类</span>
                 <Link
-                  key={t}
                   href={buildHomeHref({
                     filter,
                     priority: priorityFilter,
-                    tag: t,
-                    taskType: taskTypeFilter,
+                    tag: tagFilter,
+                    taskType: null,
                   })}
                   className={[
-                    "rounded-lg border px-3 py-2 font-medium",
-                    t === tagFilter
+                    "rounded-lg border px-3 py-2 font-medium active-press",
+                    taskTypeFilter === null
                       ? "border-brand-primary bg-brand-primary text-white"
                       : "border-default hover:bg-interactive-hover",
                   ].join(" ")}
                 >
-                  {t}
-                  <span className="ml-1 text-inverted/70">
-                    {count}
-                  </span>
+                  全部
                 </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
+                {taskTypes.map((t) => (
+                  <Link
+                    key={t}
+                    href={buildHomeHref({
+                      filter,
+                      priority: priorityFilter,
+                      tag: tagFilter,
+                      taskType: t,
+                    })}
+                    className={[
+                      "rounded-lg border px-3 py-2 font-medium active-press",
+                      t === taskTypeFilter
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-default hover:bg-interactive-hover",
+                    ].join(" ")}
+                  >
+                    {t}
+                  </Link>
+                ))}
 
-        <section className="rounded-xl border border-default bg-elevated shadow-sm">
-          <ul className="divide-y divide-divider">
+                {tagFilter ||
+                  priorityFilter !== "all" ||
+                  taskTypeFilter !== null ||
+                  filter !== "active" ? (
+                  <Link
+                    href="/todo"
+                    className="rounded-lg border border-default px-3 py-2 font-medium text-muted hover:bg-interactive-hover active-press"
+                  >
+                    清除筛选
+                  </Link>
+                ) : null}
+              </nav>
+
+              {tagsSorted.length > 0 ? (
+                <div className="mt-3 border-t border-dashed border-divider pt-3 text-xs">
+                  <div className="mb-2 text-muted">标签</div>
+                  <div className="flex flex-wrap gap-2">
+                    {tagsSorted.map(([t, count]) => (
+                      <Link
+                        key={t}
+                        href={buildHomeHref({
+                          filter,
+                          priority: priorityFilter,
+                          tag: t,
+                          taskType: taskTypeFilter,
+                        })}
+                        className={[
+                          "rounded-lg border px-3 py-2 font-medium",
+                          t === tagFilter
+                            ? "border-brand-primary bg-brand-primary text-white"
+                            : "border-default hover:bg-interactive-hover",
+                        ].join(" ")}
+                      >
+                        {t}
+                        <span className="ml-1 text-inverted/70">
+                          {count}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <ul className="divide-y divide-divider border-t border-divider">
             {visibleItems.length === 0 ? (
-              <li className="p-4 text-sm text-muted">
-                {emptyMessage}
-              </li>
+              <div className="p-8">
+                <EmptyState
+                  title={items.length === 0 ? "还没有待办" : "没有匹配的待办"}
+                  description={
+                    items.length === 0
+                      ? "先添加一条，开始高效的一天。"
+                      : "尝试调整筛选条件。"
+                  }
+                />
+              </div>
             ) : (
               visibleItems.map((item, index) => {
                 const staggerClass = index < 5 ? `stagger-${index + 1}` : "";

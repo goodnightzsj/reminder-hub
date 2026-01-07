@@ -108,7 +108,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     todoRows.length + anniversaryRows.length + subscriptionRows.length + itemRows.length;
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="搜索"
@@ -186,7 +186,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                       <Link
                         href={`/todo/${t.id}`}
-                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover"
+                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover active-press"
                       >
                         查看
                       </Link>
@@ -209,10 +209,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         }`}
                     >
                       <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
                           {a.isArchived ? <Badge>已归档</Badge> : null}
                           <Badge>{a.dateType === "solar" ? "公历" : "农历"}</Badge>
-                          <span className="text-zinc-500 dark:text-zinc-400">
+                          <span className="text-muted">
                             {a.date}
                           </span>
                         </div>
@@ -225,7 +225,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                       <Link
                         href={`/anniversaries/${a.id}`}
-                        className="shrink-0 rounded-lg border border-black/[.08] px-3 py-2 text-xs font-medium hover:bg-black/[.03] dark:border-white/[.145] dark:hover:bg-white/[.06]"
+                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
                       >
                         查看
                       </Link>
@@ -248,9 +248,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         }`}
                     >
                       <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
                           {s.isArchived ? <Badge>已归档</Badge> : null}
-                          <span className="text-zinc-500 dark:text-zinc-400">
+                          <span className="text-muted">
                             到期 {s.nextRenewDate}
                           </span>
                         </div>
@@ -263,7 +263,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                       <Link
                         href={`/subscriptions/${s.id}`}
-                        className="shrink-0 rounded-lg border border-black/[.08] px-3 py-2 text-xs font-medium hover:bg-black/[.03] dark:border-white/[.145] dark:hover:bg-white/[.06]"
+                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
                       >
                         查看
                       </Link>
@@ -284,10 +284,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         }`}
                     >
                       <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
                           <Badge>{itemStatusLabel[it.status]}</Badge>
                           {it.purchasedDate ? (
-                            <span className="text-zinc-500 dark:text-zinc-400">
+                            <span className="text-muted">
                               购入 {it.purchasedDate}
                             </span>
                           ) : null}
@@ -301,7 +301,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                       <Link
                         href={`/items/${it.id}`}
-                        className="shrink-0 rounded-lg border border-black/[.08] px-3 py-2 text-xs font-medium hover:bg-black/[.03] dark:border-white/[.145] dark:hover:bg-white/[.06]"
+                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
                       >
                         查看
                       </Link>

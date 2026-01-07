@@ -140,7 +140,7 @@ export default async function AnniversaryDetailPage({
       : [];
 
   return (
-    <div className="min-h-screen bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-2xl p-6 sm:p-10">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -238,7 +238,7 @@ export default async function AnniversaryDetailPage({
                 <input type="hidden" name="redirectTo" value="/anniversaries" />
                 <ConfirmSubmitButton
                   confirmMessage="确定删除这个纪念日吗？此操作不可撤销。"
-                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 active-press"
+                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20 active-press"
                 >
                   删除
                 </ConfirmSubmitButton>
@@ -292,7 +292,7 @@ export default async function AnniversaryDetailPage({
           <form action={updateAnniversary} className="mt-4 flex flex-col gap-3">
             <input type="hidden" name="id" value={item.id} />
 
-            <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+            <label className="flex flex-col gap-1 text-xs text-muted">
               标题
               <Input
                 name="title"
@@ -326,7 +326,7 @@ export default async function AnniversaryDetailPage({
                 </Select>
               </label>
 
-              <label className="flex flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400 sm:col-span-2">
+              <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">
                 日期（公历）
                 <Input
                   type="date"
