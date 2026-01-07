@@ -9,7 +9,8 @@ export function ThemeToggle() {
 
     // Avoid hydration mismatch
     useEffect(() => {
-        setMounted(true);
+        const raf = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(raf);
     }, []);
 
     if (!mounted) return <div className="h-9 w-9" />; // Placeholder

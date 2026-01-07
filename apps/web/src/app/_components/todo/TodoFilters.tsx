@@ -58,7 +58,7 @@ export function TodoFilters({
                             taskType: taskTypeFilter,
                         })}
                         className={[
-                            "rounded-lg border px-3 py-2 font-medium",
+                            "rounded-lg border px-3 py-2 font-medium active-press",
                             t.key === filter
                                 ? "border-brand-primary bg-brand-primary text-white"
                                 : "border-default hover:bg-interactive-hover",
@@ -88,7 +88,7 @@ export function TodoFilters({
                             taskType: taskTypeFilter,
                         })}
                         className={[
-                            "rounded-lg border px-3 py-2 font-medium",
+                            "rounded-lg border px-3 py-2 font-medium active-press",
                             p.key === priorityFilter
                                 ? "border-brand-primary bg-brand-primary text-white"
                                 : "border-default hover:bg-interactive-hover",
@@ -107,7 +107,7 @@ export function TodoFilters({
                         taskType: null,
                     })}
                     className={[
-                        "rounded-lg border px-3 py-2 font-medium",
+                        "rounded-lg border px-3 py-2 font-medium active-press",
                         taskTypeFilter === null
                             ? "border-brand-primary bg-brand-primary text-white"
                             : "border-default hover:bg-interactive-hover",
@@ -125,7 +125,7 @@ export function TodoFilters({
                             taskType: t,
                         })}
                         className={[
-                            "rounded-lg border px-3 py-2 font-medium",
+                            "rounded-lg border px-3 py-2 font-medium active-press",
                             t === taskTypeFilter
                                 ? "border-brand-primary bg-brand-primary text-white"
                                 : "border-default hover:bg-interactive-hover",
@@ -141,7 +141,7 @@ export function TodoFilters({
                     filter !== "active" ? (
                     <Link
                         href="/todo"
-                        className="rounded-lg border border-default px-3 py-2 font-medium text-muted hover:bg-interactive-hover"
+                        className="rounded-lg border border-default px-3 py-2 font-medium text-muted hover:bg-interactive-hover active-press"
                     >
                         清除筛选
                     </Link>

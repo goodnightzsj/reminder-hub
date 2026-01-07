@@ -7,7 +7,8 @@ export default function Template({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Simple fade-in effect on mount
-        setOpacity(1);
+        const raf = requestAnimationFrame(() => setOpacity(1));
+        return () => cancelAnimationFrame(raf);
     }, []);
 
     return (

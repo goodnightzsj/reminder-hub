@@ -16,10 +16,10 @@ export function Badge({ children, variant = "default", className = "" }: BadgePr
         outline: "border border-default text-secondary",
         // Primary: Brand color
         primary: "border border-brand-primary bg-brand-primary text-white",
-        // Priority/Status (these semantic colors stay as-is because they are status-specific)
-        danger: "border border-red-200 bg-red-50 text-red-800 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200",
-        warning: "border border-yellow-200 bg-yellow-50 text-yellow-800 dark:border-yellow-900/40 dark:bg-yellow-950/30 dark:text-yellow-200",
-        success: "border border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-100",
+        // Priority/Status
+        danger: "border border-danger bg-danger text-danger",
+        warning: "border border-warning bg-warning text-warning",
+        success: "border border-success bg-success text-success",
     };
 
     return (

@@ -38,8 +38,11 @@ export function CustomSelect({
     // Sync mode if defaultValue changes externally (unlikely for uncontrolled form but safer)
     useEffect(() => {
         if (defaultValue && !options.some(opt => opt.value === defaultValue)) {
-            setMode("custom");
-            setCustomValue(defaultValue as string);
+            const t = setTimeout(() => {
+                setMode("custom");
+                setCustomValue(defaultValue as string);
+            }, 0);
+            return () => clearTimeout(t);
         }
     }, [defaultValue, options]);
 

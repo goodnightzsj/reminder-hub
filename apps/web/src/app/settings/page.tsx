@@ -2,18 +2,15 @@ import Link from "next/link";
 import { desc } from "drizzle-orm";
 
 import { Badge } from "@/app/_components/Badge";
-import { Button } from "@/app/_components/Button";
-import { Input } from "@/app/_components/Input";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { ToastListener } from "@/app/_components/ToastListener";
-import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
 
 
 // Notifications moved to /settings/notifications
 import { importBackupMerge, importBackupOverwrite } from "../_actions/backup";
-import { clearAllData, updateTimeZone } from "../_actions/settings";
+import { clearAllData } from "../_actions/settings";
 import { DateReminderForm } from "../_components/settings/DateReminderForm";
 
 export const dynamic = "force-dynamic";
@@ -22,35 +19,10 @@ type SettingsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function getParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string | null {
-  const value = params[key];
-  if (typeof value === "string") return value;
-  return null;
-}
 
-const commonTimeZones = [
-  "Asia/Shanghai",
-  "Asia/Tokyo",
-  "Asia/Singapore",
-  "UTC",
-  "Europe/London",
-  "Europe/Berlin",
-  "America/New_York",
-  "America/Los_Angeles",
-] as const;
 
-export default async function SettingsPage({ searchParams }: SettingsPageProps) {
-  const params = (await searchParams) ?? {};
-
+export default async function SettingsPage() {
   const settings = await getAppSettings();
-  const nowText = new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "full",
-    timeStyle: "long",
-    timeZone: settings.timeZone,
-  }).format(new Date());
 
   return (
     <div className="min-h-screen bg-base font-sans text-primary">
@@ -147,7 +119,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 name="backupFile"
                 accept="application/json"
                 required
-                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-zinc-700 dark:file:bg-zinc-50 dark:file:text-zinc-900 dark:hover:file:bg-zinc-200"
+                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-brand-primary file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-brand-secondary"
               />
             </label>
 

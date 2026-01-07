@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/app/_components/Input";
+import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { createAnniversary } from "@/app/_actions/anniversaries";
 
@@ -65,7 +66,7 @@ export function AnniversaryCreateForm({
                 {dateType === "solar" && (
                     <div className="sm:col-span-3">
                         <label className="mb-1.5 block text-xs font-medium text-secondary">日期（公历）</label>
-                        <Input type="date" name="solarDate" required className="h-12 bg-base/50" />
+                        <SmartDateInput type="date" name="solarDate" required className="h-12 bg-base/50" />
                     </div>
                 )}
 

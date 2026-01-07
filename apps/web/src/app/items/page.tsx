@@ -5,9 +5,6 @@ import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
 import { createItem, deleteItem, setItemStatus } from "@/app/_actions/items";
 import { AppHeader } from "@/app/_components/AppHeader";
-import { Input } from "@/app/_components/Input";
-import { Select } from "@/app/_components/Select";
-import { CustomSelect } from "@/app/_components/CustomSelect";
 import { diffDays, formatDateString, getDatePartsInTimeZone, parseDateString } from "@/server/date";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
@@ -163,7 +160,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
                   key={t.key}
                   href={buildHref(t.key, categoryFilter)}
                   className={[
-                    "rounded-lg border px-3 py-2",
+                    "rounded-lg border px-3 py-2 active-press",
                     filter === t.key
                       ? "border-brand-primary bg-brand-primary text-white"
                       : "border-default hover:bg-interactive-hover",
@@ -181,7 +178,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
               <Link
                 href={buildHref(filter, null)}
                 className={[
-                  "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                  "rounded-full px-3 py-1 text-[11px] font-medium transition-colors active-press",
                   !categoryFilter
                     ? "bg-brand-primary text-inverted"
                     : "bg-surface text-secondary hover:bg-interactive-hover",
@@ -194,7 +191,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
                   key={c.name}
                   href={buildHref(filter, c.name)}
                   className={[
-                    "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
+                    "rounded-full px-3 py-1 text-[11px] font-medium transition-colors active-press",
                     categoryFilter === c.name
                       ? "bg-brand-primary text-inverted"
                       : "bg-surface text-secondary hover:bg-interactive-hover",

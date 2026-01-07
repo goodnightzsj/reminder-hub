@@ -29,6 +29,10 @@ export function useToast() {
 export function ToastProvider({ children }: { children: ReactNode }) {
     const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+    const removeToast = useCallback((id: string) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, []);
+
     const addToast = useCallback((message: string, type: ToastType = "info") => {
         const id = Math.random().toString(36).substring(2, 9);
         setToasts((prev) => [...prev, { id, message, type }]);
@@ -37,11 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         setTimeout(() => {
             removeToast(id);
         }, 3000);
-    }, []);
-
-    const removeToast = useCallback((id: string) => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, []);
+    }, [removeToast]);
 
     const value = {
         toast: addToast,
@@ -61,7 +61,8 @@ function ToastContainer({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss:
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const raf = requestAnimationFrame(() => setMounted(true));
+        return () => cancelAnimationFrame(raf);
     }, []);
 
     if (!mounted) return null;

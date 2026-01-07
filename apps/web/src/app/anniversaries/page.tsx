@@ -152,7 +152,7 @@ export default async function AnniversariesPage({
               key={t.key}
               href={t.key === "active" ? "/anniversaries" : `/anniversaries?filter=${t.key}`}
               className={[
-                "rounded-lg border px-3 py-2 font-medium",
+                "rounded-lg border px-3 py-2 font-medium active-press",
                 t.key === filter
                   ? "border-brand-primary bg-brand-primary text-white"
                   : "border-default hover:bg-interactive-hover",

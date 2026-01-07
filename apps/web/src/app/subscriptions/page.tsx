@@ -4,18 +4,13 @@ import Link from "next/link";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { SubscriptionCreateForm } from "@/app/_components/subscriptions/SubscriptionCreateForm";
 import {
-  createSubscription,
   deleteSubscription,
   renewSubscription,
   setSubscriptionArchived,
 } from "@/app/_actions/subscriptions";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { EmptyState } from "@/app/_components/EmptyState";
-import { Button } from "@/app/_components/Button";
 import { ServiceIconBadge } from "@/app/_components/ServiceIconBadge";
-import { Input } from "@/app/_components/Input";
-import { Select } from "@/app/_components/Select";
-import { Textarea } from "@/app/_components/Textarea";
 import { dateTimeLocalToUtcDate } from "@/server/datetime";
 import {
   addDaysToDateString,
@@ -35,13 +30,7 @@ type SubscriptionsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const reminderOptionsDays = [
-  { days: 0, label: "到期日" },
-  { days: 1, label: "提前 1 天" },
-  { days: 3, label: "提前 3 天" },
-  { days: 7, label: "提前 7 天" },
-  { days: 30, label: "提前 30 天" },
-] as const;
+
 
 function parseNumberArrayJson(value: string): number[] {
   try {
@@ -73,13 +62,7 @@ function parseFilter(raw: string | null): SubscriptionFilter {
   return "active";
 }
 
-function formatDateTime(d: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(d);
-}
+
 
 function formatPrice(priceCents: number, currency: string): string {
   const value = priceCents / 100;
@@ -147,7 +130,7 @@ export default async function SubscriptionsPage({
               key={t.key}
               href={t.key === "active" ? "/subscriptions" : `/subscriptions?filter=${t.key}`}
               className={[
-                "rounded-lg border px-3 py-2 font-medium",
+                "rounded-lg border px-3 py-2 font-medium active-press",
                 t.key === filter
                   ? "border-brand-primary bg-brand-primary text-white"
                   : "border-default hover:bg-interactive-hover",

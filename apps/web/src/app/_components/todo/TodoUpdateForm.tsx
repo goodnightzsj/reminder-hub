@@ -1,6 +1,9 @@
 "use client";
 
+"use client";
+
 import { Input } from "../Input";
+import { SmartDateInput } from "../SmartDateInput";
 import { Button } from "../Button";
 import { Select } from "../Select";
 import { Textarea } from "../Textarea";
@@ -79,7 +82,7 @@ export function TodoUpdateForm({
                 <div className="grid gap-3 sm:grid-cols-2">
                     <label className="flex flex-col gap-1 text-xs text-secondary">
                         截止
-                        <Input
+                        <SmartDateInput
                             type="datetime-local"
                             name="dueAt"
                             defaultValue={dueAtLocalValue}

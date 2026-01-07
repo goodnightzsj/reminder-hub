@@ -5,7 +5,10 @@
 // But settings (timeZone) was passed as prop in page.tsx.
 // I should pass settings as prop here too.
 
+// I should pass settings as prop here too.
+
 import { Input } from "../Input";
+import { SmartDateInput } from "../SmartDateInput";
 import { Button } from "../Button";
 import { Select } from "../Select";
 import { CustomSelect } from "../CustomSelect";
@@ -39,7 +42,7 @@ export function TodoCreateForm({ timeZone }: TodoCreateFormProps) {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <label className="flex flex-1 items-center gap-3 text-xs text-secondary">
                         <span className="w-12 shrink-0">截止</span>
-                        <Input type="datetime-local" name="dueAt" className="h-11 bg-surface text-primary" />
+                        <SmartDateInput type="datetime-local" name="dueAt" className="h-11 bg-surface text-primary" />
                     </label>
 
                     <Button

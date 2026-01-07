@@ -90,7 +90,7 @@ export function TodoItem({ item, settings, staggerClass = "" }: TodoItemProps) {
     const now = new Date();
 
     return (
-        <li className={`group animate-slide-up flex items-start gap-3 p-4 hover:bg-zinc-50 dark:hover:bg-white/[.02] transition-colors rounded-xl ${staggerClass}`}>
+        <li className={`group animate-slide-up flex items-start gap-3 p-4 hover:bg-interactive-hover transition-colors rounded-xl ${staggerClass}`}>
             <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex flex-wrap items-center gap-2">
                     <Badge>{priorityLabels[item.priority]}</Badge>
@@ -259,7 +259,7 @@ export function TodoItem({ item, settings, staggerClass = "" }: TodoItemProps) {
                         <input type="hidden" name="id" value={item.id} />
                         <ConfirmSubmitButton
                             confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
-                            className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                            className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger dark:hover:bg-danger-hover"
                         >
                             删除
                         </ConfirmSubmitButton>

@@ -1,6 +1,9 @@
 "use client";
 
+"use client";
+
 import { Input } from "@/app/_components/Input";
+import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { Textarea } from "@/app/_components/Textarea";
 import { createSubscription } from "@/app/_actions/subscriptions";
@@ -40,7 +43,7 @@ export function SubscriptionCreateForm({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
                     <label className="mb-1.5 block text-xs font-medium text-secondary">下次到期日</label>
-                    <Input type="date" name="nextRenewDate" required className="h-12 bg-base/50" />
+                    <SmartDateInput type="date" name="nextRenewDate" required className="h-12 bg-base/50" />
                 </div>
                 <div>
                     <label className="mb-1.5 block text-xs font-medium text-secondary">周期单位</label>

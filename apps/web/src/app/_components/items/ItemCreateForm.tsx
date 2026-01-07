@@ -1,6 +1,9 @@
 "use client";
 
+"use client";
+
 import { Input } from "@/app/_components/Input";
+import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { createItem } from "@/app/_actions/items";
@@ -32,7 +35,7 @@ export function ItemCreateForm() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="sm:col-span-1">
                     <label className="mb-1.5 block text-xs font-medium text-secondary">购入日期</label>
-                    <Input type="date" name="purchasedDate" className="h-12 bg-base/50" />
+                    <SmartDateInput type="date" name="purchasedDate" className="h-12 bg-base/50" />
                 </div>
 
                 <div className="sm:col-span-1">

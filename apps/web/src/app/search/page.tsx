@@ -138,7 +138,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               时区：<code className="font-mono">{timeZone}</code>
               {q.length > 0 ? (
                 <>
-                  <span className="mx-2 text-zinc-400">·</span>结果 {total}
+                  <span className="mx-2 text-secondary">·</span>结果 {total}
                 </>
               ) : null}
             </p>
@@ -158,7 +158,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {todoRows.length > 0 ? (
               <section>
                 <h2 className="text-sm font-medium">Todo（{todoRows.length}）</h2>
-                <ul className="mt-3 divide-y divide-black/[.06] rounded-lg border border-black/[.06] text-sm dark:divide-white/[.08] dark:border-white/[.08]">
+                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
                   {todoRows.map((t, index) => (
                     <li
                       key={t.id}
@@ -166,13 +166,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         }`}
                     >
                       <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-zinc-700 dark:text-zinc-300">
+                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
                           {t.isArchived ? <Badge>已归档</Badge> : null}
                           {t.isDone ? (
                             <Badge variant="success">已完成</Badge>
                           ) : null}
                           {t.dueAt ? (
-                            <span className="text-zinc-500 dark:text-zinc-400">
+                            <span className="text-muted">
                               截止 {formatDateTime(t.dueAt, timeZone)}
                             </span>
                           ) : null}
@@ -186,7 +186,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       </div>
                       <Link
                         href={`/todo/${t.id}`}
-                        className="shrink-0 rounded-lg border border-black/[.08] px-3 py-2 text-xs font-medium hover:bg-black/[.03] dark:border-white/[.145] dark:hover:bg-white/[.06]"
+                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover"
                       >
                         查看
                       </Link>
@@ -201,7 +201,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <h2 className="text-sm font-medium">
                   纪念日（{anniversaryRows.length}）
                 </h2>
-                <ul className="mt-3 divide-y divide-black/[.06] rounded-lg border border-black/[.06] text-sm dark:divide-white/[.08] dark:border-white/[.08]">
+                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
                   {anniversaryRows.map((a, index) => (
                     <li
                       key={a.id}
@@ -240,7 +240,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <h2 className="text-sm font-medium">
                   订阅（{subscriptionRows.length}）
                 </h2>
-                <ul className="mt-3 divide-y divide-black/[.06] rounded-lg border border-black/[.06] text-sm dark:divide-white/[.08] dark:border-white/[.08]">
+                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
                   {subscriptionRows.map((s, index) => (
                     <li
                       key={s.id}
@@ -276,7 +276,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {itemRows.length > 0 ? (
               <section>
                 <h2 className="text-sm font-medium">物品（{itemRows.length}）</h2>
-                <ul className="mt-3 divide-y divide-black/[.06] rounded-lg border border-black/[.06] text-sm dark:divide-white/[.08] dark:border-white/[.08]">
+                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
                   {itemRows.map((it, index) => (
                     <li
                       key={it.id}

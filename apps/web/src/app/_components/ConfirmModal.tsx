@@ -28,7 +28,7 @@ export function ConfirmModal({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
+        const raf = requestAnimationFrame(() => setMounted(true));
         // Lock scroll when modal is open
         if (isOpen) {
             document.body.style.overflow = "hidden";
@@ -36,6 +36,7 @@ export function ConfirmModal({
             document.body.style.overflow = "unset";
         }
         return () => {
+            cancelAnimationFrame(raf);
             document.body.style.overflow = "unset";
         };
     }, [isOpen]);
