@@ -238,8 +238,8 @@ export default async function AnniversariesPage({
                           <div className="flex items-center gap-2">
                             <span
                               className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium border ${item.dateType === "lunar"
-                                  ? "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400"
-                                  : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
+                                ? "bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-400"
+                                : "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400"
                                 }`}
                             >
                               {item.dateType === 'lunar' ? '农历' : '公历'}
@@ -319,6 +319,7 @@ export default async function AnniversariesPage({
                         <button
                           type="submit"
                           className="h-7 rounded border border-default px-2 text-xs font-medium hover:bg-interactive-hover text-secondary active-press"
+                          aria-label={item.isArchived ? `取消归档 ${item.title}` : `归档 ${item.title}`}
                         >
                           {item.isArchived ? "取消归档" : "归档"}
                         </button>
@@ -329,6 +330,7 @@ export default async function AnniversariesPage({
                         <ConfirmSubmitButton
                           confirmMessage="确定删除这个纪念日吗？此操作不可撤销。"
                           className="h-7 rounded border border-transparent px-2 text-xs font-medium text-danger hover:bg-danger/10 active-press"
+                          aria-label={`删除 ${item.title}`}
                         >
                           删除
                         </ConfirmSubmitButton>

@@ -81,6 +81,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                         type="button"
                         onClick={onClose}
                         className="rounded-md bg-surface px-2 py-1 text-xs font-medium text-secondary hover:bg-interactive-hover"
+                        aria-label="关闭搜索"
                     >
                         ESC
                     </button>

@@ -306,6 +306,7 @@ export default async function SubscriptionsPage({
                         <button
                           type="submit"
                           className="h-7 rounded border border-brand-primary text-brand-primary px-3 text-[11px] font-medium hover:bg-brand-primary hover:text-white transition-colors active-press"
+                          aria-label={`续期 ${item.name}`}
                         >
                           续期
                         </button>
@@ -321,6 +322,7 @@ export default async function SubscriptionsPage({
                         <button
                           type="submit"
                           className="h-7 rounded border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover text-secondary active-press"
+                          aria-label={item.isArchived ? `取消归档 ${item.name}` : `归档 ${item.name}`}
                         >
                           {item.isArchived ? "取消归档" : "归档"}
                         </button>
@@ -331,6 +333,7 @@ export default async function SubscriptionsPage({
                         <ConfirmSubmitButton
                           confirmMessage="确定删除这个订阅吗？此操作不可撤销。"
                           className="h-7 rounded border border-transparent px-2 text-[11px] font-medium text-danger hover:bg-danger/10 active-press"
+                          aria-label={`删除 ${item.name}`}
                         >
                           删除
                         </ConfirmSubmitButton>

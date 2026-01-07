@@ -211,6 +211,7 @@ export function TodoItem({ item, settings, staggerClass = "" }: TodoItemProps) {
                             type="submit"
                             className="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-interactive-hover hover:text-primary active:scale-95 transition-transform"
                             title="上移"
+                            aria-label="上移"
                         >
                             <Icons.ChevronRight className="h-3.5 w-3.5 rotate-270" />
                         </button>
@@ -224,6 +225,7 @@ export function TodoItem({ item, settings, staggerClass = "" }: TodoItemProps) {
                             type="submit"
                             className="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-interactive-hover hover:text-primary active:scale-95 transition-transform"
                             title="下移"
+                            aria-label="下移"
                         >
                             <Icons.ChevronDown className="h-3.5 w-3.5" />
                         </button>
