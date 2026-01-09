@@ -1,15 +1,15 @@
 "use client";
 
-"use client";
-
 import { Input } from "../Input";
 import { SmartDateInput } from "../SmartDateInput";
 import { Button } from "../Button";
 import { Select } from "../Select";
+import { CustomSelect } from "../CustomSelect";
 import { Textarea } from "../Textarea";
 import { updateTodo } from "../../_actions/todos";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteTodo } from "../../_actions/todos";
+import { Icons } from "../Icons";
 
 type TodoUpdateFormProps = {
     todo: {
@@ -65,166 +65,160 @@ export function TodoUpdateForm({
     const now = new Date();
 
     return (
-        <>
-            <form action={updateTodo} className="mt-4 flex flex-col gap-3">
+        <div className="space-y-8">
+            <form id="todo-update-form" action={updateTodo} className="flex flex-col gap-6">
                 <input type="hidden" name="id" value={todo.id} />
 
-                <label className="flex flex-col gap-1 text-xs text-secondary">
-                    标题
-                    <Input
-                        name="title"
-                        defaultValue={todo.title}
-                        autoComplete="off"
-                        required
-                    />
-                </label>
+                {/* Section 1: Title */}
+                <div className="group space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                        标题
+                    </label>
+                    <div className="relative">
+                        <Input
+                            name="title"
+                            defaultValue={todo.title}
+                            autoComplete="off"
+                            required
+                            className="h-14 border-transparent bg-transparent px-0 text-2xl font-bold shadow-none placeholder:text-muted/30 focus:border-transparent focus:ring-0 md:text-2xl"
+                            placeholder="输入任务标题..."
+                        />
+                        <div className="absolute bottom-0 left-0 h-0.5 w-full bg-divider transition-all group-focus-within:bg-brand-primary" />
+                    </div>
+                </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                    <label className="flex flex-col gap-1 text-xs text-secondary">
-                        截止
+                {/* Section 2: Core Details Grid */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                    {/* Due Date */}
+                    <div className="space-y-2 rounded-xl border border-default bg-surface/30 p-4 transition-colors hover:border-emphasis hover:bg-surface/50">
+                        <label className="flex items-center gap-2 text-xs font-medium text-secondary">
+                            <Icons.Calendar className="h-4 w-4" />
+                            截止时间
+                        </label>
                         <SmartDateInput
                             type="datetime-local"
                             name="dueAt"
                             defaultValue={dueAtLocalValue}
+                            className="bg-transparent shadow-none focus:ring-0"
                         />
-                    </label>
-
-                    <div className="flex flex-col gap-1">
-                        <div className="text-xs text-muted">提醒（可多选，需设置截止）</div>
-                        <div className="flex flex-wrap gap-3 rounded-lg border border-default bg-surface p-3 text-sm">
-                            {reminderOptions.map((opt) => (
-                                <label
-                                    key={opt.minutes}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-xs text-secondary hover:bg-interactive-hover active:bg-interactive-hover/80 transition-colors cursor-pointer select-none"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        name="reminderOffsetsMinutes"
-                                        value={opt.minutes}
-                                        defaultChecked={reminders.includes(opt.minutes)}
-                                        className="h-5 w-5 rounded border-emphasis text-brand-primary focus:ring-brand-primary/20"
-                                    />
-                                    {opt.label}
-                                </label>
-                            ))}
-                        </div>
                     </div>
 
-                    <label className="flex flex-col gap-1 text-xs text-secondary">
-                        重复
-                        <Select name="recurrenceUnit" defaultValue={recurrence?.unit ?? ""}>
-                            <option value="">不重复</option>
-                            <option value="day">天</option>
-                            <option value="week">周</option>
-                            <option value="month">月</option>
-                        </Select>
-                    </label>
+                    {/* Recurrence */}
+                    <div className="space-y-2 rounded-xl border border-default bg-surface/30 p-4 transition-colors hover:border-emphasis hover:bg-surface/50">
+                        <label className="flex items-center gap-2 text-xs font-medium text-secondary">
+                            <Icons.Refresh className="h-4 w-4" />
+                            重复设置
+                        </label>
+                        <div className="flex gap-2">
+                            <Select
+                                name="recurrenceUnit"
+                                defaultValue={recurrence?.unit ?? ""}
+                                className="bg-transparent shadow-none focus:ring-0"
+                            >
+                                <option value="">不重复</option>
+                                <option value="day">每天</option>
+                                <option value="week">每周</option>
+                                <option value="month">每月</option>
+                                <option value="year">每年</option>
+                            </Select>
+                            {(recurrence?.unit || "") !== "" && (
+                                <Input
+                                    type="number"
+                                    name="recurrenceInterval"
+                                    defaultValue={recurrence?.interval ?? 1}
+                                    min={1}
+                                    className="w-20 bg-transparent shadow-none focus:ring-0"
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
 
-                    <label className="flex flex-col gap-1 text-xs text-secondary">
-                        间隔
-                        <Input
-                            type="number"
-                            name="recurrenceInterval"
-                            defaultValue={recurrence?.interval ?? 1}
-                            min={1}
-                        />
+                {/* Section 3: Reminders (Grid Layout) */}
+                <div className="space-y-3">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                        提醒设置
                     </label>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                        {reminderOptions.map((opt) => (
+                            <label
+                                key={opt.minutes}
+                                className="relative flex h-14 cursor-pointer flex-col items-center justify-center rounded-xl border border-default bg-surface/50 p-2 text-center transition-all hover:bg-interactive-hover active:scale-95 has-[:checked]:border-brand-primary has-[:checked]:bg-brand-primary/5 has-[:checked]:text-brand-primary"
+                            >
+                                <input
+                                    type="checkbox"
+                                    name="reminderOffsetsMinutes"
+                                    value={opt.minutes}
+                                    defaultChecked={reminders.includes(opt.minutes)}
+                                    className="peer sr-only"
+                                />
+                                <span className="text-sm font-medium leading-none">{opt.label}</span>
+                                <div className="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-transparent transition-colors peer-checked:bg-brand-primary" />
+                            </label>
+                        ))}
+                    </div>
+                </div>
 
-                    <label className="flex flex-col gap-1 text-xs text-secondary">
-                        优先级
+                {/* Section 4: Metadata (Priority, Type, Tags) */}
+                <div className="grid gap-6 sm:grid-cols-3">
+                    <div className="space-y-2">
+                        <label className="text-xs font-medium text-secondary">优先级</label>
                         <Select name="priority" defaultValue={todo.priority}>
                             <option value="low">低</option>
                             <option value="medium">中</option>
                             <option value="high">高</option>
                         </Select>
-                    </label>
+                    </div>
 
-                    <label className="flex flex-col gap-1 text-xs text-secondary">
-                        分类（个人/公司/自定义）
-                        <Input name="taskType" defaultValue={todo.taskType} />
-                    </label>
-
-                    <label className="flex flex-col gap-1 text-xs text-secondary sm:col-span-2">
-                        标签（逗号分隔）
-                        <Input name="tags" defaultValue={tags.join(", ")} />
-                    </label>
-
-                    <label className="flex flex-col gap-1 text-xs text-secondary sm:col-span-2">
-                        备注
-                        <Textarea
-                            name="description"
-                            rows={4}
-                            defaultValue={todo.description ?? ""}
-                            className="resize-y"
+                    <div className="space-y-2">
+                        <label className="text-xs font-medium text-secondary">分类</label>
+                        <CustomSelect
+                            name="taskType"
+                            defaultValue={todo.taskType}
+                            options={[
+                                { value: "个人", label: "个人" },
+                                { value: "公司", label: "公司" },
+                                { value: "生活", label: "生活" },
+                            ]}
+                            placeholder="选择或输入分类..."
                         />
-                    </label>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-medium text-secondary">标签</label>
+                        <Input name="tags" defaultValue={tags.join(", ")} placeholder="逗号分隔" />
+                    </div>
                 </div>
 
-                {todo.dueAt && recurrence && nextDueAtPreview ? (
-                    <div className="rounded-lg border border-default bg-surface p-3 text-xs text-secondary">
-                        完成后将自动生成下一次：截止{" "}
-                        <span className="font-medium">
-                            {formatDueAt(nextDueAtPreview, settings.timeZone)}
-                        </span>
-                    </div>
-                ) : null}
-
-                {todo.dueAt && reminders.length > 0 ? (
-                    <div className="rounded-lg border border-default bg-surface p-3 text-xs text-secondary">
-                        <div className="font-medium">提醒预览</div>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {reminders
-                                .map((minutes) => ({
-                                    minutes,
-                                    label: getReminderLabel(minutes),
-                                    at: new Date(todo.dueAt!.getTime() - minutes * 60000),
-                                }))
-                                .sort((a, b) => a.at.getTime() - b.at.getTime())
-                                .map((p) => {
-                                    const isPast = p.at.getTime() < now.getTime();
-                                    return (
-                                        <span
-                                            key={p.minutes}
-                                            className={[
-                                                "rounded-md border px-2 py-1",
-                                                isPast
-                                                    ? "border-danger bg-danger text-danger"
-                                                    : "border-divider bg-surface",
-                                            ].join(" ")}
-                                        >
-                                            {p.label}：{formatDueAt(p.at, settings.timeZone)}
-                                        </span>
-                                    );
-                                })}
-                        </div>
-                    </div>
-                ) : null}
-
-                <div className="mt-2 flex items-center justify-between gap-4">
-                    <Button type="submit" variant="primary">
-                        保存修改
-                    </Button>
-
-                    {/* Delete Button moved here/duplicated for convenience? 
-              Originally it was separate form outside?
-              Actually separate form is safer for `action`.
-          */}
+                {/* Section 5: Description */}
+                <div className="space-y-2">
+                    <label className="text-xs font-medium text-secondary">备注</label>
+                    <Textarea
+                        name="description"
+                        rows={4}
+                        defaultValue={todo.description ?? ""}
+                        className="resize-y bg-surface/30 focus:bg-surface/50"
+                        placeholder="添加详细说明..."
+                    />
                 </div>
             </form>
 
-            {/* Delete Form */}
-            <div className="mt-6 flex justify-end border-t border-divider pt-4">
+            <div className="flex items-center justify-between border-t border-divider pt-6">
+                <span className="text-xs text-muted">
+                    创建于 {new Date().toLocaleDateString()}
+                </span>
                 <form action={deleteTodo}>
                     <input type="hidden" name="id" value={todo.id} />
                     <input type="hidden" name="redirectTo" value="/" />
                     <ConfirmSubmitButton
                         confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
-                        className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20"
+                        className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
                     >
-                        删除
+                        <Icons.Trash className="h-3.5 w-3.5" />
+                        删除任务
                     </ConfirmSubmitButton>
                 </form>
             </div>
-        </>
+        </div>
     );
 }

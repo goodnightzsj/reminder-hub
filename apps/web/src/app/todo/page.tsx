@@ -1,5 +1,7 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+
+import { and, asc, desc, eq, ne, isNull, isNotNull, sql } from "drizzle-orm";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
@@ -8,11 +10,13 @@ import { todos } from "@/server/db/schema";
 
 import { AppHeader } from "../_components/AppHeader";
 import { TodoCreateForm } from "../_components/todo/TodoCreateForm";
-import { TodoItem } from "../_components/todo/TodoItem";
-import { EmptyState } from "../_components/EmptyState";
+import { TodoList } from "../_components/todo/TodoList";
+import { CreateModal } from "../_components/CreateModal";
+import { SegmentedControl } from "../_components/SegmentedControl";
 
 export const dynamic = "force-dynamic";
 
+// Used for server component props
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -36,12 +40,13 @@ function getParam(
   return null;
 }
 
-type TodoFilter = "active" | "done" | "archived" | "all";
+type TodoFilter = "active" | "done" | "archived" | "trash" | "all";
 
 function parseTodoFilter(raw: string | null): TodoFilter {
   if (raw === "active") return "active";
   if (raw === "done") return "done";
   if (raw === "archived") return "archived";
+  if (raw === "trash") return "trash";
   if (raw === "all") return "all";
   return "active";
 }
@@ -77,21 +82,62 @@ export default async function Home({ searchParams }: HomePageProps) {
   const taskTypeFilter = parseTaskTypeFilter(getParam(params, "taskType"));
   const settings = await getAppSettings();
 
+  // Build status predicates for taskTypes query (same logic as main query)
+  const taskTypeStatusPredicates = [];
+  if (filter === "trash") {
+    taskTypeStatusPredicates.push(isNotNull(todos.deletedAt));
+  } else {
+    taskTypeStatusPredicates.push(isNull(todos.deletedAt));
+    if (filter === "active") {
+      taskTypeStatusPredicates.push(eq(todos.isDone, false), eq(todos.isArchived, false));
+    } else if (filter === "done") {
+      taskTypeStatusPredicates.push(eq(todos.isDone, true), eq(todos.isArchived, false));
+    } else if (filter === "archived") {
+      taskTypeStatusPredicates.push(eq(todos.isArchived, true));
+    }
+    // filter === "all" has no additional predicates (just non-deleted)
+  }
+
+  // Query taskTypes scoped to current status filter
+  const taskTypesRows = await db
+    .select({ taskType: todos.taskType })
+    .from(todos)
+    .where(and(...taskTypeStatusPredicates))
+    .groupBy(todos.taskType)
+    .orderBy(asc(todos.taskType));
+  const taskTypes = taskTypesRows
+    .map((r) => r.taskType)
+    .filter((t): t is string => typeof t === "string" && t.length > 0)
+    .slice(0, 20);
+
+  // If current taskType filter no longer exists in this status, treat as "全部"
+  const effectiveTaskTypeFilter =
+    taskTypeFilter && taskTypes.includes(taskTypeFilter) ? taskTypeFilter : null;
+
+  // Build predicates using effectiveTaskTypeFilter
   const predicates = [];
-  if (filter === "active") {
-    predicates.push(eq(todos.isDone, false), eq(todos.isArchived, false));
-  } else if (filter === "done") {
-    predicates.push(eq(todos.isDone, true), eq(todos.isArchived, false));
-  } else if (filter === "archived") {
-    predicates.push(eq(todos.isArchived, true));
+  if (filter === "trash") {
+    // In trash: show only deleted items
+    predicates.push(isNotNull(todos.deletedAt));
+  } else {
+    // Not in trash: show only non-deleted items
+    predicates.push(isNull(todos.deletedAt));
+
+    if (filter === "active") {
+      predicates.push(eq(todos.isDone, false), eq(todos.isArchived, false));
+    } else if (filter === "done") {
+      predicates.push(eq(todos.isDone, true), eq(todos.isArchived, false));
+    } else if (filter === "archived") {
+      predicates.push(eq(todos.isArchived, true));
+    }
   }
 
   if (priorityFilter !== "all") {
     predicates.push(eq(todos.priority, priorityFilter));
   }
 
-  if (taskTypeFilter) {
-    predicates.push(eq(todos.taskType, taskTypeFilter));
+  if (effectiveTaskTypeFilter) {
+    predicates.push(eq(todos.taskType, effectiveTaskTypeFilter));
   }
 
   const where =
@@ -101,19 +147,48 @@ export default async function Home({ searchParams }: HomePageProps) {
         ? predicates[0]
         : and(...predicates);
 
-  const taskTypesRows = await db
-    .select({ taskType: todos.taskType })
-    .from(todos)
-    .groupBy(todos.taskType)
-    .orderBy(asc(todos.taskType));
-  const taskTypes = taskTypesRows
-    .map((r) => r.taskType)
-    .filter((t): t is string => typeof t === "string" && t.length > 0)
-    .slice(0, 20);
+  /*
+    Sorting Logic (varies by filter):
+    - active: isDone ASC → 紧急度 DESC → 优先级 DESC → createdAt DESC
+    - done: updatedAt DESC (最近完成的在上面)
+    - trash: 优先级 DESC → deletedAt ASC (先删除的在上面)
+  */
+  let orderByClause;
+  if (filter === "trash") {
+    // 废纸篓：按优先级排序，相同优先级按删除时间升序
+    orderByClause = [
+      sql`CASE ${todos.priority} 
+        WHEN 'high' THEN 3 
+        WHEN 'medium' THEN 2 
+        WHEN 'low' THEN 1 
+        ELSE 0 
+      END DESC`,
+      asc(todos.deletedAt)
+    ];
+  } else if (filter === "done") {
+    // 已完成：按更新时间降序（最近完成的在上面）
+    orderByClause = [desc(todos.updatedAt)];
+  } else {
+    // 进行中/全部：原有逻辑
+    orderByClause = [
+      asc(todos.isDone),
+      sql`CASE 
+        WHEN ${todos.isDone} = 0 AND ${todos.dueAt} IS NOT NULL AND ${todos.dueAt} < (unixepoch() + 3600) * 1000 THEN 1 
+        ELSE 0 
+      END DESC`,
+      sql`CASE ${todos.priority} 
+        WHEN 'high' THEN 3 
+        WHEN 'medium' THEN 2 
+        WHEN 'low' THEN 1 
+        ELSE 0 
+      END DESC`,
+      desc(todos.createdAt)
+    ];
+  }
 
   const items = await db.query.todos.findMany({
     where,
-    orderBy: desc(todos.createdAt),
+    orderBy: orderByClause,
     with: {
       subtasks: true,
     },
@@ -134,9 +209,6 @@ export default async function Home({ searchParams }: HomePageProps) {
     ? items.filter((item) => parseStringArrayJson(item.tags).includes(tagFilter))
     : items;
 
-
-
-  // Reconstruct href building for Tags section (local helper)
   function buildHomeHref({
     filter: f,
     priority: p,
@@ -157,6 +229,8 @@ export default async function Home({ searchParams }: HomePageProps) {
     return qs.length > 0 ? `/todo?${qs}` : "/todo";
   }
 
+
+
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
@@ -165,114 +239,64 @@ export default async function Home({ searchParams }: HomePageProps) {
           description="MVP：本地 SQLite + CRUD + 截止/提醒预览/标签/子任务（外部通知后置）。"
         />
 
-        <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <TodoCreateForm timeZone={settings.timeZone} />
-        </section>
+
+
+        {/* Mobile Create Modal */}
+        {filter !== 'trash' && (
+          <CreateModal title="新建待办">
+            <TodoCreateForm timeZone={settings.timeZone} className="" />
+          </CreateModal>
+        )}
 
         <section className="rounded-xl border border-default bg-elevated shadow-sm">
           <div className="p-4">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h2 className="text-sm font-medium">列表</h2>
-              <nav className="flex flex-wrap gap-2 text-xs">
-                {(
-                  [
-                    { key: "active", label: "进行中" },
-                    { key: "done", label: "已完成" },
-                    { key: "archived", label: "已归档" },
-                    { key: "all", label: "全部" },
-                  ] as const
-                ).map((t) => (
-                  <Link
-                    key={t.key}
-                    href={buildHomeHref({
-                      filter: t.key,
-                      priority: priorityFilter,
-                      tag: tagFilter,
-                      taskType: taskTypeFilter,
-                    })}
-                    className={[
-                      "rounded-lg border px-3 py-2 font-medium active-press",
-                      t.key === filter
-                        ? "border-brand-primary bg-brand-primary text-white"
-                        : "border-default hover:bg-interactive-hover",
-                    ].join(" ")}
-                  >
-                    {t.label}
-                  </Link>
-                ))}
-              </nav>
+              <SegmentedControl
+                options={[
+                  { key: "active", label: "进行中", href: buildHomeHref({ filter: "active", priority: priorityFilter, tag: tagFilter, taskType: taskTypeFilter }) },
+                  { key: "done", label: "已完成", href: buildHomeHref({ filter: "done", priority: priorityFilter, tag: tagFilter, taskType: taskTypeFilter }) },
+                  { key: "trash", label: "废纸篓", href: buildHomeHref({ filter: "trash", priority: priorityFilter, tag: tagFilter, taskType: taskTypeFilter }) },
+                ]}
+                currentValue={filter}
+                layoutId="todo-filter"
+              />
             </div>
 
+            {/* ... (Filter controls - kept same) */}
             <div className="border-t border-divider pt-4">
-              <nav className="flex flex-wrap items-center gap-2 text-xs">
+              {/* Same filter controls for priority/type/tags */}
+              {/* NOTE: I am copying the whole updated logic here, but relying on user to see the diff via tool */}
+              <nav className="flex flex-wrap items-center gap-3 text-xs">
                 <span className="text-muted">优先级</span>
-                {(
-                  [
-                    { key: "all", label: "全部" },
-                    { key: "high", label: "高" },
-                    { key: "medium", label: "中" },
-                    { key: "low", label: "低" },
-                  ] as const
-                ).map((p) => (
-                  <Link
-                    key={p.key}
-                    href={buildHomeHref({
-                      filter,
-                      priority: p.key,
-                      tag: tagFilter,
-                      taskType: taskTypeFilter,
-                    })}
-                    className={[
-                      "rounded-lg border px-3 py-2 font-medium active-press",
-                      p.key === priorityFilter
-                        ? "border-brand-primary bg-brand-primary text-white"
-                        : "border-default hover:bg-interactive-hover",
-                    ].join(" ")}
-                  >
-                    {p.label}
-                  </Link>
-                ))}
+                <SegmentedControl
+                  options={[
+                    { key: "all", label: "全部", href: buildHomeHref({ filter, priority: "all", tag: tagFilter, taskType: taskTypeFilter }) },
+                    { key: "high", label: "高", href: buildHomeHref({ filter, priority: "high", tag: tagFilter, taskType: taskTypeFilter }) },
+                    { key: "medium", label: "中", href: buildHomeHref({ filter, priority: "medium", tag: tagFilter, taskType: taskTypeFilter }) },
+                    { key: "low", label: "低", href: buildHomeHref({ filter, priority: "low", tag: tagFilter, taskType: taskTypeFilter }) },
+                  ]}
+                  currentValue={priorityFilter}
+                  layoutId="priority-filter"
+                />
 
-                <span className="ml-2 text-muted">分类</span>
-                <Link
-                  href={buildHomeHref({
-                    filter,
-                    priority: priorityFilter,
-                    tag: tagFilter,
-                    taskType: null,
-                  })}
-                  className={[
-                    "rounded-lg border px-3 py-2 font-medium active-press",
-                    taskTypeFilter === null
-                      ? "border-brand-primary bg-brand-primary text-white"
-                      : "border-default hover:bg-interactive-hover",
-                  ].join(" ")}
-                >
-                  全部
-                </Link>
-                {taskTypes.map((t) => (
-                  <Link
-                    key={t}
-                    href={buildHomeHref({
-                      filter,
-                      priority: priorityFilter,
-                      tag: tagFilter,
-                      taskType: t,
-                    })}
-                    className={[
-                      "rounded-lg border px-3 py-2 font-medium active-press",
-                      t === taskTypeFilter
-                        ? "border-brand-primary bg-brand-primary text-white"
-                        : "border-default hover:bg-interactive-hover",
-                    ].join(" ")}
-                  >
-                    {t}
-                  </Link>
-                ))}
+                <span className="text-muted">分类</span>
+                <SegmentedControl
+                  options={[
+                    { key: "all", label: "全部", href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: null }) },
+                    ...taskTypes.map((t) => ({
+                      key: t,
+                      label: t,
+                      href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: t }),
+                    }))
+                  ]}
+                  currentValue={effectiveTaskTypeFilter ?? "all"}
+                  layoutId="category-filter"
+                />
 
                 {tagFilter ||
                   priorityFilter !== "all" ||
-                  taskTypeFilter !== null ||
+                  effectiveTaskTypeFilter !== null ||
                   filter !== "active" ? (
                   <Link
                     href="/todo"
@@ -315,34 +339,23 @@ export default async function Home({ searchParams }: HomePageProps) {
             </div>
           </div>
 
-          <ul className="divide-y divide-divider border-t border-divider">
-            {visibleItems.length === 0 ? (
-              <div className="p-8">
-                <EmptyState
-                  title={items.length === 0 ? "还没有待办" : "没有匹配的待办"}
-                  description={
-                    items.length === 0
-                      ? "先添加一条，开始高效的一天。"
-                      : "尝试调整筛选条件。"
-                  }
-                />
-              </div>
-            ) : (
-              visibleItems.map((item, index) => {
-                const staggerClass = index < 5 ? `stagger-${index + 1}` : "";
-                return (
-                  <TodoItem
-                    key={item.id}
-                    item={item}
-                    settings={settings}
-                    staggerClass={staggerClass}
-                  />
-                );
-              })
-            )}
-          </ul>
+          <TodoList
+            items={visibleItems}
+            settings={settings}
+            emptyTitle={
+              filter === 'trash' ? "废纸篓为空" :
+                items.length === 0 ? "还没有待办" : "没有匹配的待办"
+            }
+            emptyDescription={
+              filter === 'trash' ? "你的废纸篓很干净。" :
+                items.length === 0
+                  ? "先添加一条，开始高效的一天。"
+                  : "尝试调整筛选条件。"
+            }
+          />
         </section>
       </main>
-    </div>
+    </div >
   );
 }
+

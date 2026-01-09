@@ -1,11 +1,15 @@
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { formatRecurrenceRuleZh, parseRecurrenceRuleJson } from "@/server/recurrence";
 import { Icons } from "../Icons";
-import { Badge } from "../Badge";
+import { Badge, getBadgeVariantFromLabel } from "../Badge";
 import { Button } from "../Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
     deleteTodo,
+    moveTodoDown,
+    moveTodoUp,
+    restoreTodo,
     setTodoArchived,
     toggleTodo,
 } from "../../_actions/todos";
@@ -24,6 +28,7 @@ type TodoItemProps = {
         recurrenceRule: string | null; // JSON string
         isDone: boolean;
         isArchived: boolean;
+        deletedAt?: Date | null;
         subtasks?: {
             id: string;
             isDone: boolean;
@@ -87,181 +92,194 @@ function getReminderLabel(offsetMinutes: number): string {
     return `提前 ${offsetMinutes} 分钟`;
 }
 
-export function TodoItem({ item, settings, staggerClass = "" }: TodoItemProps) {
+const itemVariants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0 },
+};
+
+export function TodoItem({ item, settings }: TodoItemProps) {
     const now = new Date();
+    const isDeleted = !!item.deletedAt;
 
     return (
-        <li className={`group animate-slide-up flex items-start gap-3 p-4 hover:bg-interactive-hover transition-colors rounded-xl ${staggerClass}`}>
-            <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex flex-wrap items-center gap-2">
-                    <Badge>{priorityLabels[item.priority]}</Badge>
-                    <Badge>{item.taskType}</Badge>
-
-                    {(() => {
-                        const rule = parseRecurrenceRuleJson(item.recurrenceRule ?? null);
-                        if (!rule) return null;
-                        return <Badge>{formatRecurrenceRuleZh(rule)}</Badge>;
-                    })()}
-
-                    {item.isArchived ? <Badge>已归档</Badge> : null}
+        <motion.li
+            layout
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+            className="group relative overflow-hidden rounded-xl bg-elevated"
+        >
+            {/* Mobile Swipe Action (Delete) - Background Layer - HIDDEN on desktop */}
+            {!isDeleted && (
+                <div className="absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-destructive text-destructive-foreground sm:hidden">
+                    <form action={deleteTodo} className="flex h-full w-full items-center justify-center">
+                        <input type="hidden" name="id" value={item.id} />
+                        <button type="submit" className="flex h-full w-full items-center justify-center">
+                            <Icons.Trash className="h-5 w-5" />
+                        </button>
+                    </form>
                 </div>
+            )}
 
-                <Link
-                    href={`/todo/${item.id}`}
-                    className={[
-                        "mt-1 truncate text-sm font-medium hover:underline",
-                        item.isDone ? "text-muted line-through" : "text-primary",
-                    ].join(" ")}
-                    title={item.title}
-                >
-                    {item.title}
-                </Link>
+            {/* Main Content - Draggable */}
+            <motion.div
+                drag={!isDeleted ? "x" : false}
+                dragConstraints={{ left: -100, right: 0 }}
+                dragElastic={0.05}
+                className="relative z-10 flex items-start gap-4 bg-elevated p-4 transition-colors hover:bg-muted/30"
+                style={{ x: 0 }} // Reset x on re-render needed? No, Motion handles it.
+                whileDrag={{ cursor: "grabbing" }}
+            >
+                {/* Priority Indicator Line */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.priority === "high" ? "bg-danger" :
+                    item.priority === "medium" ? "bg-warning" : "bg-transparent"
+                    }`} />
 
-                {(() => {
-                    const tags = parseStringArrayJson(item.tags);
-                    if (tags.length === 0) return null;
-                    return (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                            {tags.map((t) => (
-                                <Badge
-                                    key={`${item.id}:${t}`}
-                                    className="text-secondary border-divider bg-surface"
-                                >
-                                    {t}
-                                </Badge>
-                            ))}
-                        </div>
-                    );
-                })()}
+                <div className="flex min-w-0 flex-1 flex-col pl-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Priority Badge */}
+                        <Badge variant={
+                            item.priority === 'high' ? 'danger' :
+                                item.priority === 'medium' ? 'warning' :
+                                    'blue'
+                        }>
+                            {priorityLabels[item.priority]}
+                        </Badge>
 
-                {/* Subtasks Indicator */}
-                {item.subtasks && item.subtasks.length > 0 ? (
-                    <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary">
-                        <Icons.Check className="h-3.5 w-3.5 text-muted" />
-                        <span>
-                            {item.subtasks.filter(s => s.isDone).length}/{item.subtasks.length} 子任务
-                        </span>
-                    </div>
-                ) : null}
-
-                {item.dueAt ? (
-                    <>
-                        <span className="mt-1 text-xs text-muted">
-                            截止 {formatDueAt(item.dueAt, settings.timeZone)}
-                        </span>
+                        {/* Category Badge */}
+                        <Badge
+                            variant={getBadgeVariantFromLabel(item.taskType)}
+                            className="border"
+                        >
+                            {item.taskType}
+                        </Badge>
 
                         {(() => {
-                            const dueAt = item.dueAt;
-                            if (!dueAt) return null;
-
-                            const offsets = parseReminderOffsetsMinutes(item.reminderOffsetsMinutes);
-                            if (offsets.length === 0) return null;
-
-                            const preview = offsets
-                                .map((minutes) => ({
-                                    minutes,
-                                    label: getReminderLabel(minutes),
-                                    at: new Date(dueAt.getTime() - minutes * 60000),
-                                }))
-                                .sort((a, b) => a.at.getTime() - b.at.getTime());
-
-                            return (
-                                <div className="mt-2 flex flex-col gap-1 text-xs text-muted">
-                                    <div>提醒预览：</div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {preview.map((p) => {
-                                            const isPast = p.at.getTime() < now.getTime();
-                                            return (
-                                                <span
-                                                    key={`${item.id}:${p.minutes}`}
-                                                    className={[
-                                                        "rounded-md border px-2 py-1",
-                                                        isPast
-                                                            ? "border-danger bg-danger text-danger"
-                                                            : "border-divider bg-surface",
-                                                    ].join(" ")}
-                                                >
-                                                    {p.label}： {formatDueAt(p.at, settings.timeZone)}
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
+                            const rule = parseRecurrenceRuleJson(item.recurrenceRule ?? null);
+                            if (!rule) return null;
+                            return <Badge variant="secondary" className="gap-1"><Icons.Repeat className="w-3 h-3" /> {formatRecurrenceRuleZh(rule)}</Badge>;
                         })()}
-                    </>
-                ) : null}
 
-                {item.description ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-muted">
-                        {item.description}
-                    </p>
-                ) : null}
-            </div>
+                        {item.isArchived ? <Badge variant="secondary">已归档</Badge> : null}
+                    </div>
 
-            <div className="flex shrink-0 items-start gap-2">
-                {/* Move buttons - hidden on mobile */}
-                <div className="hidden sm:flex flex-col gap-0.5">
-                    <form action={async () => {
-                        "use server";
-                        const { moveTodoUp } = await import("@/app/_actions/todos");
-                        await moveTodoUp(item.id);
-                    }}>
-                        <button
-                            type="submit"
-                            className="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-interactive-hover hover:text-primary active:scale-95 transition-transform"
-                            title="上移"
-                            aria-label="上移"
-                        >
-                            <Icons.ChevronRight className="h-3.5 w-3.5 rotate-270" />
-                        </button>
-                    </form>
-                    <form action={async () => {
-                        "use server";
-                        const { moveTodoDown } = await import("@/app/_actions/todos");
-                        await moveTodoDown(item.id);
-                    }}>
-                        <button
-                            type="submit"
-                            className="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-interactive-hover hover:text-primary active:scale-95 transition-transform"
-                            title="下移"
-                            aria-label="下移"
-                        >
-                            <Icons.ChevronDown className="h-3.5 w-3.5" />
-                        </button>
-                    </form>
+                    <Link
+                        href={`/todo/${item.id}`}
+                        className={[
+                            "mt-2 block truncate text-base font-medium transition-colors hover:text-brand-primary",
+                            item.isDone ? "text-muted line-through" : "text-primary",
+                        ].join(" ")}
+                        title={item.title}
+                    >
+                        {item.title}
+                    </Link>
+
+                    {item.description ? (
+                        <p className="mt-1 line-clamp-1 text-sm text-secondary">
+                            {item.description}
+                        </p>
+                    ) : null}
+
+                    {(() => {
+                        const tags = parseStringArrayJson(item.tags);
+                        if (tags.length === 0) return null;
+                        return (
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                                {tags.map((t) => (
+                                    <span
+                                        key={`${item.id}:${t}`}
+                                        className="inline-flex items-center rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-secondary border border-border/50"
+                                    >
+                                        #{t}
+                                    </span>
+                                ))}
+                            </div>
+                        );
+                    })()}
+
+                    {/* Subtasks & DueDate */}
+                    <div className="mt-3 flex items-center gap-4 text-xs text-muted">
+                        {item.subtasks && item.subtasks.length > 0 && (
+                            <div className="flex items-center gap-1">
+                                <Icons.Check className="h-3.5 w-3.5" />
+                                <span>
+                                    {item.subtasks.filter(s => s.isDone).length}/{item.subtasks.length}
+                                </span>
+                            </div>
+                        )}
+
+                        {item.dueAt && (
+                            <div className={`flex items-center gap-1 ${item.dueAt < now && !item.isDone ? "text-danger" : ""}`}>
+                                <Icons.Calendar className="h-3.5 w-3.5" />
+                                <span>{formatDueAt(item.dueAt, settings.timeZone)}</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2">
-                    <TodoCompleteButton
-                        todoId={item.id}
-                        isDone={item.isDone}
-                        onToggle={toggleTodo}
-                    />
+                {/* Actions Column */}
+                <div className="flex shrink-0 items-start gap-2">
+                    {isDeleted ? (
+                        <div className="flex flex-col items-end gap-2">
+                            <form action={restoreTodo}>
+                                <input type="hidden" name="id" value={item.id} />
+                                <Button type="submit" size="sm" className="h-8 bg-brand-primary text-white hover:bg-brand-primary/90">
+                                    恢复
+                                </Button>
+                            </form>
 
-                    <form action={setTodoArchived}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <input
-                            type="hidden"
-                            name="isArchived"
-                            value={item.isArchived ? "0" : "1"}
-                        />
-                        <Button type="submit" variant="outline" size="sm" className="h-9">
-                            {item.isArchived ? "取消归档" : "归档"}
-                        </Button>
-                    </form>
+                            <form action={deleteTodo}>
+                                <input type="hidden" name="id" value={item.id} />
+                                <ConfirmSubmitButton
+                                    confirmMessage="确定彻底删除这个 Todo 吗？"
+                                    className="h-8 rounded-lg border border-danger/20 bg-danger/10 px-3 text-xs font-medium text-danger hover:bg-danger hover:text-white"
+                                >
+                                    彻底删除
+                                </ConfirmSubmitButton>
+                            </form>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-end gap-3">
+                            <TodoCompleteButton
+                                todoId={item.id}
+                                isDone={item.isDone}
+                                onToggle={toggleTodo}
+                            />
 
-                    <form action={deleteTodo}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <ConfirmSubmitButton
-                            confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
-                            className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger dark:hover:bg-danger-hover"
-                        >
-                            删除
-                        </ConfirmSubmitButton>
-                    </form>
+                            {/* Desktop Actions - visible on hover */}
+                            <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => moveTodoUp(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface" title="上移"><Icons.ChevronRight className="w-4 h-4 -rotate-90" /></button>
+                                <button onClick={() => moveTodoDown(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface" title="下移"><Icons.ChevronDown className="w-4 h-4" /></button>
+
+                                <form action={setTodoArchived}>
+                                    <input type="hidden" name="id" value={item.id} />
+                                    <input type="hidden" name="isArchived" value={item.isArchived ? "0" : "1"} />
+                                    <button
+                                        type="submit"
+                                        className={`p-1.5 rounded hover:bg-surface ${item.isArchived ? "text-brand-primary hover:text-brand-primary" : "text-muted hover:text-primary"}`}
+                                        title={item.isArchived ? "取消归档" : "归档"}
+                                    >
+                                        {item.isArchived ? <Icons.ArchiveRestore className="w-4 h-4" /> : <Icons.Archive className="w-4 h-4" />}
+                                    </button>
+                                </form>
+
+                                <form action={deleteTodo}>
+                                    <input type="hidden" name="id" value={item.id} />
+                                    <ConfirmSubmitButton
+                                        confirmMessage="确定删除这个待办吗？"
+                                        className="p-1.5 rounded text-muted hover:text-danger hover:bg-danger/10"
+                                        title="删除"
+                                    >
+                                        <Icons.Trash className="w-4 h-4" />
+                                    </ConfirmSubmitButton>
+                                </form>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
-        </li>
+            </motion.div>
+        </motion.li >
     );
 }
+

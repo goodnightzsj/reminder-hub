@@ -13,6 +13,9 @@ import { formatDateTimeLocal } from "@/server/datetime";
 
 import { SubtaskList } from "../../_components/todo/SubtaskList";
 import { TodoUpdateForm } from "../../_components/todo/TodoUpdateForm";
+import { Icons } from "../../_components/Icons";
+import { ExpandableSearch } from "../../_components/ExpandableSearch";
+import { Badge, getBadgeVariantFromLabel } from "../../_components/Badge";
 
 export const dynamic = "force-dynamic";
 
@@ -86,107 +89,123 @@ export default async function TodoPage({ params }: TodoPageProps) {
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
-      <main className="mx-auto max-w-2xl p-6 sm:p-10">
-        <header className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="rounded-lg border border-divider p-2 text-sm font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              返回
-            </Link>
-            <Link
-              href="/dashboard"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              仪表盘
-            </Link>
-            <Link
-              href="/anniversaries"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              纪念日
-            </Link>
-            <Link
-              href="/subscriptions"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              订阅
-            </Link>
-            <Link
-              href="/items"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              物品
-            </Link>
-            <Link
-              href="/search"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              搜索
-            </Link>
-          </div>
-        </header>
+      {/* Background decoration */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-secondary/5 rounded-full blur-[120px]" />
+      </div>
 
-        <ClientSavedToast />
-
-        <div className="flex flex-col gap-6">
-          <div>
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold">编辑 Todo</h1>
-              <div className="text-xs text-muted">ID: {todo.id.slice(0, 8)}</div>
+      <main className="relative mx-auto max-w-4xl p-0 sm:p-0">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-divider bg-base/80 p-4 backdrop-blur-xl transition-all">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/todo"
+              className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
+            >
+              <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+            </Link>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-semibold text-primary">编辑 Todo</h1>
+                <Badge
+                  variant={
+                    todo.priority === 'high' ? 'danger' :
+                      todo.priority === 'medium' ? 'warning' :
+                        'blue'
+                  }
+                  className="px-1.5 py-0 text-[10px]"
+                >
+                  {{ low: "低", medium: "中", high: "高" }[todo.priority]}
+                </Badge>
+                <Badge
+                  variant={getBadgeVariantFromLabel(todo.taskType)}
+                  className="px-1.5 py-0 text-[10px]"
+                >
+                  {todo.taskType}
+                </Badge>
+              </div>
+              <span className="text-xs text-muted font-mono">ID: {todo.id.slice(0, 8)}</span>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              form="todo-update-form"
+              className="h-9 px-4 rounded-lg bg-brand-primary text-xs font-medium text-white shadow-sm hover:bg-brand-primary/90 transition-all active:scale-95"
+            >
+              保存
+            </button>
+          </div>
+        </div>
 
-            {nextTodo ? (
-              <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
-                <div className="font-medium text-primary">下一次已生成</div>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Link
-                    href={`/todo/${nextTodo.id}`}
-                    className="font-medium text-brand-primary hover:underline"
-                  >
-                    打开下一次
-                  </Link>
-                  {nextTodo.dueAt ? (
-                    <span>
-                      截止{" "}
-                      {new Intl.DateTimeFormat("zh-CN", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                        timeZone: settings.timeZone,
-                      }).format(nextTodo.dueAt)}
-                    </span>
-                  ) : null}
-                  {nextTodo.isArchived ? <span>（已归档）</span> : null}
-                  {nextTodo.isDone ? <span>（已完成）</span> : null}
+        <div className="p-4 sm:p-8 animate-slide-up stagger-2">
+          {/* Main Card */}
+          <div className="overflow-hidden rounded-2xl border border-default bg-elevated/80 shadow-xl backdrop-blur-xl">
+            <div className="p-6 sm:p-10">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  {/* Old title removed */}
                 </div>
               </div>
-            ) : null}
 
-            <TodoUpdateForm
-              todo={todo}
-              tags={tags}
-              recurrence={recurrence}
-              reminders={reminders}
-              dueAtLocalValue={dueAtLocalValue}
-              nextDueAtPreview={nextDueAtPreview}
-              settings={settings}
-            />
+              {/* Previous logic for Next Todo Preview */}
+              {nextTodo ? (
+                <div className="mb-8 overflow-hidden rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-brand-primary">
+                    <Icons.Refresh className="h-4 w-4" />
+                    已生成下一次任务
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                    <Link
+                      href={`/todo/${nextTodo.id}`}
+                      className="font-medium text-primary hover:text-brand-primary underline decoration-divider hover:decoration-brand-primary transition-colors"
+                    >
+                      查看详情
+                    </Link>
+                    {nextTodo.dueAt && (
+                      <span className="flex items-center gap-1 text-secondary">
+                        <Icons.Calendar className="h-3.5 w-3.5" />
+                        截止 {new Intl.DateTimeFormat("zh-CN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                          timeZone: settings.timeZone,
+                        }).format(nextTodo.dueAt)}
+                      </span>
+                    )}
+                    {nextTodo.isDone && (
+                      <span className="rounded-md bg-success/10 px-2 py-0.5 text-success">已完成</span>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="grid gap-8 lg:grid-cols-[1fr,320px]">
+                <div className="min-w-0">
+                  <TodoUpdateForm
+                    todo={todo}
+                    tags={tags}
+                    recurrence={recurrence}
+                    reminders={reminders}
+                    dueAtLocalValue={dueAtLocalValue}
+                    nextDueAtPreview={nextDueAtPreview}
+                    settings={settings}
+                  />
+                </div>
+
+                <div className="border-t border-divider pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
+                  <div className="sticky top-20">
+                    <h3 className="mb-4 text-sm font-medium text-secondary">子任务</h3>
+                    <div className="rounded-xl border border-default bg-surface/50 p-1">
+                      <SubtaskList todoId={todo.id} subtasks={subtasks} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <SubtaskList todoId={todo.id} subtasks={subtasks} />
         </div>
       </main>
     </div>
   );
-}
-
-// Client component for showing toast if "?saved=1"
-// Actually I can use ToastListener global or a simple inline check here?
-// The global ToastListener handles `saved=1`.
-// But wait, `ToastListener` in layout handles it globally?
-// Yes, `apps/web/src/app/_components/ToastListener.tsx` handles `saved`.
-// So I don't need `ClientSavedToast` here.
-function ClientSavedToast() {
-  return null;
 }

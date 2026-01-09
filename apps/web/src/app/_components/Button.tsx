@@ -1,20 +1,29 @@
 import { ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+    variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "success" | "warning";
     size?: "sm" | "default" | "lg" | "icon";
     loading?: boolean;
 };
 
 export function Button({ className = "", variant = "primary", size = "default", loading = false, disabled, children, ...props }: ButtonProps) {
-    const base = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-100 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 ring-offset-background active-press";
+    const base = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 ring-offset-background active-press";
 
     const variants = {
-        primary: "bg-brand-primary text-inverted hover:bg-brand-primary/90 shadow-sm border border-transparent",
-        secondary: "bg-surface text-primary hover:bg-interactive-hover border border-transparent",
+        // Primary: Brand gradient + glow shadow (Pro Max)
+        primary: "bg-gradient-to-b from-brand-primary to-brand-secondary text-white shadow-md shadow-brand-primary/25 hover:shadow-lg hover:shadow-brand-primary/30 border border-transparent",
+        // Secondary: Subtle surface with border (Pro Max Neutral)
+        secondary: "bg-gradient-to-b from-surface to-muted/20 text-primary shadow-sm border border-border/50 hover:bg-muted/30",
+        // Outline: Clean border, transparent bg
         outline: "border border-default bg-transparent hover:bg-interactive-hover text-primary",
+        // Ghost: Minimal, no border
         ghost: "bg-transparent hover:bg-interactive-hover text-secondary border border-transparent",
-        danger: "bg-[#dc2626] text-white hover:bg-[#b91c1c] dark:bg-[#b91c1c] dark:hover:bg-[#991b1b] border border-transparent",
+        // Danger: Gradient red with glow (Pro Max)
+        danger: "bg-gradient-to-b from-red-500 to-red-600 text-white shadow-md shadow-red-500/25 hover:shadow-lg hover:shadow-red-500/30 border border-transparent",
+        // Success: Gradient green with glow (Pro Max)
+        success: "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-md shadow-emerald-500/25 hover:shadow-lg hover:shadow-emerald-500/30 border border-transparent",
+        // Warning: Gradient amber with glow (Pro Max)
+        warning: "bg-gradient-to-b from-amber-400 to-amber-500 text-white shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/30 border border-transparent",
     };
 
     const sizes = {

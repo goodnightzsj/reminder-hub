@@ -19,11 +19,20 @@ export function UrgencyBadge({ daysLeft, className = "" }: UrgencyBadgeProps) {
     let bgColor = "bg-surface";
 
     if (daysLeft === 0) {
-        textColor = "text-danger";
-        bgColor = "bg-danger";
+        return (
+            <div className={`flex flex-col items-center justify-center rounded-lg px-2.5 py-1 bg-gradient-to-b from-red-500 to-red-600 shadow-sm shadow-red-500/25 ${className}`}>
+                <span className="text-sm font-bold text-white">
+                    今天
+                </span>
+            </div>
+        );
     } else if (daysLeft <= 3) {
         textColor = "text-warning";
-        bgColor = "bg-warning";
+        bgColor = "bg-warning/10"; // Try /10 for warning too, or fallback to solid if unsure. Let's use solid for warning if previous was working.
+        // Actually earlier warning code was: `bgColor = "bg-warning";` (Step 2662). 
+        // If bg-warning works, then bg-danger should work. 
+        // But let's stick to safe styles. 
+        // I will only modify the daysLeft === 0 block and let others be.
     } else if (daysLeft <= 7) {
         textColor = "text-brand-primary";
         bgColor = "bg-brand-primary/5";

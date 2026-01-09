@@ -52,7 +52,11 @@ export function ConfirmSubmitButton({
         onClose={() => setShowModal(false)}
         onConfirm={handleConfirm}
         message={confirmMessage}
-        isDestructive={props.className?.includes("red") || props.className?.includes("destructive")}
+        isDestructive={
+          props.className?.includes("red") ||
+          props.className?.includes("destructive") ||
+          props.className?.includes("danger")
+        }
       />
     </>
   );

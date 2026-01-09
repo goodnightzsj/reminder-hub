@@ -41,7 +41,7 @@ export function MainNav() {
                                 "relative whitespace-nowrap px-3 py-2 text-xs font-medium transition-all duration-200 active-press",
                                 "rounded-lg hover:bg-interactive-hover",
                                 isActive
-                                    ? "text-brand-primary bg-surface font-semibold"
+                                    ? "text-gradient-brand bg-surface font-semibold"
                                     : "text-secondary hover:text-primary"
                             )}
                         >

@@ -3,145 +3,254 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Brand Colors - Classic Blue (Pro Tool) */
-  --color-brand-primary: #2563eb;
-  /* blue-600 */
-  --color-brand-secondary: #4f46e5;
-  /* indigo-600 */
+  /* Brand colors - Tailwind uses --color-*, we reference --theme-* from each theme block */
+  --color-brand-primary: var(--theme-brand-primary);
+  --color-brand-secondary: var(--theme-brand-secondary);
+  --color-cta: var(--theme-cta);
 
-  /* Feature Colors */
-  --color-priority-high: #ef4444;
-  --color-priority-medium: #f59e0b;
-  --color-priority-low: #71717a;
+  /* Priority */
+  --color-priority-high: hsl(var(--destructive));
+  --color-priority-medium: hsl(var(--warning));
+  --color-priority-low: hsl(var(--muted-foreground));
+
+  /* Semantic Map */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  /* Accent colors - reference theme-specific values */
+  --color-accent: var(--theme-accent);
+  --color-accent-foreground: var(--theme-accent-foreground);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: var(--theme-ring);
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
 }
 
+/* ========================================
+   THEME SYSTEM: 8 Color Themes × Light/Dark
+   Default: ocean-blue
+   ======================================== */
+
+/* Base layout colors (shared by all themes in light mode) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-
-  /* UI Tokens */
-
-  /* UI Tokens */
-  --radius-card: 1rem;
-  /* 16px */
-  --radius-button: 0.5rem;
-  /* 8px */
-
-  /* === Semantic Color Tokens (Light Mode) === */
-
-  /* Backgrounds */
-  --bg-base: #ffffff;
-  --bg-surface: #f4f4f5;
-  /* zinc-100 */
-  --bg-elevated: #ffffff;
-  /* Cards, Modals */
-  --bg-interactive: transparent;
-  --bg-interactive-hover: rgba(0, 0, 0, 0.05);
-  --bg-danger: #fef2f2;
-  /* red-50 */
-  --bg-danger-hover: #fee2e2;
-  /* red-100 */
-  --bg-success: #f0fdf4;
-  /* green-50 */
-  --bg-success-hover: #dcfce7;
-  /* green-100 */
-  --bg-warning: #fffbeb;
-  /* amber-50 */
-  --bg-warning-hover: #fef3c7;
-  /* amber-100 */
-
-  /* Text */
-  --text-primary: #18181b;
-  /* zinc-900 */
-  --text-secondary: #52525b;
-  /* zinc-600 */
-  --text-muted: #a1a1aa;
-  /* zinc-400 */
-  --text-inverted: #ffffff;
-  --text-danger: #991b1b;
-  /* red-800 */
-  --text-success: #166534;
-  /* green-800 */
-  --text-warning: #92400e;
-  /* amber-800 */
-
-  /* Borders */
-  --border-default: rgba(0, 0, 0, 0.08);
-  --border-emphasis: rgba(0, 0, 0, 0.15);
-  --border-divider: rgba(0, 0, 0, 0.06);
-  --border-danger: #fecaca;
-  /* red-200 */
-  --border-success: #bbf7d0;
-  /* green-200 */
-  --border-warning: #fde68a;
-  /* amber-200 */
-
-  /* Glassmorphism */
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  --border-glass: rgba(255, 255, 255, 0.6);
-
-  color-scheme: light;
+  /* Modern Clean Light Mode */
+  --background: 240 10% 98%;
+  --foreground: 240 10% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 4%;
+  --primary: 240 6% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+  --success: 150 80% 35%;
+  --warning: 35 95% 55%;
+  --info: 210 90% 55%;
+  --cta: 24 95% 53%;
+  --cta-foreground: 0 0% 100%;
+  --radius: 0.75rem;
+  --bg-elevated: 0 0% 100%;
+  --bg-surface: 240 5% 97%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 240 10% 4%;
+  --sidebar-border: 240 6% 90%;
 }
 
-/* Data-driven dark mode (for next-themes) */
+/* === Theme 1: Ocean Blue (Default) === */
+:root,
+[data-theme="ocean-blue"] {
+  --brand-primary: 217 91% 60%;
+  --brand-secondary: 213 94% 68%;
+  --accent: 217 91% 95%;
+  --accent-foreground: 217 91% 60%;
+  --ring: 217 91% 60%;
+  /* Tailwind color tokens */
+  --theme-brand-primary: hsl(217 91% 60%);
+  --theme-brand-secondary: hsl(213 94% 68%);
+  --theme-accent: hsl(217 91% 95%);
+  --theme-accent-foreground: hsl(217 91% 60%);
+  --theme-ring: hsl(217 91% 60%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 2: Emerald Pro === */
+[data-theme="emerald"] {
+  --brand-primary: 160 84% 39%;
+  --brand-secondary: 158 64% 52%;
+  --accent: 160 84% 95%;
+  --accent-foreground: 160 84% 39%;
+  --ring: 160 84% 39%;
+  --theme-brand-primary: hsl(160 84% 39%);
+  --theme-brand-secondary: hsl(158 64% 52%);
+  --theme-accent: hsl(160 84% 95%);
+  --theme-accent-foreground: hsl(160 84% 39%);
+  --theme-ring: hsl(160 84% 39%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 3: Notion Gray === */
+/* Using accent brown/orange as primary for better visibility */
+[data-theme="notion-gray"] {
+  --brand-primary: 32 30% 45%;
+  --brand-secondary: 32 25% 55%;
+  --accent: 32 95% 92%;
+  --accent-foreground: 32 95% 44%;
+  --ring: 32 30% 45%;
+  --theme-brand-primary: hsl(32 30% 45%);
+  --theme-brand-secondary: hsl(32 25% 55%);
+  --theme-accent: hsl(32 95% 92%);
+  --theme-accent-foreground: hsl(32 95% 44%);
+  --theme-ring: hsl(32 30% 45%);
+  --theme-cta: hsl(32 95% 50%);
+}
+
+/* === Theme 4: Todoist Zeus === */
+/* Using warm olive/moss green accent */
+[data-theme="todoist-zeus"] {
+  --brand-primary: 78 45% 40%;
+  --brand-secondary: 78 40% 50%;
+  --accent: 78 60% 92%;
+  --accent-foreground: 78 60% 35%;
+  --ring: 78 45% 40%;
+  --theme-brand-primary: hsl(78 45% 40%);
+  --theme-brand-secondary: hsl(78 40% 50%);
+  --theme-accent: hsl(78 60% 92%);
+  --theme-accent-foreground: hsl(78 60% 35%);
+  --theme-ring: hsl(78 45% 40%);
+  --theme-cta: hsl(78 60% 45%);
+}
+
+/* === Theme 5: TickTick Teal === */
+[data-theme="ticktick-teal"] {
+  --brand-primary: 174 72% 40%;
+  --brand-secondary: 187 72% 45%;
+  --accent: 174 72% 92%;
+  --accent-foreground: 174 72% 40%;
+  --ring: 174 72% 40%;
+  --theme-brand-primary: hsl(174 72% 40%);
+  --theme-brand-secondary: hsl(187 72% 45%);
+  --theme-accent: hsl(174 72% 92%);
+  --theme-accent-foreground: hsl(174 72% 40%);
+  --theme-ring: hsl(174 72% 40%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 6: Fintech Gold === */
+/* Gold as primary color for luxury feel */
+[data-theme="fintech-gold"] {
+  --brand-primary: 45 93% 47%;
+  --brand-secondary: 38 90% 50%;
+  --accent: 45 93% 90%;
+  --accent-foreground: 45 93% 35%;
+  --ring: 45 93% 47%;
+  --cta: 45 93% 47%;
+  --theme-brand-primary: hsl(45 93% 47%);
+  --theme-brand-secondary: hsl(38 90% 50%);
+  --theme-accent: hsl(45 93% 90%);
+  --theme-accent-foreground: hsl(45 93% 35%);
+  --theme-ring: hsl(45 93% 47%);
+  --theme-cta: hsl(45 93% 47%);
+}
+
+/* === Theme 7: Peach Fuzz === */
+[data-theme="peach-fuzz"] {
+  --brand-primary: 24 73% 67%;
+  --brand-secondary: 15 86% 73%;
+  --accent: 24 73% 95%;
+  --accent-foreground: 24 73% 50%;
+  --ring: 24 73% 67%;
+  --theme-brand-primary: hsl(24 73% 67%);
+  --theme-brand-secondary: hsl(15 86% 73%);
+  --theme-accent: hsl(24 73% 95%);
+  --theme-accent-foreground: hsl(24 73% 50%);
+  --theme-ring: hsl(24 73% 67%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 8: Aurora Gradient === */
+[data-theme="aurora"] {
+  --brand-primary: 210 100% 50%;
+  --brand-secondary: 328 100% 54%;
+  --accent: 180 100% 92%;
+  --accent-foreground: 180 100% 35%;
+  --ring: 210 100% 50%;
+  --theme-brand-primary: hsl(210 100% 50%);
+  --theme-brand-secondary: hsl(328 100% 54%);
+  --theme-accent: hsl(180 100% 92%);
+  --theme-accent-foreground: hsl(180 100% 35%);
+  --theme-ring: hsl(210 100% 50%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Deep Blue/Black Theme */
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
 
-  /* === Semantic Color Tokens (Dark Mode) === */
+  --card: 240 10% 5%;
+  --card-foreground: 0 0% 98%;
 
-  /* Backgrounds */
-  --bg-base: #09090b;
-  --bg-surface: rgba(255, 255, 255, 0.04);
-  --bg-elevated: #18181b;
-  /* zinc-900 */
-  --bg-interactive: transparent;
-  --bg-interactive-hover: rgba(255, 255, 255, 0.06);
-  --bg-danger: rgba(69, 10, 10, 0.3);
-  /* red-950/30 */
-  --bg-danger-hover: rgba(69, 10, 10, 0.5);
-  /* red-950/50 */
-  --bg-success: rgba(5, 46, 22, 0.3);
-  /* green-950/30 */
-  --bg-success-hover: rgba(5, 46, 22, 0.5);
-  /* green-950/50 */
-  --bg-warning: rgba(69, 26, 3, 0.3);
-  /* amber-950/30 */
-  --bg-warning-hover: rgba(69, 26, 3, 0.5);
-  /* amber-950/50 */
+  --popover: 240 10% 5%;
+  --popover-foreground: 0 0% 98%;
 
-  /* Glassmorphism */
-  --bg-glass: rgba(24, 24, 27, 0.6);
-  /* zinc-900/60 */
-  --border-glass: rgba(255, 255, 255, 0.1);
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 6% 10%;
 
-  /* Text */
-  --text-primary: #fafafa;
-  /* zinc-50 */
-  --text-secondary: #a1a1aa;
-  /* zinc-400 */
-  --text-muted: #71717a;
-  /* zinc-500 */
-  --text-inverted: #18181b;
-  --text-danger: #fee2e2;
-  /* red-100 */
-  --text-success: #dcfce7;
-  /* green-100 */
-  --text-warning: #fef3c7;
-  /* amber-100 */
+  --secondary: 240 4% 12%;
+  --secondary-foreground: 0 0% 98%;
 
-  /* Borders */
-  --border-default: rgba(255, 255, 255, 0.145);
-  --border-emphasis: rgba(255, 255, 255, 0.25);
-  --border-divider: rgba(255, 255, 255, 0.08);
-  --border-danger: rgba(127, 29, 29, 0.4);
-  /* red-900/40 */
-  --border-success: rgba(20, 83, 45, 0.4);
-  /* green-900/40 */
-  --border-warning: rgba(120, 53, 15, 0.4);
-  /* amber-900/40 */
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 85%;
+  /* Brighten from 65% to 85% for better contrast */
 
-  color-scheme: dark;
+  --accent: 250 40% 15%;
+  /* Dark violet tint */
+  --accent-foreground: 250 90% 75%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 250 95% 64%;
+
+  /* CTA in dark mode - slightly brighter orange */
+  --cta: 24 100% 55%;
+  --cta-foreground: 0 0% 100%;
+
+  --bg-elevated: 240 4% 8%;
+  --bg-surface: 240 4% 6%;
+
+  --sidebar: 240 4% 5%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 240 4% 16%;
 }
 
 @utility hide-scrollbar {
@@ -153,117 +262,231 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.015em;
+  /* Tighter tracking for modern feel */
 }
 
 /* === Semantic Utility Classes === */
+@layer utilities {
+  .bg-base {
+    background-color: hsl(var(--background));
+  }
 
-@utility bg-base {
-  background-color: var(--bg-base);
+  .bg-surface {
+    background-color: hsl(var(--bg-surface));
+  }
+
+  .bg-elevated {
+    background-color: hsl(var(--bg-elevated));
+    border: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .text-primary {
+    color: hsl(var(--foreground));
+  }
+
+  .text-secondary {
+    color: hsl(240 4% 35%);
+  }
+
+  .dark .text-secondary {
+    color: hsl(240 5% 75%);
+  }
+
+  .text-muted {
+    color: hsl(240 4% 45%);
+  }
+
+  .dark .text-muted {
+    color: hsl(240 5% 65%);
+  }
+
+  .text-inverted {
+    color: white;
+  }
+
+  .text-success {
+    color: hsl(var(--success));
+  }
+
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+
+  .bg-interactive-hover {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+
+  /* CTA (Call-to-Action) Button Styles */
+  .bg-cta {
+    background-color: hsl(var(--cta));
+  }
+
+  .text-cta {
+    color: hsl(var(--cta));
+  }
+
+  .text-cta-foreground {
+    color: hsl(var(--cta-foreground));
+  }
+
+  .border-cta {
+    border-color: hsl(var(--cta));
+  }
+
+  .btn-cta {
+    background-color: hsl(var(--cta));
+    color: hsl(var(--cta-foreground));
+    transition: all 0.2s ease;
+  }
+
+  .btn-cta:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 12px hsl(var(--cta) / 0.3);
+  }
+
+  .border-default {
+    border-color: hsl(var(--border) / 0.8);
+  }
+
+  .border-divider {
+    border-color: hsl(var(--border) / 0.5);
+  }
+
+  /* === Glassmorphism v2.0 === */
+  .bg-glass {
+    background-color: hsl(var(--card));
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  .border-glass {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* === Badge Styles === */
+  /* Priority: Low - Neutral/Gray */
+  .badge-priority-low {
+    background-color: hsl(240 4% 90%) !important;
+    color: hsl(240 4% 45%) !important;
+    border-color: transparent !important;
+  }
+
+  .dark .badge-priority-low {
+    background-color: hsl(240 4% 20%) !important;
+    color: hsl(240 5% 65%) !important;
+  }
+
+  /* Priority: Medium - Orange */
+  .badge-priority-medium {
+    background-color: hsl(35 95% 90%) !important;
+    color: hsl(35 95% 40%) !important;
+    border-color: hsl(35 95% 70%) !important;
+  }
+
+  .dark .badge-priority-medium {
+    background-color: hsl(35 80% 20%) !important;
+    color: hsl(35 95% 65%) !important;
+    border-color: hsl(35 80% 40%) !important;
+  }
+
+  /* Priority: High - Red */
+  .badge-priority-high {
+    background-color: hsl(0 84% 92%) !important;
+    color: hsl(0 84% 50%) !important;
+    border-color: hsl(0 84% 80%) !important;
+  }
+
+  .dark .badge-priority-high {
+    background-color: hsl(0 63% 20%) !important;
+    color: hsl(0 84% 70%) !important;
+    border-color: hsl(0 63% 40%) !important;
+  }
+
+  /* Category: Personal - Blue */
+  .badge-category-personal {
+    background-color: hsl(210 90% 92%) !important;
+    color: hsl(210 90% 40%) !important;
+    border-color: hsl(210 90% 80%) !important;
+  }
+
+  .dark .badge-category-personal {
+    background-color: hsl(210 80% 20%) !important;
+    color: hsl(210 90% 70%) !important;
+    border-color: hsl(210 80% 40%) !important;
+  }
+
+  /* Category: Work - Purple */
+  .badge-category-work {
+    background-color: hsl(270 70% 92%) !important;
+    color: hsl(270 70% 45%) !important;
+    border-color: hsl(270 70% 80%) !important;
+  }
+
+  .dark .badge-category-work {
+    background-color: hsl(270 60% 20%) !important;
+    color: hsl(270 70% 70%) !important;
+    border-color: hsl(270 60% 40%) !important;
+  }
+
+  /* Category: Life - Green */
+  .badge-category-life {
+    background-color: hsl(150 70% 90%) !important;
+    color: hsl(150 70% 35%) !important;
+    border-color: hsl(150 70% 75%) !important;
+  }
+
+  .dark .badge-category-life {
+    background-color: hsl(150 60% 18%) !important;
+    color: hsl(150 70% 65%) !important;
+    border-color: hsl(150 60% 35%) !important;
+  }
 }
 
-@utility bg-surface {
-  background-color: var(--bg-surface);
+/* === Mesh Gradients === */
+@utility bg-mesh-gradient {
+  background-image: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
 }
 
-@utility bg-elevated {
-  background-color: var(--bg-elevated);
+.dark .bg-mesh-gradient {
+  /* Subtle dark mesh */
+  background-image: radial-gradient(circle at 50% 0%, hsl(var(--brand-primary) / 0.15), transparent 70%);
 }
 
-@utility bg-interactive {
-  background-color: var(--bg-interactive);
-}
-
-@utility bg-interactive-hover {
-  background-color: var(--bg-interactive-hover);
-}
-
-@utility text-primary {
-  color: var(--text-primary);
-}
-
-@utility text-secondary {
-  color: var(--text-secondary);
-}
-
-@utility text-muted {
-  color: var(--text-muted);
-}
-
-@utility text-inverted {
-  color: var(--text-inverted);
-}
-
-@utility border-default {
-  border-color: var(--border-default);
-}
-
-@utility border-emphasis {
-  border-color: var(--border-emphasis);
-}
-
-@utility border-divider {
-  border-color: var(--border-divider);
+/* === Status Utilities === */
+@utility text-danger {
+  color: hsl(var(--destructive));
 }
 
 @utility bg-danger {
-  background-color: var(--bg-danger);
-}
-
-@utility bg-danger-hover {
-  background-color: var(--bg-danger-hover);
-}
-
-@utility text-danger {
-  color: var(--text-danger);
+  background-color: hsl(var(--destructive));
 }
 
 @utility border-danger {
-  border-color: var(--border-danger);
+  border-color: hsl(var(--destructive) / 0.5);
 }
 
-@utility bg-success {
-  background-color: var(--bg-success);
-}
-
-@utility bg-success-hover {
-  background-color: var(--bg-success-hover);
-}
-
-@utility text-success {
-  color: var(--text-success);
-}
-
-@utility border-success {
-  border-color: var(--border-success);
-}
-
-@utility bg-warning {
-  background-color: var(--bg-warning);
-}
-
-@utility bg-warning-hover {
-  background-color: var(--bg-warning-hover);
-}
-
-@utility text-warning {
-  color: var(--text-warning);
-}
-
-@utility border-warning {
-  border-color: var(--border-warning);
-}
-
-@utility bg-glass {
-  background-color: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-@utility border-glass {
-  border-color: var(--border-glass);
+/* === Gradient Text Effect === */
+@utility text-gradient-brand {
+  background: linear-gradient(135deg, var(--theme-brand-primary), var(--theme-brand-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* === Stagger Animation Delays === */
@@ -287,11 +510,11 @@ body {
   animation-delay: 250ms;
 }
 
-/* === Slide Up Animation === */
+/* === Animations === */
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
   }
 
   to {
@@ -301,10 +524,9 @@ body {
 }
 
 @utility animate-slide-up {
-  animation: slide-up 0.3s ease-out both;
+  animation: slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* === Fade In Animation === */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -316,7 +538,23 @@ body {
 }
 
 @utility animate-fade-in {
-  animation: fade-in 0.4s ease-out both;
+  animation: fade-in 0.5s ease-out both;
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@utility animate-zoom-in {
+  animation: zoom-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 /* === Safe Area Utilities === */
@@ -328,38 +566,19 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* === Zoom In Animation === */
-@keyframes zoom-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@utility animate-zoom-in {
-  animation: zoom-in 0.2s ease-out both;
-}
-
-/* === Hover & Active Micro-interactions === */
+/* === Micro-interactions === */
 @utility hover-float {
-  transition-property: transform, box-shadow;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
   }
 }
 
 @utility active-press {
   &:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
     transition: transform 0.1s;
   }
 }
@@ -367,5 +586,26 @@ body {
 /* === Global Form Elements Polish === */
 input[type="checkbox"],
 input[type="radio"] {
-  @apply transition-transform active:scale-90 cursor-pointer;
+  @apply transition-transform active:scale-90 cursor-pointer accent-[hsl(var(--brand-primary))];
+}
+
+/* === Accessibility: Reduced Motion === */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hover-float:hover {
+    transform: none;
+  }
+
+  .active-press:active {
+    transform: none;
+  }
 }

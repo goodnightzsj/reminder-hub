@@ -8,10 +8,10 @@ export const todos = sqliteTable("todos", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  taskType: text("task_type").notNull().default("personal"),
+  taskType: text("task_type").notNull().default("个人"),
   priority: text("priority", { enum: todoPriorityValues })
     .notNull()
-    .default("medium"),
+    .default("low"),
   tags: text("tags").notNull().default("[]"),
   dueAt: integer("due_at", { mode: "timestamp_ms" }),
   reminderOffsetsMinutes: text("reminder_offsets_minutes")
@@ -26,6 +26,7 @@ export const todos = sqliteTable("todos", {
     .notNull()
     .default(false),
   archivedAt: integer("archived_at", { mode: "timestamp_ms" }),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),
@@ -115,6 +116,7 @@ export const subscriptions = sqliteTable("subscriptions", {
     .notNull()
     .default(false),
   archivedAt: integer("archived_at", { mode: "timestamp_ms" }),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),
@@ -136,6 +138,7 @@ export const items = sqliteTable("items", {
   status: text("status", { enum: itemStatusValues }).notNull().default("using"),
   usageCount: integer("usage_count").notNull().default(0),
   targetDailyCostCents: integer("target_daily_cost_cents"),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),
@@ -150,7 +153,7 @@ export const anniversaryCategoryValues = [
   "festival",
   "custom",
 ] as const;
-export type AnniversaryCategory = (typeof anniversaryCategoryValues)[number];
+export type AnniversaryCategory = string;
 
 export const anniversaryDateTypeValues = ["solar", "lunar"] as const;
 export type AnniversaryDateType = (typeof anniversaryDateTypeValues)[number];
@@ -158,9 +161,7 @@ export type AnniversaryDateType = (typeof anniversaryDateTypeValues)[number];
 export const anniversaries = sqliteTable("anniversaries", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
-  category: text("category", { enum: anniversaryCategoryValues })
-    .notNull()
-    .default("anniversary"),
+  category: text("category").notNull().default("anniversary"),
   dateType: text("date_type", { enum: anniversaryDateTypeValues })
     .notNull()
     .default("solar"),
@@ -173,6 +174,7 @@ export const anniversaries = sqliteTable("anniversaries", {
     .notNull()
     .default(false),
   archivedAt: integer("archived_at", { mode: "timestamp_ms" }),
+  deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),

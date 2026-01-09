@@ -41,6 +41,16 @@ export function ConfirmModal({
         };
     }, [isOpen]);
 
+    // Handle ESC key to close modal
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, onClose]);
+
     if (!mounted || !isOpen) return null;
 
     return createPortal(
@@ -52,16 +62,29 @@ export function ConfirmModal({
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-sm transform overflow-hidden rounded-2xl border border-default bg-elevated p-6 shadow-2xl transition-all animate-zoom-in">
-                <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-primary">{title}</h3>
-                    <p className="mt-2 text-sm text-secondary">{message}</p>
+            <div className={`relative w-full max-w-sm mx-4 transform overflow-hidden rounded-2xl border bg-elevated p-6 shadow-2xl transition-all animate-zoom-in ${isDestructive ? "border-danger/30" : "border-default"}`}>
+                <div className="flex flex-col items-center gap-4 text-center">
+                    {isDestructive && (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger animate-in zoom-in duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+                        </div>
+                    )}
+
+                    <div className="space-y-1">
+                        <h3 className={`text-lg font-bold tracking-tight ${isDestructive ? "text-danger" : "text-primary"}`}>
+                            {title}
+                        </h3>
+                        <p className="text-sm font-medium text-secondary">
+                            {message}
+                        </p>
+                    </div>
                 </div>
 
-                <div className="flex justify-end gap-3">
+                <div className="mt-8 flex gap-3">
                     <Button
                         variant="ghost"
                         onClick={onClose}
+                        className="flex-1"
                     >
                         {cancelLabel}
                     </Button>
@@ -71,6 +94,7 @@ export function ConfirmModal({
                             onConfirm();
                             onClose();
                         }}
+                        className={`flex-1 ${isDestructive ? "shadow-lg shadow-danger/20" : ""}`}
                     >
                         {confirmLabel}
                     </Button>

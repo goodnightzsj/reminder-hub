@@ -1,9 +1,12 @@
-import { and, asc, desc, eq, ne, isNotNull } from "drizzle-orm";
-import Link from "next/link";
+import { and, asc, desc, eq, ne, isNotNull, isNull, isNotNull as isNotNull_alias, type SQL } from "drizzle-orm"; // Avoid conflict if any, but they are distinct
+
+import { SegmentedControl } from "@/app/_components/SegmentedControl";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
+import { ItemList } from "@/app/_components/items/ItemList";
 import { EmptyState } from "@/app/_components/EmptyState";
+import { CreateModal } from "@/app/_components/CreateModal";
 import { createItem, deleteItem, setItemStatus } from "@/app/_actions/items";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { diffDays, formatDateString, getDatePartsInTimeZone, parseDateString } from "@/server/date";
@@ -13,7 +16,8 @@ import { items } from "@/server/db/schema";
 
 export const dynamic = "force-dynamic";
 
-type ItemFilter = "active" | "using" | "idle" | "retired" | "all";
+
+
 
 type ItemsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -28,96 +32,107 @@ function getParam(
   return null;
 }
 
-function parseFilter(raw: string | null): ItemFilter {
-  if (raw === "active") return "active";
-  if (raw === "using") return "using";
-  if (raw === "idle") return "idle";
-  if (raw === "retired") return "retired";
-  if (raw === "all") return "all";
-  return "active";
-}
-
-
-
-function formatMoneyCents(priceCents: number, currency: string): string {
-  const value = priceCents / 100;
-  try {
-    return new Intl.NumberFormat("zh-CN", {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `${value.toFixed(2)} ${currency}`;
-  }
-}
-
 function computeDaysUsed(purchasedDate: string | null, today: string): number | null {
   if (!purchasedDate) return null;
-  if (!parseDateString(purchasedDate)) return null;
   const diff = diffDays(purchasedDate, today);
   if (diff === null) return null;
   if (diff < 0) return null;
   return diff + 1;
 }
 
-const statusLabel = {
-  using: "使用中",
-  idle: "闲置",
-  retired: "淘汰",
-} as const;
+type ItemFilter = "active" | "using" | "idle" | "retired" | "all" | "trash";
+
+function parseFilter(raw: string | null): ItemFilter {
+  if (raw === "active") return "active";
+  if (raw === "using") return "using";
+  if (raw === "idle") return "idle";
+  if (raw === "retired") return "retired";
+  if (raw === "all") return "all";
+  if (raw === "trash") return "trash";
+  return "using";
+}
+
+// ... 
 
 export default async function ItemsPage({ searchParams }: ItemsPageProps) {
-  /* imports need updatin but replace_file_content handles the block... wait, I need to update imports first or I can do it all in one go if I rewrite the top file? No, I'll update imports separately. */
-  /* Actually, I will update the logic block first. */
+  // ... imports logic check
 
   const params = (await searchParams) ?? {};
   const filter = parseFilter(getParam(params, "filter"));
   const categoryFilter = getParam(params, "category");
 
-  /* Helper to preserve other params */
   const buildHref = (f: ItemFilter, c: string | null) => {
     const p = new URLSearchParams();
-    if (f !== "active") p.set("filter", f);
+    if (f !== "using") p.set("filter", f);
     if (c) p.set("category", c);
     return p.toString().length > 0 ? `/items?${p.toString()}` : "/items";
   };
   const href = buildHref(filter, categoryFilter);
-  // We need to pass this buildHref logic to the view, or pre-calculate links.
 
   const settings = await getAppSettings();
   const timeZone = settings.timeZone;
   const today = formatDateString(getDatePartsInTimeZone(new Date(), timeZone));
 
   // Base filter condition
-  const statusCondition =
-    filter === "active"
-      ? ne(items.status, "retired")
-      : filter === "using"
-        ? eq(items.status, "using")
-        : filter === "idle"
-          ? eq(items.status, "idle")
-          : filter === "retired"
-            ? eq(items.status, "retired")
-            : undefined;
+  const baseWhere =
+    filter === "trash"
+      ? isNotNull(items.deletedAt)
+      : isNull(items.deletedAt);
+
+  let statusCondition: any = undefined;
+
+  if (filter === "active") {
+    statusCondition = ne(items.status, "retired");
+  } else if (filter === "using") {
+    statusCondition = eq(items.status, "using");
+  } else if (filter === "idle") {
+    statusCondition = eq(items.status, "idle");
+  } else if (filter === "retired") {
+    statusCondition = eq(items.status, "retired");
+  }
+
+  // Combine with baseWhere
+  let combinedWhere: SQL | undefined = baseWhere;
+  if (statusCondition) {
+    combinedWhere = and(baseWhere, statusCondition);
+  }
 
   // Category condition
   const categoryCondition = categoryFilter ? eq(items.category, categoryFilter) : undefined;
 
-  // Combine conditions
-  const where = statusCondition && categoryCondition
-    ? and(statusCondition, categoryCondition)
-    : statusCondition || categoryCondition;
+  // Final Where
+  let finalWhere: SQL | undefined = combinedWhere;
+  if (categoryCondition) {
+    finalWhere = and(finalWhere, categoryCondition);
+  }
 
-  const rows = await db.select().from(items).where(where || undefined).orderBy(asc(items.status), desc(items.createdAt));
+  // 废纸篓：按删除时间升序（先删除的在上面）
+  const orderByClause = filter === "trash"
+    ? [asc(items.deletedAt)]
+    : [asc(items.status), desc(items.createdAt)];
 
-  // Fetch unique categories for active items (or all items?) - let's fetch from all non-retired to be useful
+  const rows = await db.select().from(items).where(finalWhere).orderBy(...orderByClause);
+
+  // Build base where for categories (exclude category filter itself)
+  const categoryBasePredicates = [];
+  if (filter === "using") {
+    categoryBasePredicates.push(isNull(items.deletedAt), eq(items.status, "using"));
+  } else if (filter === "idle") {
+    categoryBasePredicates.push(isNull(items.deletedAt), eq(items.status, "idle"));
+  } else if (filter === "retired") {
+    categoryBasePredicates.push(isNull(items.deletedAt), eq(items.status, "retired"));
+  } else if (filter === "trash") {
+    categoryBasePredicates.push(isNotNull(items.deletedAt));
+  } else {
+    // Fallback or "all" (if it existed)
+    categoryBasePredicates.push(isNull(items.deletedAt));
+  }
+  const categoryBaseWhere = and(...categoryBasePredicates);
+
   const distinctCategories = await db
     .selectDistinct({ name: items.category })
     .from(items)
-    .where(and(isNotNull(items.category), ne(items.category, "")))
+    .where(and(isNotNull(items.category), ne(items.category, ""), categoryBaseWhere))
     .orderBy(items.category);
 
 
@@ -134,9 +149,12 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
           }
         />
 
-        <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <ItemCreateForm />
-        </section>
+
+
+        {/* Mobile Create Modal */}
+        <CreateModal title="新建物品">
+          <ItemCreateForm className="" />
+        </CreateModal>
 
         <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,208 +165,64 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
               </p>
             </div>
 
-            <nav className="flex flex-wrap gap-2 text-xs">
-              {(
-                [
-                  { key: "active", label: "进行中" },
-                  { key: "using", label: "使用中" },
-                  { key: "idle", label: "闲置" },
-                  { key: "retired", label: "淘汰" },
-                  { key: "all", label: "全部" },
-                ] as const
-              ).map((t) => (
-                <Link
-                  key={t.key}
-                  href={buildHref(t.key, categoryFilter)}
-                  className={[
-                    "rounded-lg border px-3 py-2 active-press",
-                    filter === t.key
-                      ? "border-brand-primary bg-brand-primary text-white"
-                      : "border-default hover:bg-interactive-hover",
-                  ].join(" ")}
-                >
-                  {t.label}
-                </Link>
-              ))}
-            </nav>
+            <SegmentedControl
+              options={[
+                { key: "using", label: "使用中", href: buildHref("using", categoryFilter) },
+                { key: "idle", label: "闲置", href: buildHref("idle", categoryFilter) },
+                { key: "retired", label: "淘汰", href: buildHref("retired", categoryFilter) },
+                { key: "trash", label: "回收站", href: buildHref("trash", categoryFilter) },
+              ]}
+              currentValue={filter}
+              layoutId="item-filter"
+            />
           </div>
 
-          {/* Category Filter Tags */}
+          {/* Category Filter SegmentedControl */}
           {distinctCategories.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2 border-t border-divider pt-3">
-              <Link
-                href={buildHref(filter, null)}
-                className={[
-                  "rounded-full px-3 py-1 text-[11px] font-medium transition-colors active-press",
-                  !categoryFilter
-                    ? "bg-brand-primary text-inverted"
-                    : "bg-surface text-secondary hover:bg-interactive-hover",
-                ].join(" ")}
-              >
-                全部
-              </Link>
-              {distinctCategories.map((c) => (
-                <Link
-                  key={c.name}
-                  href={buildHref(filter, c.name)}
-                  className={[
-                    "rounded-full px-3 py-1 text-[11px] font-medium transition-colors active-press",
-                    categoryFilter === c.name
-                      ? "bg-brand-primary text-inverted"
-                      : "bg-surface text-secondary hover:bg-interactive-hover",
-                  ].join(" ")}
-                >
-                  {c.name}
-                </Link>
-              ))}
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-divider pt-3 text-xs">
+              <span className="text-muted">分类</span>
+              <SegmentedControl
+                options={[
+                  { key: "all", label: "全部", href: buildHref(filter, null) },
+                  ...distinctCategories.map((c) => ({
+                    key: c.name!,
+                    label: c.name!,
+                    href: buildHref(filter, c.name),
+                  }))
+                ]}
+                currentValue={categoryFilter ?? "all"}
+                layoutId="item-category-filter"
+              />
             </div>
           )}
 
 
-          {rows.length === 0 ? (
+          <ItemList
+            items={rows.map((it) => {
+              const daysUsed = computeDaysUsed(it.purchasedDate, today);
+              const dailyCents =
+                typeof it.priceCents === "number" && typeof daysUsed === "number" && daysUsed > 0
+                  ? Math.round(it.priceCents / daysUsed)
+                  : null;
+              return { item: it, daysUsed, dailyCents };
+            })}
+            filter={filter}
+          />
+
+          {rows.length === 0 && (
             <div className="mt-4">
               <EmptyState
-                title="还没有物品"
-                description="点击上方添加按钮，记录你的物品成本与价值。"
+                title={
+                  filter === "trash"
+                    ? "回收站为空"
+                    : "还没有物品"
+                }
+                description={
+                  filter === "trash"
+                    ? "你的回收站很干净。"
+                    : "点击上方添加按钮，记录你的物品成本与价值。"
+                }
               />
-            </div>
-          ) : (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {rows.map((it, index) => {
-                const daysUsed = computeDaysUsed(it.purchasedDate, today);
-                const dailyCents =
-                  typeof it.priceCents === "number" && typeof daysUsed === "number" && daysUsed > 0
-                    ? Math.round(it.priceCents / daysUsed)
-                    : null;
-                const staggerClass = index < 5 ? `stagger-${index + 1}` : "";
-
-                return (
-                  <div
-                    key={it.id}
-                    className={`flex flex-col justify-between rounded-xl border border-default bg-elevated p-3 shadow-sm hover-float animate-slide-up ${staggerClass}`}
-                  >
-                    <div className="mb-4">
-                      <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                        <span className="rounded-md border border-divider bg-surface px-2 py-0.5">
-                          {statusLabel[it.status]}
-                        </span>
-                        {it.category ? (
-                          <span className="text-secondary">
-                            {it.category}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <Link
-                        href={`/items/${it.id}`}
-                        className="block truncate text-base font-semibold text-primary hover:underline"
-                        title={it.name}
-                      >
-                        {it.name}
-                      </Link>
-
-                      <div className="mt-2 space-y-1 text-xs text-muted">
-                        {it.purchasedDate ? <div>购入 {it.purchasedDate}</div> : null}
-                        {typeof it.priceCents === "number" ? (
-                          <div>
-                            总价 {formatMoneyCents(it.priceCents, it.currency)}
-                          </div>
-                        ) : null}
-                        {dailyCents !== null ? (
-                          <div>
-                            日均 {formatMoneyCents(dailyCents, it.currency)}
-                            {typeof daysUsed === "number" ? `（${daysUsed} 天）` : ""}
-                          </div>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 border-t border-divider pt-3">
-                      {it.status === "using" ? (
-                        <>
-                          <form action={setItemStatus}>
-                            <input type="hidden" name="id" value={it.id} />
-                            <input type="hidden" name="status" value="idle" />
-                            <input type="hidden" name="redirectTo" value={href} />
-                            <button
-                              type="submit"
-                              className="h-8 rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                            >
-                              闲置
-                            </button>
-                          </form>
-                          <form action={setItemStatus}>
-                            <input type="hidden" name="id" value={it.id} />
-                            <input type="hidden" name="status" value="retired" />
-                            <input type="hidden" name="redirectTo" value={href} />
-                            <button
-                              type="submit"
-                              className="h-8 rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                            >
-                              淘汰
-                            </button>
-                          </form>
-                        </>
-                      ) : it.status === "idle" ? (
-                        <>
-                          <form action={setItemStatus}>
-                            <input type="hidden" name="id" value={it.id} />
-                            <input type="hidden" name="status" value="using" />
-                            <input type="hidden" name="redirectTo" value={href} />
-                            <button
-                              type="submit"
-                              className="h-8 rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                            >
-                              使用中
-                            </button>
-                          </form>
-                          <form action={setItemStatus}>
-                            <input type="hidden" name="id" value={it.id} />
-                            <input type="hidden" name="status" value="retired" />
-                            <input type="hidden" name="redirectTo" value={href} />
-                            <button
-                              type="submit"
-                              className="h-8 rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                            >
-                              淘汰
-                            </button>
-                          </form>
-                        </>
-                      ) : (
-                        <form action={setItemStatus}>
-                          <input type="hidden" name="id" value={it.id} />
-                          <input type="hidden" name="status" value="using" />
-                          <input type="hidden" name="redirectTo" value={href} />
-                          <button
-                            type="submit"
-                            className="h-8 rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                          >
-                            恢复
-                          </button>
-                        </form>
-                      )}
-
-                      <Link
-                        href={`/items/${it.id}`}
-                        className="flex h-8 items-center rounded-md border border-default px-2 text-[11px] font-medium hover:bg-interactive-hover active-press"
-                      >
-                        查看
-                      </Link>
-
-                      <form action={deleteItem}>
-                        <input type="hidden" name="id" value={it.id} />
-                        <input type="hidden" name="redirectTo" value={href} />
-                        <ConfirmSubmitButton
-                          confirmMessage="确定删除这个物品吗？此操作不可撤销。"
-                          className="h-8 rounded-md border border-danger/30 px-2 text-[11px] font-medium text-danger hover:bg-danger hover:text-danger-foreground active-press"
-                        >
-                          删除
-                        </ConfirmSubmitButton>
-                      </form>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           )}
         </section>

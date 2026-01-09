@@ -128,7 +128,7 @@ export async function updateItem(formData: FormData) {
 
   revalidatePath("/items");
   revalidatePath(`/items/${id}`);
-  redirect(`/items/${id}?saved=1`);
+  redirect("/items?action=updated");
 }
 
 export async function setItemStatus(formData: FormData) {
@@ -148,16 +148,48 @@ export async function setItemStatus(formData: FormData) {
   if (redirectTo) redirect(redirectTo);
 }
 
+
 export async function deleteItem(formData: FormData) {
   const id = parseStringField(formData, "id");
   if (!id) return;
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  await db.delete(items).where(eq(items.id, id));
+  const existing = await db.select({ deletedAt: items.deletedAt }).from(items).where(eq(items.id, id)).get();
+  if (!existing) return;
+
+  if (existing.deletedAt) {
+    await db.delete(items).where(eq(items.id, id));
+  } else {
+    await db.update(items).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(items.id, id));
+  }
 
   revalidatePath("/items");
   revalidatePath(`/items/${id}`);
-  if (redirectTo) redirect(redirectTo);
+
+  // Naive separator check
+  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+
+  if (redirectTo && existing.deletedAt) {
+      redirect(`${redirectTo}${sep}action=deleted`);
+  } else if (existing.deletedAt === null) {
+      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
+  }
 }
+
+export async function restoreItem(formData: FormData) {
+    const id = parseStringField(formData, "id");
+    if (!id) return;
+    const redirectTo = parseRedirectToField(formData, "redirectTo");
+
+    await db.update(items).set({ deletedAt: null, updatedAt: new Date() }).where(eq(items.id, id));
+
+    revalidatePath("/items");
+    revalidatePath(`/items/${id}`);
+    
+    // Naive separator check
+    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
+}
+
 

@@ -116,7 +116,7 @@ export async function createSubscription(formData: FormData) {
     120,
     parsePositiveIntField(formData, "cycleInterval", 1),
   );
-  const autoRenew = parseBooleanField(formData, "autoRenew") ?? true;
+  const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
   const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
 
   await db.insert(subscriptions).values({
@@ -150,7 +150,7 @@ export async function updateSubscription(formData: FormData) {
     120,
     parsePositiveIntField(formData, "cycleInterval", 1),
   );
-  const autoRenew = parseBooleanField(formData, "autoRenew") ?? true;
+  const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
   const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
 
   await db
@@ -171,7 +171,7 @@ export async function updateSubscription(formData: FormData) {
 
   revalidatePath("/subscriptions");
   revalidatePath(`/subscriptions/${id}`);
-  redirect(`/subscriptions/${id}?saved=1`);
+  redirect("/subscriptions?action=updated");
 }
 
 export async function setSubscriptionArchived(formData: FormData) {
@@ -231,15 +231,47 @@ export async function renewSubscription(formData: FormData) {
   if (redirectTo) redirect(redirectTo);
 }
 
+
 export async function deleteSubscription(formData: FormData) {
   const id = parseStringField(formData, "id");
   if (!id) return;
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  await db.delete(subscriptions).where(eq(subscriptions.id, id));
+  const existing = await db.select({ deletedAt: subscriptions.deletedAt }).from(subscriptions).where(eq(subscriptions.id, id)).get();
+  if (!existing) return;
+
+  if (existing.deletedAt) {
+    await db.delete(subscriptions).where(eq(subscriptions.id, id));
+  } else {
+    await db.update(subscriptions).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(subscriptions.id, id));
+  }
 
   revalidatePath("/subscriptions");
   revalidatePath(`/subscriptions/${id}`);
-  if (redirectTo) redirect(redirectTo);
+  
+  // Naive separator check
+  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+
+  if (redirectTo && existing.deletedAt) {
+      redirect(`${redirectTo}${sep}action=deleted`);
+  } else if (existing.deletedAt === null) {
+      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
+  }
 }
+
+export async function restoreSubscription(formData: FormData) {
+    const id = parseStringField(formData, "id");
+    if (!id) return;
+    const redirectTo = parseRedirectToField(formData, "redirectTo");
+
+    await db.update(subscriptions).set({ deletedAt: null, updatedAt: new Date() }).where(eq(subscriptions.id, id));
+
+    revalidatePath("/subscriptions");
+    revalidatePath(`/subscriptions/${id}`);
+    
+    // Naive separator check
+    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
+}
+

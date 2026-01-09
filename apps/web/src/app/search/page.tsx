@@ -4,7 +4,9 @@ import Link from "next/link";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { Badge } from "@/app/_components/Badge";
 import { Button } from "@/app/_components/Button";
+import { Icons } from "@/app/_components/Icons";
 import { Input } from "@/app/_components/Input";
+import { ServiceIconBadge } from "@/app/_components/ServiceIconBadge";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
 import { anniversaries, items, subscriptions, todos } from "@/server/db/schema";
@@ -59,6 +61,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             isDone: todos.isDone,
             isArchived: todos.isArchived,
             createdAt: todos.createdAt,
+            priority: todos.priority,
           })
           .from(todos)
           .where(like(todos.title, pattern))
@@ -115,81 +118,87 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           description="跨 Todo / 纪念日 / 订阅 / 物品 的标题关键字搜索。"
         />
 
-        <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+        <section className="mb-8 rounded-xl border border-default bg-elevated p-4 shadow-sm">
           <form action="/search" method="GET" className="flex flex-col gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Input
-                name="q"
-                defaultValue={q}
-                placeholder="输入关键字…"
-                className="flex-1"
-              />
+              <div className="relative flex-1">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
+                  <Icons.Search className="h-5 w-5" />
+                </div>
+                <Input
+                  name="q"
+                  defaultValue={q}
+                  placeholder="搜索标题…"
+                  className="pl-10 h-11 text-base flex-1 w-full"
+                />
+              </div>
               <Button
                 type="submit"
                 variant="primary"
-                size="lg" // h-11
-                className="sm:self-end"
+                size="lg"
+                className="sm:w-24 h-11"
               >
                 搜索
               </Button>
             </div>
 
-            <p className="text-xs text-muted">
-              时区：<code className="font-mono">{timeZone}</code>
-              {q.length > 0 ? (
-                <>
-                  <span className="mx-2 text-secondary">·</span>结果 {total}
-                </>
-              ) : null}
-            </p>
+            <div className="flex items-center justify-end text-xs text-muted px-1">
+              {q.length > 0 && <span>结果 {total}</span>}
+            </div>
           </form>
         </section>
 
         {q.length === 0 ? (
-          <div className="rounded-xl border border-default bg-elevated p-4 text-sm text-secondary shadow-sm">
-            输入关键字开始搜索。
+          <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
+            <Icons.Search className="mb-4 h-12 w-12 opacity-20" />
+            <p>输入关键字开始搜索</p>
           </div>
         ) : total === 0 ? (
-          <div className="rounded-xl border border-default bg-elevated p-4 text-sm text-secondary shadow-sm">
-            没有找到匹配项。
+          <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
+            <Icons.Box className="mb-4 h-12 w-12 opacity-20" />
+            <p>没有找到匹配项</p>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-10">
             {todoRows.length > 0 ? (
               <section>
-                <h2 className="text-sm font-medium">Todo（{todoRows.length}）</h2>
-                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
+                  <Icons.Todo className="h-4 w-4" />
+                  Todo
+                  <Badge variant="default" className="ml-1">{todoRows.length}</Badge>
+                </h2>
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {todoRows.map((t, index) => (
                     <li
                       key={t.id}
-                      className={`flex items-start justify-between gap-3 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""
-                        }`}
+                      className={`group relative flex flex-col justify-between overflow-hidden rounded-xl bg-elevated p-4 transition-all hover:border-brand-primary/50 hover:shadow-md animate-slide-up ${index < 10 ? `stagger-${index + 1}` : ""}`}
                     >
-                      <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                          {t.isArchived ? <Badge>已归档</Badge> : null}
-                          {t.isDone ? (
-                            <Badge variant="success">已完成</Badge>
-                          ) : null}
-                          {t.dueAt ? (
-                            <span className="text-muted">
-                              截止 {formatDateTime(t.dueAt, timeZone)}
-                            </span>
-                          ) : null}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/todo/${t.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                            {t.title}
+                          </Link>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
+                            {t.priority === 'high' && <Badge variant="danger" className="px-1.5 py-0 text-[10px]">高优先级</Badge>}
+                            {t.priority === 'medium' && <Badge variant="warning" className="px-1.5 py-0 text-[10px]">中优先级</Badge>}
+                            {t.priority === 'low' && <Badge variant="success" className="px-1.5 py-0 text-[10px]">低优先级</Badge>}
+
+                            {t.isDone ? (
+                              <span className="text-success flex items-center gap-1"><Icons.Check className="h-3 w-3" /> 已完成</span>
+                            ) : t.dueAt ? (
+                              <span className="text-secondary">截止 {formatDateTime(t.dueAt, timeZone)}</span>
+                            ) : <span className="text-secondary">无截止日期</span>}
+
+                            {t.isArchived && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] border border-divider">归档</span>}
+                          </div>
                         </div>
                         <Link
                           href={`/todo/${t.id}`}
-                          className="truncate font-medium hover:underline"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          {t.title}
+                          <Icons.ChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
-                      <Link
-                        href={`/todo/${t.id}`}
-                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover active-press"
-                      >
-                        查看
-                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -198,37 +207,35 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {anniversaryRows.length > 0 ? (
               <section>
-                <h2 className="text-sm font-medium">
-                  纪念日（{anniversaryRows.length}）
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
+                  <Icons.Calendar className="h-4 w-4" />
+                  纪念日
+                  <Badge variant="default" className="ml-1">{anniversaryRows.length}</Badge>
                 </h2>
-                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {anniversaryRows.map((a, index) => (
                     <li
                       key={a.id}
-                      className={`flex items-start justify-between gap-3 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""
-                        }`}
+                      className={`group relative flex flex-col overflow-hidden rounded-xl bg-elevated p-4 transition-all hover:border-brand-primary/50 hover:shadow-md animate-slide-up ${index < 10 ? `stagger-${index + 1}` : ""}`}
                     >
-                      <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                          {a.isArchived ? <Badge>已归档</Badge> : null}
-                          <Badge>{a.dateType === "solar" ? "公历" : "农历"}</Badge>
-                          <span className="text-muted">
-                            {a.date}
-                          </span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/anniversaries/${a.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                            {a.title}
+                          </Link>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
+                            <Badge variant={a.dateType === "solar" ? "blue" : "purple"} className="px-1.5 py-0 text-[10px]">{a.dateType === "solar" ? "公历" : "农历"}</Badge>
+                            <span>{a.date}</span>
+                            {a.isArchived && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] border border-divider">归档</span>}
+                          </div>
                         </div>
                         <Link
                           href={`/anniversaries/${a.id}`}
-                          className="truncate font-medium hover:underline"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          {a.title}
+                          <Icons.ChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
-                      <Link
-                        href={`/anniversaries/${a.id}`}
-                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
-                      >
-                        查看
-                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -237,36 +244,37 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {subscriptionRows.length > 0 ? (
               <section>
-                <h2 className="text-sm font-medium">
-                  订阅（{subscriptionRows.length}）
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
+                  <Icons.CreditCard className="h-4 w-4" />
+                  订阅
+                  <Badge variant="default" className="ml-1">{subscriptionRows.length}</Badge>
                 </h2>
-                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {subscriptionRows.map((s, index) => (
                     <li
                       key={s.id}
-                      className={`flex items-start justify-between gap-3 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""
-                        }`}
+                      className={`group relative flex flex-col overflow-hidden rounded-xl bg-elevated p-4 transition-all hover:border-brand-primary/50 hover:shadow-md animate-slide-up ${index < 10 ? `stagger-${index + 1}` : ""}`}
                     >
-                      <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                          {s.isArchived ? <Badge>已归档</Badge> : null}
-                          <span className="text-muted">
-                            到期 {s.nextRenewDate}
-                          </span>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <ServiceIconBadge serviceName={s.name} size="sm" className="mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <Link href={`/subscriptions/${s.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                              {s.name}
+                            </Link>
+                            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
+                              <span>到期 {s.nextRenewDate}</span>
+                              {s.isArchived && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] border border-divider">归档</span>}
+                            </div>
+                          </div>
                         </div>
                         <Link
                           href={`/subscriptions/${s.id}`}
-                          className="truncate font-medium hover:underline"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          {s.name}
+                          <Icons.ChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
-                      <Link
-                        href={`/subscriptions/${s.id}`}
-                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
-                      >
-                        查看
-                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -275,36 +283,34 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {itemRows.length > 0 ? (
               <section>
-                <h2 className="text-sm font-medium">物品（{itemRows.length}）</h2>
-                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider text-sm">
+                <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
+                  <Icons.Box className="h-4 w-4" />
+                  物品
+                  <Badge variant="default" className="ml-1">{itemRows.length}</Badge>
+                </h2>
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {itemRows.map((it, index) => (
                     <li
                       key={it.id}
-                      className={`flex items-start justify-between gap-3 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""
-                        }`}
+                      className={`group relative flex flex-col overflow-hidden rounded-xl bg-elevated p-4 transition-all hover:border-brand-primary/50 hover:shadow-md animate-slide-up ${index < 10 ? `stagger-${index + 1}` : ""}`}
                     >
-                      <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                          <Badge>{itemStatusLabel[it.status]}</Badge>
-                          {it.purchasedDate ? (
-                            <span className="text-muted">
-                              购入 {it.purchasedDate}
-                            </span>
-                          ) : null}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <Link href={`/items/${it.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                            {it.name}
+                          </Link>
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
+                            <Badge variant={it.status === 'using' ? 'success' : it.status === 'idle' ? 'warning' : 'danger'} className="px-1.5 py-0 text-[10px]">{itemStatusLabel[it.status]}</Badge>
+                            {it.purchasedDate && <span className="text-secondary">购入 {it.purchasedDate}</span>}
+                          </div>
                         </div>
                         <Link
                           href={`/items/${it.id}`}
-                          className="truncate font-medium hover:underline"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          {it.name}
+                          <Icons.ChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
-                      <Link
-                        href={`/items/${it.id}`}
-                        className="shrink-0 rounded-lg border border-default px-3 py-2 text-xs font-medium hover:bg-interactive-hover hover-float active-press"
-                      >
-                        查看
-                      </Link>
                     </li>
                   ))}
                 </ul>

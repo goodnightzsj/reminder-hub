@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -133,7 +133,7 @@ export async function createTodo(formData: FormData) {
   if (!title) return;
 
   const description = parseStringField(formData, "description");
-  const taskType = parseStringField(formData, "taskType") ?? "personal";
+  const taskType = parseStringField(formData, "taskType") || "个人";
   const priority = parseTodoPriorityField(formData, "priority");
   const tags = parseTagsField(formData, "tags");
   const dueAtRaw = parseDateTimeLocalField(formData, "dueAt");
@@ -259,25 +259,61 @@ export async function toggleTodo(formData: FormData) {
   revalidatePath(`/todo/${id}`);
 }
 
+
 export async function deleteTodo(formData: FormData) {
   const id = parseStringField(formData, "id");
   if (!id) return;
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  db.transaction((tx) => {
-    const now = new Date();
+  const existing = await db.select({ deletedAt: todos.deletedAt }).from(todos).where(eq(todos.id, id)).get();
+  if (!existing) return;
 
-    tx.update(todos)
-      .set({ recurrenceNextId: null, updatedAt: now })
-      .where(eq(todos.recurrenceNextId, id))
-      .run();
-
-    tx.delete(todos).where(eq(todos.id, id)).run();
-  });
+  if (existing.deletedAt) {
+    // Hard Delete
+    db.transaction((tx) => {
+        const now = new Date();
+        tx.update(todos)
+        .set({ recurrenceNextId: null, updatedAt: now })
+        .where(eq(todos.recurrenceNextId, id))
+        .run();
+        tx.delete(todos).where(eq(todos.id, id)).run();
+    });
+  } else {
+    // Soft Delete
+    await db.update(todos).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(todos.id, id));
+  }
 
   revalidatePath("/");
+  revalidatePath("/todo");
   revalidatePath(`/todo/${id}`);
-  if (redirectTo) redirect(redirectTo);
+  
+  // Naive separator check
+  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+
+  if (redirectTo && existing.deletedAt) {
+      // If hard deleted and there's a redirect, go there (likely back to trash or list)
+      redirect(`${redirectTo}${sep}action=deleted`);
+  } else if (existing.deletedAt === null) {
+      // Soft deleted - we might stay on page if it's the list, or redirect if it was detail page.
+      // Usually if we soft delete from detail page, we go back to list?
+      // For now honor redirectTo if present.
+      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
+  }
+}
+
+export async function restoreTodo(formData: FormData) {
+    const id = parseStringField(formData, "id");
+    if (!id) return;
+    const redirectTo = parseRedirectToField(formData, "redirectTo");
+
+    await db.update(todos).set({ deletedAt: null, updatedAt: new Date() }).where(eq(todos.id, id));
+
+    revalidatePath("/");
+    revalidatePath(`/todo/${id}`);
+    
+    // Naive separator check
+    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
 }
 
 export async function updateTodo(formData: FormData) {
@@ -286,7 +322,7 @@ export async function updateTodo(formData: FormData) {
   if (!id || !title) return;
 
   const description = parseStringField(formData, "description");
-  const taskType = parseStringField(formData, "taskType") ?? "personal";
+  const taskType = parseStringField(formData, "taskType") || "个人";
   const priority = parseTodoPriorityField(formData, "priority");
   const tags = parseTagsField(formData, "tags");
   const dueAtRaw = parseDateTimeLocalField(formData, "dueAt");
@@ -335,7 +371,7 @@ export async function updateTodo(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath(`/todo/${id}`);
-  redirect(`/todo/${id}?saved=1`);
+  redirect("/todo?action=updated");
 }
 
 export async function setTodoArchived(formData: FormData) {
@@ -418,18 +454,30 @@ export async function updateSubtask(formData: FormData) {
  * Items earlier in the array will have newer timestamps (appear first in desc sort).
  */
 export async function reorderTodos(ids: string[]) {
-  const now = Date.now();
-  
-  // Update each todo's updatedAt based on position in the new order
-  for (let i = 0; i < ids.length; i++) {
-    await db
-      .update(todos)
-      .set({ updatedAt: new Date(now - i) }) // Decrement by 1ms per position
-      .where(eq(todos.id, ids[i]));
-  }
+  if (ids.length === 0) return;
+
+  const items = await db
+    .select({ id: todos.id, createdAt: todos.createdAt })
+    .from(todos)
+    .where(inArray(todos.id, ids));
+
+  // Sort timestamps descending (Newest first)
+  const timestamps = items.map((i) => i.createdAt).sort((a, b) => b.getTime() - a.getTime());
+
+  // Assign newest timestamps to the first IDs in the list (Top of list)
+  await db.transaction(async (tx) => {
+    const now = new Date();
+    for (let i = 0; i < ids.length; i++) {
+        if (i >= timestamps.length) break;
+        await tx
+            .update(todos)
+            .set({ createdAt: timestamps[i], updatedAt: now })
+            .where(eq(todos.id, ids[i]));
+    }
+  });
   
   revalidatePath("/todo");
-  revalidatePath("/dashboard");
+  revalidatePath("/");
 }
 
 /**

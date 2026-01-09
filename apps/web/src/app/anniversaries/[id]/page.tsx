@@ -2,11 +2,14 @@ import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/app/_components/Badge";
+import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
 import { Select } from "@/app/_components/Select";
+import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
+import { Icons } from "@/app/_components/Icons";
+import { ExpandableSearch } from "@/app/_components/ExpandableSearch";
 import {
   deleteAnniversary,
   setAnniversaryArchived,
@@ -42,12 +45,15 @@ const reminderOptionsDays = [
   { days: 30, label: "提前 30 天" },
 ] as const;
 
-const categoryLabels = {
+const categoryLabels: Record<string, string> = {
+  "生日": "生日",
+  "纪念日": "纪念日",
+  "节日": "节日",
   birthday: "生日",
   anniversary: "纪念日",
   festival: "节日",
   custom: "自定义",
-} as const;
+};
 
 function parseMonthDayString(value: string): { month: number; day: number } | null {
   const match = value.trim().match(/^(\d{1,2})-(\d{1,2})$/);
@@ -92,6 +98,8 @@ function formatDateTime(d: Date, timeZone: string) {
     timeZone,
   }).format(d);
 }
+
+
 
 export default async function AnniversaryDetailPage({
   params,
@@ -141,104 +149,96 @@ export default async function AnniversaryDetailPage({
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
-      <main className="mx-auto max-w-2xl p-6 sm:p-10">
-        <header className="mb-6 flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              纪念日详情
-            </h1>
-            <p className="mt-1 text-sm text-secondary">
-              提醒预览默认按 <code className="font-mono">{timeZone}</code>{" "}
-              的 <code className="font-mono">{dateReminderTime}</code>{" "}
-              计算；如在设置中开启通知，到点会按提醒规则发送。
-            </p>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
+      {/* 背景装饰 */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-secondary/5 rounded-full blur-[120px]" />
+      </div>
+
+      <main className="relative mx-auto max-w-4xl p-0 sm:p-0">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-divider bg-base/80 p-4 backdrop-blur-xl transition-all">
+          <div className="flex items-center gap-4">
             <Link
               href="/anniversaries"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
+              className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
             >
-              返回
+              <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Link>
-            <Link
-              href="/dashboard"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              仪表盘
-            </Link>
-            <Link
-              href="/subscriptions"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              订阅
-            </Link>
-            <Link
-              href="/items"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              物品
-            </Link>
-            <Link
-              href="/search"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              搜索
-            </Link>
-            <Link
-              href="/settings"
-              className="mt-0.5 rounded-lg border border-divider px-3 py-2 text-xs font-medium text-secondary hover:bg-interactive-hover hover-float"
-            >
-              设置
-            </Link>
-          </div>
-        </header>
-
-        {saved ? (
-          <div className="mb-4 rounded-xl border border-success bg-success p-3 text-sm text-success">
-            已保存。
-          </div>
-        ) : null}
-
-        <section className="mb-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">
-                {categoryLabels[item.category]}
-              </Badge>
-              <Badge variant="outline">
-                {item.dateType === "solar" ? "公历" : "农历"}
-              </Badge>
-              {item.isArchived ? (
-                <Badge>
-                  已归档
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-semibold text-primary">编辑纪念日</h1>
+                <Badge variant={getBadgeVariantFromLabel(item.category)} className="px-1.5 py-0 text-[10px]">
+                  {categoryLabels[item.category] || item.category}
                 </Badge>
-              ) : null}
+              </div>
+              <span className="text-xs text-muted font-mono">ID: {item.id.slice(0, 8)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              form="anniversary-edit-form"
+              className="h-9 px-4 rounded-lg bg-brand-primary text-xs font-medium text-white shadow-sm hover:bg-brand-primary/90 transition-all active:scale-95"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-8 animate-slide-up stagger-1 space-y-8">
+          {saved ? (
+            <div className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success animate-slide-up">
+              ✓ 已保存修改
+            </div>
+          ) : null}
+
+          {/* 状态概览 */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
+              <span className="text-xs text-muted">录入日期</span>
+              <div className="text-lg font-semibold font-mono">
+                {item.dateType === "solar"
+                  ? item.date
+                  : lunarMd
+                    ? `农历${item.isLeapMonth ? "闰" : ""}${lunarMd.month}月${lunarMd.day}日`
+                    : `农历${item.date}`}
+              </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <form action={setAnniversaryArchived}>
-                <input type="hidden" name="id" value={item.id} />
-                <input
-                  type="hidden"
-                  name="isArchived"
-                  value={item.isArchived ? "0" : "1"}
-                />
-                <Button
-                  type="submit"
-                  variant="outline"
-                  size="sm"
-                  className="h-9 active-press"
-                >
-                  {item.isArchived ? "取消归档" : "归档"}
-                </Button>
-              </form>
+            {nextDate && (
+              <div className="rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-4 flex flex-col justify-between gap-2">
+                <span className="text-xs text-brand-primary">下次到来</span>
+                <div>
+                  <div className="text-lg font-semibold font-mono text-brand-primary">
+                    {nextDate}
+                  </div>
+                  {typeof daysLeft === "number" && (
+                    <div className="text-xs text-muted">还有 {daysLeft} 天</div>
+                  )}
+                </div>
+              </div>
+            )}
 
+            <div className="lg:col-span-2 rounded-xl border border-default bg-surface/50 p-4 flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-muted">操作</span>
+                <div className="flex flex-wrap gap-2">
+                  <form action={setAnniversaryArchived}>
+                    <input type="hidden" name="id" value={item.id} />
+                    <input type="hidden" name="isArchived" value={item.isArchived ? "0" : "1"} />
+                    <Button type="submit" variant="outline" size="sm" className="h-8 text-xs">
+                      {item.isArchived ? "取消归档" : "归档"}
+                    </Button>
+                  </form>
+                </div>
+              </div>
               <form action={deleteAnniversary}>
                 <input type="hidden" name="id" value={item.id} />
                 <input type="hidden" name="redirectTo" value="/anniversaries" />
                 <ConfirmSubmitButton
                   confirmMessage="确定删除这个纪念日吗？此操作不可撤销。"
-                  className="h-9 rounded-lg border border-divider px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20 active-press"
+                  className="h-8 rounded-lg border border-transparent px-3 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
                 >
                   删除
                 </ConfirmSubmitButton>
@@ -246,127 +246,68 @@ export default async function AnniversaryDetailPage({
             </div>
           </div>
 
-          <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
-            <div className="flex flex-wrap items-center gap-2">
-              <span>
-                录入日期：{" "}
-                <span className="font-medium text-primary">
-                  {item.dateType === "solar"
-                    ? item.date
-                    : lunarMd
-                      ? `农历${item.isLeapMonth ? "闰" : ""}${lunarMd.month}-${lunarMd.day}`
-                      : `农历${item.date}`}
-                </span>
-              </span>
-              {nextDate ? <span>· 下次 {nextDate}</span> : null}
-              {typeof daysLeft === "number" ? (
-                <span>· 还有 {daysLeft} 天</span>
-              ) : null}
-            </div>
-          </div>
-
-          {preview.length > 0 ? (
-            <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
-              <div className="font-medium text-primary">提醒预览</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {preview.map((p) => {
-                  const isPast = p.at.getTime() < now.getTime();
-                  return (
-                    <span
-                      key={p.days}
-                      className={[
-                        "rounded-md border px-2 py-1",
-                        isPast
-                          ? "border-danger bg-danger text-danger"
-                          : "border-divider bg-elevated text-secondary",
-                      ].join(" ")}
-                    >
-                      {p.label}：{formatDateTime(p.at, timeZone)}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <form action={updateAnniversary} className="mt-4 flex flex-col gap-3">
+          <form id="anniversary-edit-form" action={updateAnniversary} className="space-y-8">
             <input type="hidden" name="id" value={item.id} />
 
-            <label className="flex flex-col gap-1 text-xs text-muted">
-              标题
-              <Input
-                name="title"
-                defaultValue={item.title}
-                required
-              />
-            </label>
+            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+              <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
+                基本信息
+              </div>
+              <div className="p-4 grid gap-6 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-secondary mb-1.5">标题</label>
+                  <Input name="title" defaultValue={item.title} required className="h-10 bg-base/50" />
+                </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-1 text-xs text-secondary">
-                类型
-                <Select
-                  name="category"
-                  defaultValue={item.category}
-                >
-                  <option value="birthday">生日</option>
-                  <option value="anniversary">纪念日</option>
-                  <option value="festival">节日</option>
-                  <option value="custom">自定义</option>
-                </Select>
-              </label>
+                <div>
+                  <label className="block text-xs font-medium text-secondary mb-1.5">类型</label>
+                  <CustomSelect
+                    name="category"
+                    defaultValue={item.category in categoryLabels ? (categoryLabels[item.category] !== item.category ? categoryLabels[item.category] : item.category) : item.category}
+                    allowCustom={true}
+                    options={[
+                      { value: "生日", label: "生日" },
+                      { value: "纪念日", label: "纪念日" },
+                      { value: "节日", label: "节日" },
+                    ]}
+                    placeholder="输入自定义类型..."
+                    className="h-10 bg-base/50"
+                  />
+                </div>
 
-              <label className="flex flex-col gap-1 text-xs text-secondary">
-                日期类型
-                <Select
-                  name="dateType"
-                  defaultValue={item.dateType}
-                >
-                  <option value="solar">公历</option>
-                  <option value="lunar">农历</option>
-                </Select>
-              </label>
+                <div>
+                  <label className="block text-xs font-medium text-secondary mb-1.5">日期类型</label>
+                  <Select name="dateType" defaultValue={item.dateType} className="h-10 bg-base/50">
+                    <option value="solar">公历</option>
+                    <option value="lunar">农历</option>
+                  </Select>
+                </div>
 
-              <label className="flex flex-col gap-1 text-xs text-muted sm:col-span-2">
-                日期（公历）
-                <Input
-                  type="date"
-                  name="solarDate"
-                  defaultValue={item.dateType === "solar" ? item.date : ""}
-                />
-              </label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-secondary mb-1.5">日期（公历）</label>
+                  <Input type="date" name="solarDate" defaultValue={item.dateType === "solar" ? item.date : ""} className="h-10 bg-base/50" />
+                </div>
 
-              <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
-                <label className="flex flex-col gap-1 text-xs text-secondary">
-                  农历月
-                  <Select
-                    name="lunarMonth"
-                    defaultValue={lunarMd?.month ?? 1}
-                  >
+                <div>
+                  <label className="block text-xs font-medium text-secondary mb-1.5">农历月</label>
+                  <Select name="lunarMonth" defaultValue={lunarMd?.month ?? 1} className="h-10 bg-base/50">
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
+                      <option key={m} value={m}>{m}月</option>
                     ))}
                   </Select>
-                </label>
+                </div>
 
-                <label className="flex flex-col gap-1 text-xs text-secondary">
-                  农历日
-                  <Select
-                    name="lunarDay"
-                    defaultValue={lunarMd?.day ?? 1}
-                  >
+                <div>
+                  <label className="block text-xs font-medium text-secondary mb-1.5">农历日</label>
+                  <Select name="lunarDay" defaultValue={lunarMd?.day ?? 1} className="h-10 bg-base/50">
                     {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
+                      <option key={d} value={d}>{d}日</option>
                     ))}
                   </Select>
-                </label>
+                </div>
 
-                <label className="flex flex-col gap-1 text-xs text-secondary">
-                  闰月
-                  <div className="flex h-11 items-center rounded-lg border border-default bg-transparent px-3">
+                <div className="sm:col-span-2">
+                  <label className="flex items-center gap-3 text-sm cursor-pointer p-2 rounded-lg hover:bg-surface/50 w-max">
                     <input
                       type="checkbox"
                       name="isLeapMonth"
@@ -374,46 +315,30 @@ export default async function AnniversaryDetailPage({
                       defaultChecked={item.isLeapMonth}
                       className="h-4 w-4 rounded border-emphasis text-brand-primary focus:ring-brand-primary/20"
                     />
-                    <span className="ml-2 text-sm text-primary">
-                      是
-                    </span>
-                  </div>
-                </label>
+                    <span className="text-secondary">是否闰月</span>
+                  </label>
+                </div>
               </div>
             </div>
 
-            <fieldset className="mt-1">
-              <legend className="text-xs text-secondary">
-                提醒（可多选）
-              </legend>
-              <div className="mt-2 flex flex-wrap gap-3 rounded-lg border border-divider bg-surface p-3 text-sm">
-                {reminderOptionsDays.map((opt) => (
-                  <label
-                    key={opt.days}
-                    className="inline-flex items-center gap-2 text-xs text-primary"
-                  >
-                    <input
-                      type="checkbox"
-                      name="remindOffsetsDays"
-                      value={opt.days}
-                      defaultChecked={offsets.includes(opt.days)}
-                      className="h-4 w-4 rounded border-emphasis text-brand-primary focus:ring-brand-primary/20"
-                    />
-                    {opt.label}
-                  </label>
-                ))}
+            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+              <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary flex items-center justify-between">
+                <span>提醒设置</span>
+                <span className="text-[10px] text-muted font-normal">可多选</span>
               </div>
-            </fieldset>
-
-            <Button
-              type="submit"
-              variant="secondary"
-              className="self-start"
-            >
-              保存修改
-            </Button>
+              <div className="p-4">
+                <div className="flex flex-wrap gap-3">
+                  {reminderOptionsDays.map((opt) => (
+                    <label key={opt.days} className="flex items-center gap-2 rounded-lg border border-divider bg-surface/50 px-4 py-2 text-sm cursor-pointer hover:bg-interactive-hover transition-colors">
+                      <input type="checkbox" name="remindOffsetsDays" value={opt.days} defaultChecked={offsets.includes(opt.days)} className="h-4 w-4 rounded border-emphasis text-brand-primary" />
+                      {opt.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
           </form>
-        </section>
+        </div>
       </main>
     </div>
   );

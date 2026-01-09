@@ -85,6 +85,27 @@
       "when": 1767587760501,
       "tag": "0011_glamorous_felicia_hardy",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1767876918540,
+      "tag": "0012_rainy_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1767877052586,
+      "tag": "0013_bizarre_major_mapleleaf",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1767939066538,
+      "tag": "0014_clear_drax",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,5 @@
-"use client";
-
-import { findServiceSvgIcon } from "./SimpleIconsService";
+import { Icon } from '@iconify/react';
+import { findServiceIcon } from "./IconService";
 
 type ServiceIconBadgeProps = {
     serviceName: string;
@@ -25,7 +24,7 @@ export function ServiceIconBadge({
     size = "md",
     className = "",
 }: ServiceIconBadgeProps) {
-    const { path, color, title } = findServiceSvgIcon(serviceName);
+    const { icon, color, title } = findServiceIcon(serviceName);
 
     return (
         <div
@@ -36,17 +35,13 @@ export function ServiceIconBadge({
             ].join(" ")}
             title={title}
         >
-            {path ? (
-                <svg
-                    role="img"
-                    viewBox="0 0 24 24"
+            {icon ? (
+                <Icon
+                    icon={icon}
                     width={iconSizes[size]}
                     height={iconSizes[size]}
-                    fill={color}
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path d={path} />
-                </svg>
+                    style={{ color }}
+                />
             ) : (
                 <span
                     className="text-xs font-bold"

@@ -8,7 +8,9 @@ import {
   getNextSolarOccurrenceDateString,
 } from "@/server/anniversary";
 import { AppHeader } from "../_components/AppHeader";
-import { StatsCard, ProgressRing } from "../_components/StatsCard";
+import { BentoCard } from "../_components/BentoCard";
+import { Button } from "../_components/Button";
+import { Icons } from "../_components/Icons";
 import {
   addDaysToDateString,
   diffDays,
@@ -333,7 +335,7 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-base font-sans text-primary animate-fade-in">
+    <div className="min-h-dvh bg-base font-sans text-primary animate-fade-in pb-20 sm:pb-10">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="仪表盘"
@@ -344,402 +346,283 @@ export default async function DashboardPage() {
           }
         />
 
-        {/* Stats Cards */}
-        <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4 animate-slide-up">
-          <StatsCard
-            title="待办任务"
-            value={stats.activeTodos}
-            subtitle={`${stats.activeTodosNoDueAt} 个无截止日期`}
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            }
-          />
-          <StatsCard
-            title="今日完成"
-            value={stats.doneTodosToday}
-            subtitle="继续加油！"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <path d="m9 11 3 3L22 4" />
-              </svg>
-            }
-          />
-          <StatsCard
-            title="逾期任务"
-            value={stats.overdueTodos}
-            subtitle={stats.overdueTodos > 0 ? "需要处理" : "太棒了！"}
-            className={stats.overdueTodos > 0 ? "border-danger/50" : ""}
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" x2="12" y1="8" y2="12" />
-                <line x1="12" x2="12.01" y1="16" y2="16" />
-              </svg>
-            }
-          />
-          <StatsCard
-            title="即将到来"
-            value={stats.upcomingCount}
-            subtitle="未来 7 天"
-            icon={
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 2v4" />
-                <path d="M16 2v4" />
-                <rect width="18" height="18" x="3" y="4" rx="2" />
-                <path d="M3 10h18" />
-              </svg>
-            }
-          />
-        </div>
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_auto_auto]">
+          {/* Hero: Today's Focus (2x2) */}
+          <div className="sm:col-span-2 sm:row-span-2">
+            <BentoCard
+              title="今日聚焦"
+              className="h-full"
+              delay={0.05}
+              icon={<Icons.Target className="h-5 w-5" />}
+            >
+              <div className="flex bg-surface/50 rounded-lg p-3 mb-4 items-center justify-between text-xs text-secondary">
+                <span>逾期 {stats.overdueTodos}</span>
+                <span className="text-muted">|</span>
+                <span>待办 {stats.todayTodos}</span>
+                <span className="text-muted">|</span>
+                <span>纪念日 {stats.todayAnniversaries}</span>
+                <span className="text-muted">|</span>
+                <span>订阅 {stats.todaySubscriptions}</span>
+              </div>
 
-        <div className="grid gap-6 lg:grid-cols-12 lg:items-start">
-          <div className="space-y-6 lg:col-span-7 animate-slide-up stagger-1">
-            <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-              <h2 className="text-sm font-medium">今日聚焦</h2>
-              <p className="mt-1 text-xs text-secondary">
-                逾期 {stats.overdueTodos} · 今日 Todo {stats.todayTodos} · 今日纪念日{" "}
-                {stats.todayAnniversaries} · 今日订阅 {stats.todaySubscriptions}
-              </p>
-
-              <div className="mt-4 grid gap-4">
-                {overdueTodos.length > 0 ? (
-                  <div>
-                    <div className="mb-2 text-xs font-medium text-danger">
-                      逾期 Todo（显示前 {overdueTodos.length} / 共 {stats.overdueTodos}）
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {/* Overdue */}
+                {overdueTodos.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-danger">
+                      <Icons.AlertTriangle className="h-3 w-3" />
+                      <span>逾期事项 ({overdueTodos.length})</span>
                     </div>
-                    <ul className="divide-y divide-divider rounded-lg border border-divider">
+                    <ul className="space-y-2">
                       {overdueTodos.map((t) => (
-                        <li key={t.id} className="flex items-start justify-between gap-3 p-3">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/todo/${t.id}`}
-                              className="truncate text-sm font-medium hover:underline"
-                            >
-                              {t.title}
-                            </Link>
-                            {t.dueAt ? (
-                              <div className="mt-1 text-xs text-muted">
-                                截止 {formatDateTime(t.dueAt, timeZone)}
-                              </div>
-                            ) : null}
-                          </div>
-                          <form action={toggleTodo} className="shrink-0">
-                            <input type="hidden" name="id" value={t.id} />
-                            <input type="hidden" name="isDone" value="1" />
-                            <button
-                              type="submit"
-                              className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover active-press"
-                            >
-                              完成
-                            </button>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {todayTodos.length > 0 ? (
-                  <div>
-                    <div className="mb-2 text-xs font-medium text-secondary">
-                      今日 Todo（显示前 {todayTodos.length} / 共 {stats.todayTodos}）
-                    </div>
-                    <ul className="divide-y divide-divider rounded-lg border border-divider">
-                      {todayTodos.map((t) => (
-                        <li key={t.id} className="flex items-start justify-between gap-3 p-3">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/todo/${t.id}`}
-                              className="truncate text-sm font-medium hover:underline"
-                            >
-                              {t.title}
-                            </Link>
-                            {t.dueAt ? (
-                              <div className="mt-1 text-xs text-muted">
-                                截止 {formatDateTime(t.dueAt, timeZone)}
-                              </div>
-                            ) : null}
-                          </div>
-                          <form action={toggleTodo} className="shrink-0">
-                            <input type="hidden" name="id" value={t.id} />
-                            <input type="hidden" name="isDone" value="1" />
-                            <button
-                              type="submit"
-                              className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover active-press"
-                            >
-                              完成
-                            </button>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {todayAnniversaries.length > 0 ? (
-                  <div>
-                    <div className="mb-2 text-xs font-medium text-secondary">
-                      今日纪念日
-                    </div>
-                    <ul className="divide-y divide-divider rounded-lg border border-divider">
-                      {todayAnniversaries.map((a) => (
-                        <li key={a.id} className="p-3">
-                          <Link
-                            href={`/anniversaries/${a.id}`}
-                            className="truncate text-sm font-medium hover:underline"
-                          >
-                            {a.title}
+                        <li key={t.id} className="group flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
+                          <Link href={`/todo/${t.id}`} className="flex-1 truncate text-sm font-medium hover:underline">
+                            {t.title}
                           </Link>
-                          <div className="mt-1 text-xs text-muted">
-                            下次 {a.nextDate}（{a.dateType === "solar" ? "公历" : "农历"}）
-                          </div>
+                          <span className="text-xs text-danger font-mono ml-3">{formatDateTime(t.dueAt!, timeZone)}</span>
+                          <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <input type="hidden" name="id" value={t.id} />
+                            <input type="hidden" name="isDone" value="1" />
+                            <Button type="submit" variant="ghost" size="icon" className="h-6 w-6 hover:bg-success hover:text-white">
+                              <Icons.Check className="h-3 w-3" />
+                            </Button>
+                          </form>
                         </li>
                       ))}
                     </ul>
                   </div>
-                ) : null}
+                )}
 
-                {todaySubscriptions.length > 0 ? (
-                  <div>
-                    <div className="mb-2 text-xs font-medium text-secondary">
-                      今日订阅到期
+                {/* Today */}
+                {todayTodos.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-brand-primary">
+                      <Icons.Calendar className="h-3 w-3" />
+                      <span>今日待办 ({todayTodos.length})</span>
                     </div>
-                    <ul className="divide-y divide-divider rounded-lg border border-divider">
-                      {todaySubscriptions.map((s) => (
-                        <li key={s.id} className="flex items-start justify-between gap-3 p-3">
-                          <div className="min-w-0">
-                            <Link
-                              href={`/subscriptions/${s.id}`}
-                              className="truncate text-sm font-medium hover:underline"
-                            >
-                              {s.name}
+                    <ul className="space-y-2">
+                      {todayTodos.map((t) => (
+                        <li key={t.id} className="group flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/todo/${t.id}`} className="block truncate text-sm font-medium hover:underline">
+                              {t.title}
                             </Link>
-                            <div className="mt-1 text-xs text-muted">
-                              到期 {formatDateOnly(s.nextRenewDate)}
+                            <div className="text-[10px] text-muted mt-0.5">
+                              {formatDateTime(t.dueAt!, timeZone)}
                             </div>
                           </div>
-                          <form action={renewSubscription} className="shrink-0">
-                            <input type="hidden" name="id" value={s.id} />
-                            <input
-                              type="hidden"
-                              name="redirectTo"
-                              value={`/subscriptions/${s.id}`}
-                            />
-                            <button
-                              type="submit"
-                              className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover active-press"
-                            >
-                              续期
-                            </button>
+                          <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <input type="hidden" name="id" value={t.id} />
+                            <input type="hidden" name="isDone" value="1" />
+                            <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-brand-primary hover:text-white">
+                              <Icons.Check className="h-3.5 w-3.5" />
+                            </Button>
                           </form>
                         </li>
                       ))}
                     </ul>
                   </div>
-                ) : null}
+                )}
 
-                {overdueTodos.length === 0 &&
-                  todayTodos.length === 0 &&
-                  todayAnniversaries.length === 0 &&
-                  todaySubscriptions.length === 0 ? (
-                  <div className="rounded-lg border border-divider bg-surface p-3 text-sm text-secondary">
-                    今天没有特别要处理的事项。
+                {/* Today Anniversaries */}
+                {todayAnniversaries.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-pink-500">
+                      <Icons.Gift className="h-3 w-3" />
+                      <span>今日纪念 ({todayAnniversaries.length})</span>
+                    </div>
+                    <ul className="space-y-2">
+                      {todayAnniversaries.map((a) => (
+                        <li key={a.id} className="flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
+                          <Link href={`/anniversaries/${a.id}`} className="truncate text-sm font-medium hover:underline">
+                            {a.title}
+                          </Link>
+                          <span className="text-xs text-muted ml-3">
+                            {a.dateType === "solar" ? "公历" : "农历"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                ) : null}
+                )}
+
+                {/* Today Subscriptions */}
+                {todaySubscriptions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-blue-500">
+                      <Icons.CreditCard className="h-3 w-3" />
+                      <span>今日续费 ({todaySubscriptions.length})</span>
+                    </div>
+                    <ul className="space-y-2">
+                      {todaySubscriptions.map((s) => (
+                        <li key={s.id} className="flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/subscriptions/${s.id}`} className="block truncate text-sm font-medium hover:underline">
+                              {s.name}
+                            </Link>
+                          </div>
+                          <form action={renewSubscription} className="ml-3 shrink-0">
+                            <input type="hidden" name="id" value={s.id} />
+                            <input type="hidden" name="redirectTo" value={`/subscriptions/${s.id}`} />
+                            <Button type="submit" variant="primary" size="sm">
+                              续期
+                            </Button>
+                          </form>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {overdueTodos.length === 0 && todayTodos.length === 0 && todayAnniversaries.length === 0 && todaySubscriptions.length === 0 && (
+                  <div className="flex h-40 flex-col items-center justify-center text-center text-muted">
+                    <Icons.Inbox className="h-10 w-10 opacity-20 mb-3" />
+                    <p className="text-sm">今天暂无特别事项</p>
+                    <p className="text-xs opacity-70">享受美好的一天！</p>
+                  </div>
+                )}
               </div>
-            </section>
-
-            <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-              <h2 className="text-sm font-medium">即将到来（7 天）</h2>
-              <p className="mt-1 text-xs text-secondary">
-                共 {stats.upcomingCount} 条
-                {upcomingIsTruncated
-                  ? `（展示前 ${upcomingVisible.length} 条）`
-                  : ""}
-              </p>
-
-              {stats.upcomingCount === 0 ? (
-                <div className="mt-3 text-sm text-muted">
-                  暂无即将到来的事项。
-                </div>
-              ) : (
-                <ul className="mt-3 divide-y divide-divider rounded-lg border border-divider">
-                  {upcomingVisible.map((u) => (
-                    <li
-                      key={`${u.kind}:${u.id}`}
-                      className="flex items-start justify-between gap-3 p-3"
-                    >
-                      <div className="min-w-0">
-                        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-medium text-secondary">
-                          <span className="rounded-md border border-divider bg-surface px-2 py-0.5">
-                            {u.kind === "todo"
-                              ? "Todo"
-                              : u.kind === "anniversary"
-                                ? "纪念日"
-                                : "订阅"}
-                          </span>
-                          <span className="text-muted">
-                            {formatDateTime(u.at, timeZone)}
-                          </span>
-                        </div>
-
-                        {u.kind === "todo" ? (
-                          <Link
-                            href={`/todo/${u.id}`}
-                            className="truncate text-sm font-medium hover:underline"
-                          >
-                            {u.title}
-                          </Link>
-                        ) : u.kind === "anniversary" ? (
-                          <Link
-                            href={`/anniversaries/${u.id}`}
-                            className="truncate text-sm font-medium hover:underline"
-                          >
-                            {u.title}
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/subscriptions/${u.id}`}
-                            className="truncate text-sm font-medium hover:underline"
-                          >
-                            {u.name}
-                          </Link>
-                        )}
-                      </div>
-
-                      {u.kind === "todo" ? (
-                        <form action={toggleTodo} className="shrink-0">
-                          <input type="hidden" name="id" value={u.id} />
-                          <input type="hidden" name="isDone" value="1" />
-                          <button
-                            type="submit"
-                            className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover active-press"
-                          >
-                            完成
-                          </button>
-                        </form>
-                      ) : u.kind === "subscription" ? (
-                        <form action={renewSubscription} className="shrink-0">
-                          <input type="hidden" name="id" value={u.id} />
-                          <input
-                            type="hidden"
-                            name="redirectTo"
-                            value={`/subscriptions/${u.id}`}
-                          />
-                          <button
-                            type="submit"
-                            className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover active-press"
-                          >
-                            续期
-                          </button>
-                        </form>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+            </BentoCard>
           </div>
 
-          <div className="space-y-6 lg:col-span-5 animate-slide-up stagger-2">
-            <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-              <h2 className="text-sm font-medium">洞察（简单统计）</h2>
-              <div className="mt-3 grid gap-3 text-sm text-secondary">
-                <div className="rounded-lg border border-divider bg-surface p-3">
-                  <div className="text-xs font-medium text-secondary">
-                    Todo
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>未完成 {stats.activeTodos}</span>
-                    <span className="text-muted">·</span>
-                    <span>无截止 {stats.activeTodosNoDueAt}</span>
-                    <span className="text-muted">·</span>
-                    <span>今日完成 {stats.doneTodosToday}</span>
-                  </div>
-                </div>
+          {/* Stats 1: Todo */}
+          <BentoCard className="col-span-1" delay={0.1}>
+            <div className="flex items-center justify-center gap-6 h-full p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary shrink-0">
+                <Icons.CheckSquare className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.activeTodos}</div>
+                <div className="text-xs text-secondary font-medium mt-1 truncate">剩余待办</div>
+              </div>
+            </div>
+          </BentoCard>
 
-                <div className="rounded-lg border border-divider bg-surface p-3">
-                  <div className="text-xs font-medium text-secondary">
-                    订阅
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>进行中 {stats.activeSubscriptions}</span>
-                    {monthlySpendRows.length > 0 ? (
-                      <>
-                        <span className="text-muted">·</span>
-                        <span>
-                          月度支出（估算）{" "}
-                          {monthlySpendRows
-                            .map((row) => `${formatCurrencyAmount(row.amount, row.currency)}/月`)
-                            .join(" · ")}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-muted">·</span>
-                        <span className="text-muted">
-                          未填写价格，暂无法估算支出
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+          {/* Stats 2: Done */}
+          <BentoCard className="col-span-1" delay={0.15}>
+            <div className="flex items-center justify-center gap-6 h-full p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 shrink-0">
+                <Icons.CheckCircle className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.doneTodosToday}</div>
+                <div className="text-xs text-secondary font-medium mt-1 truncate">今日完成</div>
+              </div>
+            </div>
+          </BentoCard>
 
-                <div className="rounded-lg border border-divider bg-surface p-3">
-                  <div className="text-xs font-medium text-secondary">
-                    纪念日
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>进行中 {stats.activeAnniversaries}</span>
-                    <span className="text-muted">·</span>
-                    <span>未来 7 天 {upcomingAnniversaries.length}</span>
-                  </div>
-                </div>
+          {/* Stats 3: Upcoming */}
+          <BentoCard className="col-span-1" delay={0.2}>
+            <div className="flex items-center justify-center gap-6 h-full p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shrink-0">
+                <Icons.Calendar className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.upcomingCount}</div>
+                <div className="text-xs text-secondary font-medium mt-1 truncate">未来7天事项</div>
+              </div>
+            </div>
+          </BentoCard>
 
-                <div className="rounded-lg border border-divider bg-surface p-3">
-                  <div className="text-xs font-medium text-secondary">
-                    物品
+          {/* Stats 4: Subscriptions */}
+          <BentoCard className="col-span-1" delay={0.25}>
+            <div className="flex items-center justify-center gap-6 h-full p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 shrink-0">
+                <Icons.CreditCard className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.activeSubscriptions}</div>
+                <div className="text-xs text-secondary font-medium mt-1 truncate">活跃订阅</div>
+              </div>
+            </div>
+          </BentoCard>
+
+          {/* Upcoming: (2x2) */}
+          <div className="sm:col-span-2 sm:row-span-2">
+            <BentoCard title="即将到来" className="h-full" delay={0.3} icon={<Icons.CalendarClock className="h-5 w-5" />}>
+              <div className="flex flex-col h-full">
+                {upcoming.length === 0 ? (
+                  <div className="flex-1 flex flex-col items-center justify-center text-muted">
+                    <p className="text-sm">未来 7 天暂无安排</p>
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span>进行中 {stats.activeItems}</span>
-                    <span className="text-muted">·</span>
-                    <span>
-                      日均成本最低 Top3
-                      {primaryDailyCostCurrency ? `（${primaryDailyCostCurrency}）` : ""}
-                    </span>
-                  </div>
-                  {lowestDailyCostItems.length > 0 ? (
-                    <ul className="mt-2 space-y-1 text-xs text-secondary">
-                      {lowestDailyCostItems.map((it) => (
-                        <li
-                          key={it.id}
-                          className="flex items-center justify-between gap-2"
-                        >
-                          <Link
-                            href={`/items/${it.id}`}
-                            className="min-w-0 truncate hover:underline"
-                          >
-                            {it.name}
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingVisible.map((u) => (
+                      <div key={`${u.kind}:${u.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className={`
+                                        h-10 w-10 shrink-0 rounded-lg flex items-center justify-center text-white
+                                        ${u.kind === "todo" ? "bg-brand-primary" : u.kind === "anniversary" ? "bg-pink-500" : "bg-purple-500"}
+                                     `}>
+                          <div className="text-center">
+                            <div className="text-[10px] uppercase font-bold opacity-80">{u.at.toLocaleString('en-US', { month: 'short' })}</div>
+                            <div className="text-sm font-bold leading-none">{u.at.getDate()}</div>
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Link href={u.kind === "todo" ? `/todo/${u.id}` : u.kind === "anniversary" ? `/anniversaries/${u.id}` : `/subscriptions/${u.id}`} className="block truncate text-sm font-medium hover:underline">
+                            {u.kind === "todo" ? u.title : u.kind === "anniversary" ? u.title : u.name}
                           </Link>
-                          <span className="shrink-0">
+                          <div className="text-xs text-muted flex items-center gap-2">
+                            <span>{u.kind === "todo" ? "任务" : u.kind === "anniversary" ? "纪念日" : "订阅"}</span>
+                            <span>•</span>
+                            <span>{formatDateTime(u.at, timeZone).split(' ')[1]}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </BentoCard>
+          </div>
+
+          {/* Insights: (2x2) */}
+          <div className="sm:col-span-2 sm:row-span-2">
+            <BentoCard title="财务与洞察" className="h-full" delay={0.35} icon={<Icons.LineChart className="h-5 w-5" />}>
+              <div className="grid grid-cols-1 gap-4">
+                {/* Subscription Spend */}
+                <div className="rounded-xl bg-surface/50 p-4">
+                  <div className="text-xs font-semibold text-secondary mb-2">预估月度支出</div>
+                  {monthlySpendRows.length > 0 ? (
+                    <div className="space-y-2">
+                      {monthlySpendRows.map((row) => (
+                        <div key={row.currency} className="flex items-baseline justify-between">
+                          <span className="text-sm font-mono text-muted">{row.currency}</span>
+                          <span className="text-lg font-bold tabular-nums">{formatCurrencyAmount(row.amount, row.currency).replace(row.currency, '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted">暂无支出数据</div>
+                  )}
+                </div>
+
+                {/* Item Daily Cost */}
+                <div className="rounded-xl bg-surface/50 p-4">
+                  <div className="text-xs font-semibold text-secondary mb-2">日均成本最低 (Top 3)</div>
+                  {lowestDailyCostItems.length > 0 ? (
+                    <ul className="space-y-3">
+                      {lowestDailyCostItems.map((it) => (
+                        <li key={it.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
+                            <span className="truncate text-sm text-secondary">{it.name}</span>
+                          </div>
+                          <span className="text-sm font-mono text-muted tabular-nums">
                             {formatCurrencyAmount(it.dailyCents / 100, it.currency)}/天
                           </span>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <div className="mt-2 text-xs text-muted">
-                      填写购入日期与价格后可计算日均成本
-                    </div>
+                    <div className="text-sm text-muted">暂无物品数据</div>
                   )}
                 </div>
               </div>
-            </section>
+            </BentoCard>
           </div>
+
         </div>
       </main>
     </div>

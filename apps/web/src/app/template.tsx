@@ -1,22 +1,9 @@
-"use client";
+import { PageTransition } from "./_components/PageTransition";
 
-import { useEffect, useState } from "react";
-
+/**
+ * Next.js template.tsx - 每次路由切换时会重新 mount。
+ * 这确保了 PageTransition 动画能在每次导航时触发。
+ */
 export default function Template({ children }: { children: React.ReactNode }) {
-    const [opacity, setOpacity] = useState(0);
-
-    useEffect(() => {
-        // Simple fade-in effect on mount
-        const raf = requestAnimationFrame(() => setOpacity(1));
-        return () => cancelAnimationFrame(raf);
-    }, []);
-
-    return (
-        <div
-            className="transition-opacity duration-300 ease-in-out"
-            style={{ opacity }}
-        >
-            {children}
-        </div>
-    );
+    return <PageTransition>{children}</PageTransition>;
 }

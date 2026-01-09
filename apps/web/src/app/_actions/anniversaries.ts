@@ -52,10 +52,10 @@ function parseNumberListField(formData: FormData, key: string): number[] {
 
 function parseCategoryField(formData: FormData, key: string): AnniversaryCategory {
   const value = parseStringField(formData, key);
-  if (value && anniversaryCategoryValues.includes(value as AnniversaryCategory)) {
+  if (value) {
     return value as AnniversaryCategory;
   }
-  return "anniversary";
+  return "纪念日";
 }
 
 function parseDateTypeField(formData: FormData, key: string): AnniversaryDateType {
@@ -154,7 +154,7 @@ export async function updateAnniversary(formData: FormData) {
 
   revalidatePath("/anniversaries");
   revalidatePath(`/anniversaries/${id}`);
-  redirect(`/anniversaries/${id}?saved=1`);
+  redirect("/anniversaries?action=updated");
 }
 
 export async function setAnniversaryArchived(formData: FormData) {
@@ -175,15 +175,47 @@ export async function setAnniversaryArchived(formData: FormData) {
   revalidatePath(`/anniversaries/${id}`);
 }
 
+
 export async function deleteAnniversary(formData: FormData) {
   const id = parseStringField(formData, "id");
   if (!id) return;
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  await db.delete(anniversaries).where(eq(anniversaries.id, id));
+  const existing = await db.select({ deletedAt: anniversaries.deletedAt }).from(anniversaries).where(eq(anniversaries.id, id)).get();
+  if (!existing) return;
+
+  if (existing.deletedAt) {
+      await db.delete(anniversaries).where(eq(anniversaries.id, id));
+  } else {
+      await db.update(anniversaries).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(anniversaries.id, id));
+  }
 
   revalidatePath("/anniversaries");
   revalidatePath(`/anniversaries/${id}`);
-  if (redirectTo) redirect(redirectTo);
+  
+  // Use & if param exists, else ? (Naive check, assuming redirectTo is a simple path usually)
+  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+  
+  if (redirectTo && existing.deletedAt) {
+    redirect(`${redirectTo}${sep}action=deleted`);
+  } else if (existing.deletedAt === null) {
+      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
+  }
 }
+
+export async function restoreAnniversary(formData: FormData) {
+    const id = parseStringField(formData, "id");
+    if (!id) return;
+    const redirectTo = parseRedirectToField(formData, "redirectTo");
+
+    await db.update(anniversaries).set({ deletedAt: null, updatedAt: new Date() }).where(eq(anniversaries.id, id));
+
+    revalidatePath("/anniversaries");
+    revalidatePath(`/anniversaries/${id}`);
+    
+    // Naive separator check
+    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
+    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
+}
+

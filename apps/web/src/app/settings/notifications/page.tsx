@@ -60,7 +60,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
 
     return (
         <div className="min-h-dvh bg-base font-sans text-primary">
-            <main className="mx-auto max-w-3xl p-6 sm:p-10">
+            <main className="mx-auto max-w-5xl p-6 sm:p-10">
                 <div className="mb-6">
                     <Link href="/settings" className="text-xs text-muted hover:text-primary mb-2 inline-block">
                         ← 返回设置
@@ -468,7 +468,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
                                 <li key={d.id} className={`flex flex-col gap-2 p-3 animate-slide-up ${index < 5 ? `stagger-${index + 1}` : ""}`}>
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2">
-                                            <Badge variant="outline">
+                                            <Badge variant={d.channel === "telegram" ? "blue" : d.channel === "wecom" ? "success" : d.channel === "email" ? "warning" : "default"} className="px-1.5 py-0 text-[10px]">
                                                 {d.channel === "telegram"
                                                     ? "TG"
                                                     : d.channel === "wecom"
@@ -493,7 +493,7 @@ export default async function NotificationsSettingsPage({ searchParams }: Settin
 
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Badge variant={d.status === "sent" ? "success" : d.status === "failed" ? "danger" : "warning"}>
+                                            <Badge variant={d.status === "sent" ? "success" : d.status === "failed" ? "danger" : "warning"} className="px-1.5 py-0 text-[10px]">
                                                 {d.status === "sent"
                                                     ? "已发送"
                                                     : d.status === "failed"

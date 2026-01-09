@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 type ToastType = "success" | "error" | "info";
@@ -43,11 +43,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }, 3000);
     }, [removeToast]);
 
-    const value = {
+    const value = useMemo(() => ({
         toast: addToast,
         success: (msg: string) => addToast(msg, "success"),
         error: (msg: string) => addToast(msg, "error"),
-    };
+    }), [addToast]);
 
     return (
         <ToastContext.Provider value={value}>
@@ -76,9 +76,9 @@ function ToastContainer({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss:
                     className={`
             min-w-[300px] max-w-sm cursor-pointer rounded-lg border p-4 shadow-lg transition-all animate-slide-up
                     ${t.type === "success"
-                            ? "border-success bg-success text-success"
+                            ? "border-success/20 bg-success/10 text-success"
                             : t.type === "error"
-                                ? "border-danger bg-danger text-danger"
+                                ? "border-danger/20 bg-danger/10 text-danger"
                                 : "border-default bg-elevated text-primary"
                         }
           `}

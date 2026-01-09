@@ -12,6 +12,7 @@ import { getAppSettings } from "@/server/db/settings";
 import { importBackupMerge, importBackupOverwrite } from "../_actions/backup";
 import { clearAllData } from "../_actions/settings";
 import { DateReminderForm } from "../_components/settings/DateReminderForm";
+import { ThemeSwitcher } from "../_components/ThemeSwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
-      <main className="mx-auto max-w-3xl p-6 sm:p-10">
+      <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="设置"
           description="个人版默认无鉴权，建议仅本机/内网使用。"
@@ -48,6 +49,17 @@ export default async function SettingsPage() {
           </div>
         </section> 
         */}
+
+        {/* Appearance Section */}
+        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+          <h2 className="text-sm font-medium">外观设置</h2>
+          <p className="mt-1 text-xs text-secondary">
+            选择你喜欢的配色主题，搭配浅色/深色模式使用。
+          </p>
+          <div className="mt-4">
+            <ThemeSwitcher />
+          </div>
+        </section>
 
         <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
           <h2 className="text-sm font-medium">日期类提醒</h2>
@@ -105,7 +117,7 @@ export default async function SettingsPage() {
 
             <ConfirmSubmitButton
               confirmMessage="确定用备份覆盖当前所有数据吗？此操作不可撤销。"
-              className="h-11 self-start rounded-lg border border-danger bg-danger px-4 text-sm font-medium text-danger hover:bg-danger-hover"
+              className="h-11 self-start rounded-lg border border-danger bg-danger px-4 text-sm font-medium text-white hover:bg-danger-hover"
             >
               覆盖导入
             </ConfirmSubmitButton>
@@ -132,7 +144,7 @@ export default async function SettingsPage() {
           </form>
         </section>
 
-        <section className="mt-6 rounded-xl border border-danger bg-danger p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-danger bg-danger/10 p-4 shadow-sm">
           <h2 className="text-sm font-medium text-danger">
             危险操作
           </h2>
@@ -143,7 +155,7 @@ export default async function SettingsPage() {
           <form action={clearAllData} className="mt-3">
             <ConfirmSubmitButton
               confirmMessage="确定清空所有数据吗？此操作不可撤销。"
-              className="h-11 rounded-lg border border-danger bg-base px-4 text-sm font-medium text-danger hover:bg-danger-hover"
+              className="h-11 rounded-lg border border-danger bg-danger px-4 text-sm font-medium text-white hover:bg-danger-hover"
             >
               清空所有数据
             </ConfirmSubmitButton>
