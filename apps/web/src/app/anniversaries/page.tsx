@@ -2,15 +2,9 @@ import { asc, desc, eq, ne, isNull, isNotNull, and, type SQL } from "drizzle-orm
 
 import { SegmentedControl } from "@/app/_components/SegmentedControl";
 
-import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { AnniversaryCreateForm } from "@/app/_components/anniversary/AnniversaryCreateForm";
 import { AnniversaryList } from "@/app/_components/anniversary/AnniversaryList";
 import { EmptyState } from "@/app/_components/EmptyState";
-import {
-  createAnniversary,
-  deleteAnniversary,
-  setAnniversaryArchived,
-} from "@/app/_actions/anniversaries";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { CreateModal } from "@/app/_components/CreateModal";
 import { UrgencyBadge } from "@/app/_components/UrgencyBadge";
@@ -30,6 +24,9 @@ import {
   getNextLunarOccurrenceDateString,
   getNextSolarOccurrenceDateString,
 } from "@/server/anniversary";
+
+import Link from "next/link";
+import { Icons } from "@/app/_components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +142,6 @@ export default async function AnniversariesPage({
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="纪念日"
-          description="v0.2：倒计时 + 提醒预览（支持公历/农历；外部通知后置）。"
         />
 
 
@@ -159,40 +155,49 @@ export default async function AnniversariesPage({
           />
         </CreateModal>
 
-        <section className="rounded-xl border border-default bg-elevated shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <h2 className="text-sm font-medium">列表</h2>
-            <SegmentedControl
-              options={[
-                { key: "active", label: "进行中", href: buildHref({ filter: "active", category: categoryFilter }) },
-                { key: "trash", label: "回收站", href: buildHref({ filter: "trash", category: categoryFilter }) },
-              ]}
-              currentValue={filter}
-              layoutId="anniversary-filter"
-            />
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
+              <SegmentedControl
+                options={[
+                  { key: "active", label: "进行中", href: buildHref({ filter: "active", category: categoryFilter }) },
+                  { key: "trash", label: "回收站", href: buildHref({ filter: "trash", category: categoryFilter }) },
+                ]}
+                currentValue={filter}
+                layoutId="anniversary-filter"
+              />
+            </div>
+
+            {distinctCategories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 text-xs scrollbar-hide">
+                <span className="text-muted shrink-0 mr-1">类型</span>
+                <Link
+                  href={buildHref({ filter, category: null })}
+                  className={`inline-flex items-center rounded-full px-3 py-1 transition-colors ${!categoryFilter
+                    ? "bg-brand-primary/10 text-brand-primary font-medium"
+                    : "bg-surface hover:bg-surface/80 text-secondary"
+                    }`}
+                >
+                  全部
+                </Link>
+                {distinctCategories.map((c) => (
+                  <Link
+                    key={c.name}
+                    href={buildHref({ filter, category: c.name })}
+                    className={`inline-flex items-center rounded-full px-3 py-1 transition-colors ${categoryFilter === c.name
+                      ? "bg-brand-primary/10 text-brand-primary font-medium"
+                      : "bg-surface hover:bg-surface/80 text-secondary"
+                      }`}
+                  >
+                    {categoryLabels[c.name!] ?? c.name!}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
-          {distinctCategories.length > 0 && (
-            <div className="px-4 pb-4">
-              <div className="flex flex-wrap items-center gap-3 text-xs">
-                <span className="text-muted">类型</span>
-                <SegmentedControl
-                  options={[
-                    { key: "all", label: "全部", href: buildHref({ filter, category: null }) },
-                    ...distinctCategories.map((c) => ({
-                      key: c.name!,
-                      label: categoryLabels[c.name!] ?? c.name!,
-                      href: buildHref({ filter, category: c.name }),
-                    }))
-                  ]}
-                  currentValue={categoryFilter ?? "all"}
-                  layoutId="anniversary-category-filter"
-                />
-              </div>
-            </div>
-          )}
-
           <AnniversaryList
+            filter={filter}
             items={rows.map((item) => {
               const nextDate =
                 item.dateType === "solar"
@@ -227,19 +232,11 @@ export default async function AnniversariesPage({
               return { item, daysLeft, nextDate, preview };
             })}
           />
-          {rows.length === 0 && (
+          {rows.length === 0 && filter === "trash" && (
             <div className="border-t border-divider">
               <EmptyState
-                title={
-                  filter === "trash"
-                    ? "回收站为空"
-                    : "还没有纪念日"
-                }
-                description={
-                  filter === "trash"
-                    ? "你的回收站很干净。"
-                    : "点击上方添加按钮，不再错过重要日子。"
-                }
+                title="回收站为空"
+                description="你的回收站很干净。"
               />
             </div>
           )}

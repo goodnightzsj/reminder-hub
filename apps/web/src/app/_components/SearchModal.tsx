@@ -1,9 +1,8 @@
-"use client";
-
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Input } from "./Input";
+import { motion, AnimatePresence } from "framer-motion";
+import { Icons } from "./Icons";
 
 type SearchModalProps = {
     isOpen: boolean;
@@ -12,8 +11,13 @@ type SearchModalProps = {
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const [query, setQuery] = useState("");
+    const [mounted, setMounted] = useState(false);
     const router = useRouter();
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
@@ -43,56 +47,73 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         onClose();
     };
 
-    if (!isOpen) return null;
+    if (!mounted) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-            />
-
-            {/* Modal Content */}
-            <div className="relative w-full max-w-lg transform rounded-2xl border border-white/20 bg-white/90 p-4 shadow-2xl backdrop-blur-xl transition-all dark:bg-zinc-900/90 dark:border-white/10 animate-zoom-in">
-                <form onSubmit={handleSearch} className="flex items-center gap-3">
-                    <svg
-                        className="h-5 w-5 text-muted"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                    </svg>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        className="flex-1 bg-transparent text-lg text-primary outline-none placeholder:text-muted"
-                        placeholder="搜索..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                    />
-                    <button
-                        type="button"
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] px-4">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
                         onClick={onClose}
-                        className="rounded-md bg-surface px-2 py-1 text-xs font-medium text-secondary hover:bg-interactive-hover"
-                        aria-label="关闭搜索"
-                    >
-                        ESC
-                    </button>
-                </form>
+                    />
 
-                {/* Quick Tips or Recent Searches could go here */}
-                <div className="mt-4 border-t border-divider pt-3 text-xs text-muted">
-                    输入关键词并回车搜索
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                        transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
+                        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/20 bg-white/90 p-0 shadow-2xl backdrop-blur-2xl dark:bg-zinc-900/90 dark:border-white/10"
+                    >
+                        {/* Spotlight Glow Effect */}
+                        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                            <div className="absolute -top-[50%] left-[20%] w-[60%] h-[100%] bg-brand-primary/10 blur-[80px] rounded-full animate-pulse-slow" />
+                        </div>
+
+                        <div className="relative z-10 p-4">
+                            <form onSubmit={handleSearch} className="flex items-center gap-3">
+                                <Icons.Search className="h-5 w-5 text-muted/80 ml-1" />
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    className="flex-1 bg-transparent text-lg text-primary outline-none placeholder:text-muted/60 h-10"
+                                    placeholder="搜索..."
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    autoComplete="off"
+                                />
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:text-primary transition-colors"
+                                    >
+                                        ESC
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Quick Tips Footer (Static for now, but styled) */}
+                        <div className="relative z-10 border-t border-divider bg-surface/50 px-4 py-2.5">
+                            <div className="flex items-center justify-between text-[10px] text-muted font-medium">
+                                <span>支持自然语言搜索</span>
+                                <div className="flex gap-2">
+                                    <span>↵ 确认</span>
+                                    <span>↑↓ 切换</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
                 </div>
-            </div>
-        </div>,
+            )}
+        </AnimatePresence>,
         document.body
     );
 }

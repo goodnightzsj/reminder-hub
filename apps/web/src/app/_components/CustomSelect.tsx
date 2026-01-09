@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
 import { Input } from "./Input";
 import { Icons } from "./Icons";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Option = {
     value: string;
@@ -114,37 +115,45 @@ export function CustomSelect({
                 )}
             </div>
 
-            {isOpen && (
-                <div className="absolute z-50 mt-1 min-w-full w-max max-h-60 overflow-y-auto rounded-xl border border-black/5 bg-[#F5F5F7]/95 backdrop-blur-xl shadow-xl p-1 animate-in fade-in zoom-in-95 duration-100 dark:bg-[#1E1E1E]/95 dark:border-white/10">
-                    {options.map((opt) => {
-                        const isSelected = opt.value === value;
-                        return (
-                            <button
-                                key={opt.value}
-                                type="button"
-                                onMouseDown={(e) => e.preventDefault()} // Prevent blur
-                                onClick={() => handleSelect(opt.value)}
-                                className={`
-                                    w-full px-2 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors
-                                    ${isSelected ? "text-primary font-medium" : "text-primary"}
-                                    hover:bg-[#007AFF] hover:text-white
-                                    group
-                                `}
-                            >
-                                <span className={`w-4 flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:text-white"}`}>
-                                    {isSelected && <Icons.Check className="w-3.5 h-3.5" />}
-                                </span>
-                                <span className="flex-1 text-left truncate">{opt.label}</span>
-                            </button>
-                        );
-                    })}
-                    {allowCustom && value && !options.some((opt) => opt.value === value) && (
-                        <div className="px-3 py-2 text-xs text-muted border-t border-black/5 dark:border-white/5 mt-1">
-                            使用自定义值: "{value}"
-                        </div>
-                    )}
-                </div>
-            )}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className="absolute z-50 mt-1 min-w-full w-max max-h-60 overflow-y-auto rounded-xl border border-black/5 bg-[#F5F5F7]/95 backdrop-blur-xl shadow-2xl p-1 dark:bg-[#1E1E1E]/95 dark:border-white/10"
+                    >
+                        {options.map((opt) => {
+                            const isSelected = opt.value === value;
+                            return (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onMouseDown={(e) => e.preventDefault()} // Prevent blur
+                                    onClick={() => handleSelect(opt.value)}
+                                    className={`
+                                        w-full px-2 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors
+                                        ${isSelected ? "text-primary font-medium" : "text-primary"}
+                                        hover:bg-brand-primary hover:text-white
+                                        group
+                                    `}
+                                >
+                                    <span className={`w-4 flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:text-white"}`}>
+                                        {isSelected && <Icons.Check className="w-3.5 h-3.5" />}
+                                    </span>
+                                    <span className="flex-1 text-left truncate">{opt.label}</span>
+                                </button>
+                            );
+                        })}
+                        {allowCustom && value && !options.some((opt) => opt.value === value) && (
+                            <div className="px-3 py-2 text-xs text-muted border-t border-black/5 dark:border-white/5 mt-1">
+                                使用自定义值: "{value}"
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

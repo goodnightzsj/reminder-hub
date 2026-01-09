@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { Tooltip } from "../Tooltip";
 import { formatRecurrenceRuleZh, parseRecurrenceRuleJson } from "@/server/recurrence";
 import { Icons } from "../Icons";
 import { Badge, getBadgeVariantFromLabel } from "../Badge";
@@ -10,7 +11,6 @@ import {
     moveTodoDown,
     moveTodoUp,
     restoreTodo,
-    setTodoArchived,
     toggleTodo,
 } from "../../_actions/todos";
 import { TodoCompleteButton } from "./TodoCompleteButton";
@@ -27,7 +27,6 @@ type TodoItemProps = {
         reminderOffsetsMinutes: string; // JSON string
         recurrenceRule: string | null; // JSON string
         isDone: boolean;
-        isArchived: boolean;
         deletedAt?: Date | null;
         subtasks?: {
             id: string;
@@ -108,11 +107,15 @@ export function TodoItem({ item, settings }: TodoItemProps) {
             initial="hidden"
             animate="visible"
             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-            className="group relative overflow-hidden rounded-xl bg-elevated"
+            className={`
+                group relative overflow-hidden rounded-xl bg-elevated border border-transparent transition-all hover:bg-muted/30
+                ${item.priority === 'high' ? 'shadow-[0_0_15px_-3px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_-3px_rgba(239,68,68,0.25)] dark:shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]' : ''}
+                ${item.priority === 'medium' ? 'shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]' : ''}
+            `}
         >
-            {/* Mobile Swipe Action (Delete) - Background Layer - HIDDEN on desktop */}
+            {/* Mobile Swipe Action (Delete) - Background Layer */}
             {!isDeleted && (
-                <div className="absolute inset-y-0 right-0 flex w-24 items-center justify-center bg-destructive text-destructive-foreground sm:hidden">
+                <div className="absolute inset-y-0 right-0 z-0 flex w-24 items-center justify-center bg-destructive text-destructive-foreground sm:hidden">
                     <form action={deleteTodo} className="flex h-full w-full items-center justify-center">
                         <input type="hidden" name="id" value={item.id} />
                         <button type="submit" className="flex h-full w-full items-center justify-center">
@@ -127,12 +130,11 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                 drag={!isDeleted ? "x" : false}
                 dragConstraints={{ left: -100, right: 0 }}
                 dragElastic={0.05}
-                className="relative z-10 flex items-start gap-4 bg-elevated p-4 transition-colors hover:bg-muted/30"
-                style={{ x: 0 }} // Reset x on re-render needed? No, Motion handles it.
-                whileDrag={{ cursor: "grabbing" }}
+                className="relative z-10 flex items-start gap-4 bg-elevated p-4"
+                whileDrag={{ x: -50 }}
             >
-                {/* Priority Indicator Line */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${item.priority === "high" ? "bg-danger" :
+                {/* Priority Indicator Dot/Line (Optional, reusing left border logic but cleaner) */}
+                <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${item.priority === "high" ? "bg-danger" :
                     item.priority === "medium" ? "bg-warning" : "bg-transparent"
                     }`} />
 
@@ -161,7 +163,7 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                             return <Badge variant="secondary" className="gap-1"><Icons.Repeat className="w-3 h-3" /> {formatRecurrenceRuleZh(rule)}</Badge>;
                         })()}
 
-                        {item.isArchived ? <Badge variant="secondary">已归档</Badge> : null}
+
                     </div>
 
                     <Link
@@ -249,30 +251,27 @@ export function TodoItem({ item, settings }: TodoItemProps) {
 
                             {/* Desktop Actions - visible on hover */}
                             <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => moveTodoUp(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface" title="上移"><Icons.ChevronRight className="w-4 h-4 -rotate-90" /></button>
-                                <button onClick={() => moveTodoDown(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface" title="下移"><Icons.ChevronDown className="w-4 h-4" /></button>
-
-                                <form action={setTodoArchived}>
-                                    <input type="hidden" name="id" value={item.id} />
-                                    <input type="hidden" name="isArchived" value={item.isArchived ? "0" : "1"} />
-                                    <button
-                                        type="submit"
-                                        className={`p-1.5 rounded hover:bg-surface ${item.isArchived ? "text-brand-primary hover:text-brand-primary" : "text-muted hover:text-primary"}`}
-                                        title={item.isArchived ? "取消归档" : "归档"}
-                                    >
-                                        {item.isArchived ? <Icons.ArchiveRestore className="w-4 h-4" /> : <Icons.Archive className="w-4 h-4" />}
+                                <Tooltip content="上移顺序">
+                                    <button onClick={() => moveTodoUp(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface">
+                                        <Icons.ChevronRight className="w-4 h-4 -rotate-90" />
                                     </button>
-                                </form>
+                                </Tooltip>
+                                <Tooltip content="下移顺序">
+                                    <button onClick={() => moveTodoDown(item.id)} className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface">
+                                        <Icons.ChevronDown className="w-4 h-4" />
+                                    </button>
+                                </Tooltip>
 
                                 <form action={deleteTodo}>
                                     <input type="hidden" name="id" value={item.id} />
-                                    <ConfirmSubmitButton
-                                        confirmMessage="确定删除这个待办吗？"
-                                        className="p-1.5 rounded text-muted hover:text-danger hover:bg-danger/10"
-                                        title="删除"
-                                    >
-                                        <Icons.Trash className="w-4 h-4" />
-                                    </ConfirmSubmitButton>
+                                    <Tooltip content="移至回收站">
+                                        <ConfirmSubmitButton
+                                            confirmMessage="确定删除这个待办吗？"
+                                            className="p-1.5 rounded text-muted hover:text-danger hover:bg-danger/10"
+                                        >
+                                            <Icons.Trash className="w-4 h-4" />
+                                        </ConfirmSubmitButton>
+                                    </Tooltip>
                                 </form>
                             </div>
                         </div>

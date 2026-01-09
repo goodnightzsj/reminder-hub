@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Icons } from "./Icons";
+import { Magnetic } from "./Magnetic";
 
 export function FloatingActionButton() {
     const [isOpen, setIsOpen] = useState(false);
@@ -61,21 +62,23 @@ export function FloatingActionButton() {
             )}
 
             {/* Main FAB Button */}
-            <button
-                onClick={handleClick}
-                onContextMenu={(e) => {
-                    e.preventDefault();
-                    if (currentAction) setIsOpen(!isOpen); // Long press to force menu?
-                }}
-                className={[
-                    "pointer-events-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20 transition-all duration-300 active:scale-90 active:rotate-90",
-                    "bg-brand-primary text-white border border-white/10 backdrop-blur-md", // Enhanced glass
-                    isOpen ? "rotate-45" : "",
-                ].join(" ")}
-                aria-label={currentAction ? "新建" : (isOpen ? "关闭" : "添加")}
-            >
-                <Icons.Plus className="h-7 w-7 stroke-[2.5px]" />
-            </button>
+            <Magnetic strength={0.2} className="pointer-events-auto">
+                <button
+                    onClick={handleClick}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        if (currentAction) setIsOpen(!isOpen); // Long press to force menu?
+                    }}
+                    className={[
+                        "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20 transition-all duration-300 active:scale-90 active:rotate-90",
+                        "bg-brand-primary text-white border border-white/10 backdrop-blur-md", // Enhanced glass
+                        isOpen ? "rotate-45" : "",
+                    ].join(" ")}
+                    aria-label={currentAction ? "新建" : (isOpen ? "关闭" : "添加")}
+                >
+                    <Icons.Plus className="h-7 w-7 stroke-[2.5px]" />
+                </button>
+            </Magnetic>
         </div>
     );
 }

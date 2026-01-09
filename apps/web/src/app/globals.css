@@ -44,6 +44,18 @@
   --color-sidebar: hsl(var(--sidebar));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
+
+  /* Fluid Typography System */
+  --font-size-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.8rem);
+  --font-size-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.95rem);
+  --font-size-base: clamp(0.95rem, 0.9rem + 0.2vw, 1.05rem);
+  --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+  --font-size-xl: clamp(1.35rem, 1.25rem + 0.6vw, 1.65rem);
+  --font-size-2xl: clamp(1.6rem, 1.5rem + 1vw, 2.2rem);
+  --font-size-3xl: clamp(2rem, 1.8rem + 1.5vw, 3rem);
+
+  /* Fluid Spacing System */
+  --space-container: clamp(1.2rem, 1rem + 3vw, 3.5rem);
 }
 
 /* ========================================
@@ -83,39 +95,40 @@
   --sidebar-border: 240 6% 90%;
 }
 
-/* === Theme 1: Ocean Blue (Default) === */
+/* === Theme 1: Ocean Blue (Default) - Enhanced Saturation === */
 :root,
 [data-theme="ocean-blue"] {
-  --brand-primary: 217 91% 60%;
-  --brand-secondary: 213 94% 68%;
-  --accent: 217 91% 95%;
-  --accent-foreground: 217 91% 60%;
-  --ring: 217 91% 60%;
+  --brand-primary: 217 95% 62%;
+  /* Increased saturation */
+  --brand-secondary: 213 96% 72%;
+  --accent: 217 95% 96%;
+  --accent-foreground: 217 95% 60%;
+  --ring: 217 95% 62%;
   /* Tailwind color tokens */
-  --theme-brand-primary: hsl(217 91% 60%);
-  --theme-brand-secondary: hsl(213 94% 68%);
-  --theme-accent: hsl(217 91% 95%);
-  --theme-accent-foreground: hsl(217 91% 60%);
-  --theme-ring: hsl(217 91% 60%);
+  --theme-brand-primary: hsl(217 95% 62%);
+  --theme-brand-secondary: hsl(213 96% 72%);
+  --theme-accent: hsl(217 95% 96%);
+  --theme-accent-foreground: hsl(217 95% 60%);
+  --theme-ring: hsl(217 95% 62%);
   --theme-cta: hsl(24 95% 53%);
 }
 
-/* === Theme 2: Emerald Pro === */
+/* === Theme 2: Emerald Pro - Enhanced Saturation === */
 [data-theme="emerald"] {
-  --brand-primary: 160 84% 39%;
-  --brand-secondary: 158 64% 52%;
-  --accent: 160 84% 95%;
-  --accent-foreground: 160 84% 39%;
-  --ring: 160 84% 39%;
-  --theme-brand-primary: hsl(160 84% 39%);
-  --theme-brand-secondary: hsl(158 64% 52%);
-  --theme-accent: hsl(160 84% 95%);
-  --theme-accent-foreground: hsl(160 84% 39%);
-  --theme-ring: hsl(160 84% 39%);
+  --brand-primary: 160 88% 38%;
+  --brand-secondary: 158 70% 50%;
+  --accent: 160 88% 96%;
+  --accent-foreground: 160 88% 38%;
+  --ring: 160 88% 38%;
+  --theme-brand-primary: hsl(160 88% 38%);
+  --theme-brand-secondary: hsl(158 70% 50%);
+  --theme-accent: hsl(160 88% 96%);
+  --theme-accent-foreground: hsl(160 88% 38%);
+  --theme-ring: hsl(160 88% 38%);
   --theme-cta: hsl(24 95% 53%);
 }
 
-/* === Theme 3: Notion Gray === */
+/* === Theme 3: Notion Gray - Preserved === */
 /* Using accent brown/orange as primary for better visibility */
 [data-theme="notion-gray"] {
   --brand-primary: 32 30% 45%;
@@ -131,70 +144,70 @@
   --theme-cta: hsl(32 95% 50%);
 }
 
-/* === Theme 4: Todoist Zeus === */
+/* === Theme 4: Todoist Zeus - Enhanced Saturation === */
 /* Using warm olive/moss green accent */
 [data-theme="todoist-zeus"] {
-  --brand-primary: 78 45% 40%;
-  --brand-secondary: 78 40% 50%;
-  --accent: 78 60% 92%;
-  --accent-foreground: 78 60% 35%;
-  --ring: 78 45% 40%;
-  --theme-brand-primary: hsl(78 45% 40%);
-  --theme-brand-secondary: hsl(78 40% 50%);
-  --theme-accent: hsl(78 60% 92%);
-  --theme-accent-foreground: hsl(78 60% 35%);
-  --theme-ring: hsl(78 45% 40%);
-  --theme-cta: hsl(78 60% 45%);
+  --brand-primary: 78 55% 38%;
+  --brand-secondary: 78 50% 48%;
+  --accent: 78 70% 93%;
+  --accent-foreground: 78 70% 35%;
+  --ring: 78 55% 38%;
+  --theme-brand-primary: hsl(78 55% 38%);
+  --theme-brand-secondary: hsl(78 50% 48%);
+  --theme-accent: hsl(78 70% 93%);
+  --theme-accent-foreground: hsl(78 70% 35%);
+  --theme-ring: hsl(78 55% 38%);
+  --theme-cta: hsl(78 70% 45%);
 }
 
-/* === Theme 5: TickTick Teal === */
+/* === Theme 5: TickTick Teal - Enhanced Saturation === */
 [data-theme="ticktick-teal"] {
-  --brand-primary: 174 72% 40%;
-  --brand-secondary: 187 72% 45%;
-  --accent: 174 72% 92%;
-  --accent-foreground: 174 72% 40%;
-  --ring: 174 72% 40%;
-  --theme-brand-primary: hsl(174 72% 40%);
-  --theme-brand-secondary: hsl(187 72% 45%);
-  --theme-accent: hsl(174 72% 92%);
-  --theme-accent-foreground: hsl(174 72% 40%);
-  --theme-ring: hsl(174 72% 40%);
+  --brand-primary: 174 78% 38%;
+  --brand-secondary: 187 78% 43%;
+  --accent: 174 78% 94%;
+  --accent-foreground: 174 78% 38%;
+  --ring: 174 78% 38%;
+  --theme-brand-primary: hsl(174 78% 38%);
+  --theme-brand-secondary: hsl(187 78% 43%);
+  --theme-accent: hsl(174 78% 94%);
+  --theme-accent-foreground: hsl(174 78% 38%);
+  --theme-ring: hsl(174 78% 38%);
   --theme-cta: hsl(24 95% 53%);
 }
 
-/* === Theme 6: Fintech Gold === */
+/* === Theme 6: Fintech Gold - Enhanced Saturation === */
 /* Gold as primary color for luxury feel */
 [data-theme="fintech-gold"] {
-  --brand-primary: 45 93% 47%;
-  --brand-secondary: 38 90% 50%;
-  --accent: 45 93% 90%;
-  --accent-foreground: 45 93% 35%;
-  --ring: 45 93% 47%;
-  --cta: 45 93% 47%;
-  --theme-brand-primary: hsl(45 93% 47%);
-  --theme-brand-secondary: hsl(38 90% 50%);
-  --theme-accent: hsl(45 93% 90%);
-  --theme-accent-foreground: hsl(45 93% 35%);
-  --theme-ring: hsl(45 93% 47%);
-  --theme-cta: hsl(45 93% 47%);
+  --brand-primary: 45 96% 45%;
+  --brand-secondary: 38 94% 48%;
+  --accent: 45 96% 92%;
+  --accent-foreground: 45 96% 35%;
+  --ring: 45 96% 45%;
+  --cta: 45 96% 45%;
+  --theme-brand-primary: hsl(45 96% 45%);
+  --theme-brand-secondary: hsl(38 94% 48%);
+  --theme-accent: hsl(45 96% 92%);
+  --theme-accent-foreground: hsl(45 96% 35%);
+  --theme-ring: hsl(45 96% 45%);
+  --theme-cta: hsl(45 96% 45%);
 }
 
-/* === Theme 7: Peach Fuzz === */
+/* === Theme 7: Peach Fuzz - Enhanced Saturation === */
 [data-theme="peach-fuzz"] {
-  --brand-primary: 24 73% 67%;
-  --brand-secondary: 15 86% 73%;
-  --accent: 24 73% 95%;
-  --accent-foreground: 24 73% 50%;
-  --ring: 24 73% 67%;
-  --theme-brand-primary: hsl(24 73% 67%);
-  --theme-brand-secondary: hsl(15 86% 73%);
-  --theme-accent: hsl(24 73% 95%);
-  --theme-accent-foreground: hsl(24 73% 50%);
-  --theme-ring: hsl(24 73% 67%);
+  --brand-primary: 24 78% 65%;
+  --brand-secondary: 15 90% 70%;
+  --accent: 24 78% 96%;
+  --accent-foreground: 24 78% 50%;
+  --ring: 24 78% 65%;
+  --theme-brand-primary: hsl(24 78% 65%);
+  --theme-brand-secondary: hsl(15 90% 70%);
+  --theme-accent: hsl(24 78% 96%);
+  --theme-accent-foreground: hsl(24 78% 50%);
+  --theme-ring: hsl(24 78% 65%);
   --theme-cta: hsl(24 95% 53%);
 }
 
-/* === Theme 8: Aurora Gradient === */
+/* === Theme 8: Aurora Gradient - Enhanced Saturation === */
 [data-theme="aurora"] {
   --brand-primary: 210 100% 50%;
   --brand-secondary: 328 100% 54%;
@@ -210,14 +223,15 @@
 }
 
 .dark {
-  /* Deep Blue/Black Theme */
+  /* Deep Blue/Black Theme - Enhanced Contrast */
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
 
-  --card: 240 10% 5%;
+  --card: 240 10% 6%;
+  /* Slightly lighter than bg */
   --card-foreground: 0 0% 98%;
 
-  --popover: 240 10% 5%;
+  --popover: 240 10% 6%;
   --popover-foreground: 0 0% 98%;
 
   --primary: 0 0% 98%;
@@ -227,11 +241,9 @@
   --secondary-foreground: 0 0% 98%;
 
   --muted: 240 4% 16%;
-  --muted-foreground: 240 5% 85%;
-  /* Brighten from 65% to 85% for better contrast */
+  --muted-foreground: 240 5% 70%;
 
   --accent: 250 40% 15%;
-  /* Dark violet tint */
   --accent-foreground: 250 90% 75%;
 
   --destructive: 0 84% 60%;
@@ -241,17 +253,18 @@
   --input: 240 4% 16%;
   --ring: 250 95% 64%;
 
-  /* CTA in dark mode - slightly brighter orange */
   --cta: 24 100% 55%;
   --cta-foreground: 0 0% 100%;
 
-  --bg-elevated: 240 4% 8%;
-  --bg-surface: 240 4% 6%;
+  --bg-elevated: 240 4% 9%;
+  --bg-surface: 240 4% 7%;
 
   --sidebar: 240 4% 5%;
   --sidebar-foreground: 0 0% 98%;
   --sidebar-border: 240 4% 16%;
 }
+
+
 
 @utility hide-scrollbar {
   &::-webkit-scrollbar {
@@ -264,9 +277,50 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: var(--font-size-base);
+  /* Use Outfit as primary font for modern look, fallback to Inter/system */
+  font-family: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.015em;
-  /* Tighter tracking for modern feel */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h4 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+p {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+}
+
+small {
+  font-size: var(--font-size-xs);
+}
+
+/* Global Selection Style */
+::selection {
+  background-color: hsl(var(--brand-primary) / 0.2);
+  color: hsl(var(--brand-primary));
 }
 
 /* === Semantic Utility Classes === */
@@ -282,7 +336,7 @@ body {
   .bg-elevated {
     background-color: hsl(var(--bg-elevated));
     border: 1px solid hsl(var(--border) / 0.5);
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.02), 0 2px 4px -2px rgb(0 0 0 / 0.02);
   }
 
   .text-primary {
@@ -365,107 +419,53 @@ body {
     border-color: hsl(var(--border) / 0.5);
   }
 
-  /* === Glassmorphism v2.0 === */
+  /* === Glassmorphism v3.0 (Pro Max) === */
   .bg-glass {
-    background-color: hsl(var(--card));
-    backdrop-filter: blur(12px) saturate(150%);
-    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    background-color: hsl(var(--card) / 0.65);
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
     border: 1px solid hsl(var(--border) / 0.3);
+    box-shadow:
+      0 8px 32px -4px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 1.5px rgba(255, 255, 255, 0.4);
+    /* Pronounced inner highlight */
   }
 
-  .border-glass {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  /* === Badge Styles === */
-  /* Priority: Low - Neutral/Gray */
-  .badge-priority-low {
-    background-color: hsl(240 4% 90%) !important;
-    color: hsl(240 4% 45%) !important;
-    border-color: transparent !important;
-  }
-
-  .dark .badge-priority-low {
-    background-color: hsl(240 4% 20%) !important;
-    color: hsl(240 5% 65%) !important;
-  }
-
-  /* Priority: Medium - Orange */
-  .badge-priority-medium {
-    background-color: hsl(35 95% 90%) !important;
-    color: hsl(35 95% 40%) !important;
-    border-color: hsl(35 95% 70%) !important;
-  }
-
-  .dark .badge-priority-medium {
-    background-color: hsl(35 80% 20%) !important;
-    color: hsl(35 95% 65%) !important;
-    border-color: hsl(35 80% 40%) !important;
-  }
-
-  /* Priority: High - Red */
-  .badge-priority-high {
-    background-color: hsl(0 84% 92%) !important;
-    color: hsl(0 84% 50%) !important;
-    border-color: hsl(0 84% 80%) !important;
-  }
-
-  .dark .badge-priority-high {
-    background-color: hsl(0 63% 20%) !important;
-    color: hsl(0 84% 70%) !important;
-    border-color: hsl(0 63% 40%) !important;
-  }
-
-  /* Category: Personal - Blue */
-  .badge-category-personal {
-    background-color: hsl(210 90% 92%) !important;
-    color: hsl(210 90% 40%) !important;
-    border-color: hsl(210 90% 80%) !important;
-  }
-
-  .dark .badge-category-personal {
-    background-color: hsl(210 80% 20%) !important;
-    color: hsl(210 90% 70%) !important;
-    border-color: hsl(210 80% 40%) !important;
-  }
-
-  /* Category: Work - Purple */
-  .badge-category-work {
-    background-color: hsl(270 70% 92%) !important;
-    color: hsl(270 70% 45%) !important;
-    border-color: hsl(270 70% 80%) !important;
-  }
-
-  .dark .badge-category-work {
-    background-color: hsl(270 60% 20%) !important;
-    color: hsl(270 70% 70%) !important;
-    border-color: hsl(270 60% 40%) !important;
-  }
-
-  /* Category: Life - Green */
-  .badge-category-life {
-    background-color: hsl(150 70% 90%) !important;
-    color: hsl(150 70% 35%) !important;
-    border-color: hsl(150 70% 75%) !important;
-  }
-
-  .dark .badge-category-life {
-    background-color: hsl(150 60% 18%) !important;
-    color: hsl(150 70% 65%) !important;
-    border-color: hsl(150 60% 35%) !important;
+  .dark .bg-glass {
+    background-color: hsl(var(--card) / 0.55);
+    background-image: radial-gradient(at 0% 0%, hsla(var(--brand-primary), 0.05) 0, transparent 50%);
+    border: 1px solid hsl(var(--border) / 0.4);
+    box-shadow:
+      0 10px 40px -6px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   }
 }
 
-/* === Mesh Gradients === */
+@utility bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  mix-blend-mode: soft-light;
+}
+
+.dark .bg-noise {
+  opacity: 0.05;
+}
+
+/* === Theme-Aware Mesh Gradients (Pro Max) === */
 @utility bg-mesh-gradient {
-  background-image: radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-    radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+  background-image:
+    radial-gradient(at 0% 0%, var(--theme-brand-primary) 0, transparent 55%),
+    radial-gradient(at 100% 0%, var(--theme-brand-secondary) 0, transparent 55%),
+    radial-gradient(at 50% 100%, var(--theme-brand-primary) 0, transparent 55%);
+  filter: saturate(1.2) brightness(1.05);
 }
 
 .dark .bg-mesh-gradient {
-  /* Subtle dark mesh */
-  background-image: radial-gradient(circle at 50% 0%, hsl(var(--brand-primary) / 0.15), transparent 70%);
+  background-image:
+    radial-gradient(at 0% 0%, hsla(var(--brand-primary), 0.15) 0, transparent 60%),
+    radial-gradient(at 100% 0%, hsla(var(--brand-secondary), 0.1) 0, transparent 60%),
+    radial-gradient(at 50% 100%, hsla(var(--brand-primary), 0.05) 0, transparent 60%);
+  filter: none;
 }
 
 /* === Status Utilities === */
@@ -555,6 +555,126 @@ body {
 
 @utility animate-zoom-in {
   animation: zoom-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes pulse-slow {
+
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@utility animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@utility animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+/* Premium Skeleton Shimmer Effect */
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 20%,
+      hsl(var(--muted)) 40%,
+      hsl(var(--muted)) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Shake Animation for Error Feedback */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+@utility recess-effect {
+  transform: scale(0.96);
+  filter: blur(2px) brightness(0.8);
+  pointer-events: none;
+  border-radius: 2rem;
+}
+
+/* Theme Sweep View Transition */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
+@utility p-fluid {
+  padding: var(--space-container);
+}
+
+@utility px-fluid {
+  padding-left: var(--space-container);
+  padding-right: var(--space-container);
 }
 
 /* === Safe Area Utilities === */

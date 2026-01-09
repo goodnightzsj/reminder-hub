@@ -2,17 +2,18 @@ import { and, asc, desc, eq, ne, isNotNull, isNull, isNotNull as isNotNull_alias
 
 import { SegmentedControl } from "@/app/_components/SegmentedControl";
 
-import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
 import { ItemList } from "@/app/_components/items/ItemList";
 import { EmptyState } from "@/app/_components/EmptyState";
 import { CreateModal } from "@/app/_components/CreateModal";
-import { createItem, deleteItem, setItemStatus } from "@/app/_actions/items";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { diffDays, formatDateString, getDatePartsInTimeZone, parseDateString } from "@/server/date";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
 import { items } from "@/server/db/schema";
+
+import Link from "next/link";
+import { Icons } from "@/app/_components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
       ? isNotNull(items.deletedAt)
       : isNull(items.deletedAt);
 
-  let statusCondition: any = undefined;
+  let statusCondition: SQL | undefined = undefined;
 
   if (filter === "active") {
     statusCondition = ne(items.status, "retired");
@@ -141,12 +142,6 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="物品"
-          description={
-            <>
-              v0.3：物品 CRUD + 日均成本（按时区 <code className="font-mono">{timeZone}</code>{" "}
-              计算）。
-            </>
-          }
         />
 
 
@@ -156,45 +151,55 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
           <ItemCreateForm className="" />
         </CreateModal>
 
-        <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <h2 className="text-sm font-medium">列表</h2>
-              <p className="mt-1 text-xs text-secondary">
-                日均成本 = 总价 / 已使用天数（按 {timeZone} 的日期计算）。
-              </p>
-            </div>
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4">
+            {/* Primary Filters (Segmented) */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
 
-            <SegmentedControl
-              options={[
-                { key: "using", label: "使用中", href: buildHref("using", categoryFilter) },
-                { key: "idle", label: "闲置", href: buildHref("idle", categoryFilter) },
-                { key: "retired", label: "淘汰", href: buildHref("retired", categoryFilter) },
-                { key: "trash", label: "回收站", href: buildHref("trash", categoryFilter) },
-              ]}
-              currentValue={filter}
-              layoutId="item-filter"
-            />
-          </div>
-
-          {/* Category Filter SegmentedControl */}
-          {distinctCategories.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-divider pt-3 text-xs">
-              <span className="text-muted">分类</span>
+                <p className="text-xs text-muted-foreground">
+                  日均成本 = 总价 / 已使用天数
+                </p>
+              </div>
               <SegmentedControl
                 options={[
-                  { key: "all", label: "全部", href: buildHref(filter, null) },
-                  ...distinctCategories.map((c) => ({
-                    key: c.name!,
-                    label: c.name!,
-                    href: buildHref(filter, c.name),
-                  }))
+                  { key: "using", label: "使用中", href: buildHref("using", categoryFilter) },
+                  { key: "idle", label: "闲置", href: buildHref("idle", categoryFilter) },
+                  { key: "retired", label: "淘汰", href: buildHref("retired", categoryFilter) },
+                  { key: "trash", label: "回收站", href: buildHref("trash", categoryFilter) },
                 ]}
-                currentValue={categoryFilter ?? "all"}
-                layoutId="item-category-filter"
+                currentValue={filter}
+                layoutId="item-filter"
               />
             </div>
-          )}
+
+            {/* Secondary Filters (Categories) & Tags */}
+            {distinctCategories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 text-xs scrollbar-hide">
+                <Link
+                  href={buildHref(filter, null)}
+                  className={`inline-flex items-center rounded-full px-3 py-1 transition-colors ${!categoryFilter
+                    ? "bg-brand-primary/10 text-brand-primary font-medium"
+                    : "bg-surface hover:bg-surface/80 text-secondary"
+                    }`}
+                >
+                  全部
+                </Link>
+                {distinctCategories.map((c) => (
+                  <Link
+                    key={c.name}
+                    href={buildHref(filter, c.name)}
+                    className={`inline-flex items-center rounded-full px-3 py-1 transition-colors ${categoryFilter === c.name
+                      ? "bg-brand-primary/10 text-brand-primary font-medium"
+                      : "bg-surface hover:bg-surface/80 text-secondary"
+                      }`}
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
 
           <ItemList
@@ -209,18 +214,18 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
             filter={filter}
           />
 
-          {rows.length === 0 && (
+          {rows.length === 0 && (filter === "trash" || filter === "retired" || filter === "idle") && (
             <div className="mt-4">
               <EmptyState
                 title={
                   filter === "trash"
                     ? "回收站为空"
-                    : "还没有物品"
+                    : filter === "retired" ? "暂无淘汰记录" : "还没有闲置物品"
                 }
                 description={
                   filter === "trash"
                     ? "你的回收站很干净。"
-                    : "点击上方添加按钮，记录你的物品成本与价值。"
+                    : "这里空空如也。"
                 }
               />
             </div>

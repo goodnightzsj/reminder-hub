@@ -104,7 +104,6 @@ export default async function SubscriptionsPage({
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="订阅"
-          description="v0.2：到期提醒预览 + 手动续期重置（外部通知后置）。"
         />
 
         {/* Mobile Create Modal */}
@@ -117,8 +116,8 @@ export default async function SubscriptionsPage({
         </CreateModal>
 
         <section className="rounded-xl border border-default bg-elevated shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <h2 className="text-sm font-medium">列表</h2>
+          <div className="flex flex-wrap items-center justify-end gap-3 p-4">
+
             <SegmentedControl
               options={[
                 { key: "active", label: "进行中", href: "/subscriptions" },

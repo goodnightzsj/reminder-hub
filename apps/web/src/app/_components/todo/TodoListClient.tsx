@@ -20,6 +20,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SwipeableItem } from "../SwipeableItem";
+import { motion } from "framer-motion";
 
 type TodoItemData = {
     id: string;
@@ -47,11 +48,27 @@ function SortableTodoItem({ item, children, onComplete, onDelete }: SortableTodo
     const style = {
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 50 : 0,
+        position: 'relative' as const,
     };
 
     return (
-        <div ref={setNodeRef} style={style}>
+        <motion.div
+            ref={setNodeRef}
+            style={style}
+            animate={{
+                scale: isDragging ? 1.05 : 1,
+                boxShadow: isDragging
+                    ? "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                    : "0 0px 0px rgba(0, 0, 0, 0)",
+            }}
+            transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 25
+            }}
+            className={isDragging ? "bg-elevated rounded-xl border border-brand-primary/20" : ""}
+        >
             {/* Desktop: Show drag handle */}
             <div className="hidden sm:flex items-stretch">
                 <div
@@ -100,7 +117,7 @@ function SortableTodoItem({ item, children, onComplete, onDelete }: SortableTodo
                     {children}
                 </SwipeableItem>
             </div>
-        </div>
+        </motion.div>
     );
 }
 

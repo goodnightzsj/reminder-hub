@@ -30,7 +30,6 @@ export default async function SettingsPage() {
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="设置"
-          description="个人版默认无鉴权，建议仅本机/内网使用。"
         />
 
         <ToastListener />
@@ -51,7 +50,7 @@ export default async function SettingsPage() {
         */}
 
         {/* Appearance Section */}
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-1 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
           <h2 className="text-sm font-medium">外观设置</h2>
           <p className="mt-1 text-xs text-secondary">
             选择你喜欢的配色主题，搭配浅色/深色模式使用。
@@ -61,7 +60,7 @@ export default async function SettingsPage() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-2 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
           <h2 className="text-sm font-medium">日期类提醒</h2>
           <p className="mt-1 text-xs text-secondary">
             纪念日/订阅等“只填日期”的提醒，会在该时刻触发。
@@ -87,7 +86,7 @@ export default async function SettingsPage() {
         </Link>
 
         {/* Backup Section */}
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-3 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
           <h2 className="text-sm font-medium">备份（导出 / 导入）</h2>
           <p className="mt-1 text-xs text-secondary">
             导入为“覆盖导入”：会清空并恢复 Todo / 子任务 / 纪念日 / 订阅 / 物品 /
@@ -144,7 +143,7 @@ export default async function SettingsPage() {
           </form>
         </section>
 
-        <section className="mt-6 rounded-xl border border-danger bg-danger/10 p-4 shadow-sm">
+        <section className="mt-6 rounded-xl border border-danger bg-danger/10 p-4 shadow-sm animate-slide-up stagger-4">
           <h2 className="text-sm font-medium text-danger">
             危险操作
           </h2>

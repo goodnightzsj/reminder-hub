@@ -39,6 +39,12 @@ export const Icons = {
             <path d="M5 12h14" /><path d="M12 5v14" />
         </svg>
     ),
+    Edit: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+            <path d="m15 5 4 4" />
+        </svg>
+    ),
     ChevronRight: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
             <path d="m9 18 6-6-6-6" />
@@ -55,7 +61,7 @@ export const Icons = {
         </svg>
     ),
     Check: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "4" : "3.2"} strokeLinecap="round" strokeLinejoin="round" className={`${className} transition-all duration-300 ${active ? "drop-shadow-[0_0_3px_rgba(255,255,255,0.8)]" : "drop-shadow-[0_0_2px_rgba(255,255,255,0.4)]"}`}>
             <polyline points="20 6 9 17 4 12" />
         </svg>
     ),
@@ -142,6 +148,36 @@ export const Icons = {
     Repeat: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
             <path d="m17 2 4 4-4 4" /><path d="M3 11v-1a4 4 0 0 1 4-4h14" /><path d="m7 22-4-4 4-4" /><path d="M21 13v1a4 4 0 0 1-4 4H3" />
+        </svg>
+    ),
+    History: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><circle cx="12" cy="12" r="1" /><path d="M12 7v5l3 3" />
+        </svg>
+    ),
+    Banknote: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" />
+        </svg>
+    ),
+    Coffee: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" y1="2" x2="6" y2="4" /><line x1="10" y1="2" x2="10" y2="4" /><line x1="14" y1="2" x2="14" y2="4" />
+        </svg>
+    ),
+    Moon: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+    ),
+    RotateCcw: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
+        </svg>
+    ),
+    Zap: ({ className = "", active = false }: { className?: string, active?: boolean }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2.5" : "2"} strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <path d="M4 14.5 14 3l-2.4 9.4 8.4-1.9L10 21l2.4-9.4Z" />
         </svg>
     ),
 };

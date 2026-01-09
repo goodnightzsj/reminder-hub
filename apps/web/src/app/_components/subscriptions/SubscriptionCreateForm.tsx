@@ -1,7 +1,5 @@
 "use client";
 
-"use client";
-
 import { useState, useRef } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/app/_components/Input";
@@ -10,6 +8,7 @@ import { Select } from "@/app/_components/Select";
 import { createSubscription } from "@/app/_actions/subscriptions";
 import { Icons } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/Toast";
+import { useConfetti } from "@/app/_components/ConfettiProvider";
 
 const reminderOptionsDays = [
     { days: 0, label: "到期日" },
@@ -22,7 +21,7 @@ const reminderOptionsDays = [
 type SubscriptionCreateFormProps = {
     dateReminderTime: string;
     timeZone: string;
-    className?: string; // Allow overriding styles
+    className?: string;
 };
 
 export function SubscriptionCreateForm({
@@ -35,12 +34,16 @@ export function SubscriptionCreateForm({
     const searchParams = useSearchParams();
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isError, setIsError] = useState(false);
     const [formKey, setFormKey] = useState(0);
     const formRef = useRef<HTMLFormElement>(null);
-    const { success } = useToast();
+    const submitButtonRef = useRef<HTMLButtonElement>(null);
+    const { success, error: toastError } = useToast();
+    const { triggerMicroConfetti } = useConfetti();
 
     async function handleSubmit(formData: FormData) {
         setIsLoading(true);
+        setIsError(false);
         try {
             await createSubscription(formData);
 
@@ -48,6 +51,12 @@ export function SubscriptionCreateForm({
             success("创建成功");
             setFormKey(prev => prev + 1);
             formRef.current?.reset();
+
+            // Trigger confetti at submit button position
+            if (submitButtonRef.current) {
+                const rect = submitButtonRef.current.getBoundingClientRect();
+                triggerMicroConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            }
 
             setTimeout(() => {
                 setIsSuccess(false);
@@ -57,8 +66,11 @@ export function SubscriptionCreateForm({
                     router.replace(`${pathname}?${params.toString()}`);
                 }
             }, 1000);
-        } catch (error) {
-            console.error(error);
+        } catch (err) {
+            console.error(err);
+            toastError("创建失败，请重试");
+            setIsError(true);
+            setTimeout(() => setIsError(false), 500);
         } finally {
             setIsLoading(false);
         }
@@ -173,10 +185,13 @@ export function SubscriptionCreateForm({
 
             <div className="flex justify-end pt-2">
                 <button
+                    ref={submitButtonRef}
                     type="submit"
                     className={`h-11 rounded-lg px-8 text-sm font-medium shadow-sm transition-all active:scale-95 flex items-center justify-center min-w-[8rem] ${isSuccess
                         ? "bg-success text-white hover:bg-success"
-                        : "bg-brand-primary text-white hover:bg-brand-primary/90 hover:shadow-md"
+                        : isError
+                            ? "bg-destructive text-white animate-shake"
+                            : "bg-brand-primary text-white hover:bg-brand-primary/90 hover:shadow-md"
                         }`}
                     disabled={isSuccess || isLoading}
                 >
@@ -185,6 +200,11 @@ export function SubscriptionCreateForm({
                             <Icons.Check className="h-5 w-5" />
                             <span>已保存</span>
                         </div>
+                    ) : isLoading ? (
+                        <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                     ) : (
                         "保存订阅"
                     )}

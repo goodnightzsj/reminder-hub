@@ -51,8 +51,9 @@ export function SegmentedControl<T extends string>({
                                 className="absolute inset-0 z-[-1] rounded-lg bg-white dark:bg-white/10 shadow-sm"
                                 transition={{
                                     type: "spring",
-                                    stiffness: 500,
-                                    damping: 35,
+                                    stiffness: 450,
+                                    damping: 38,
+                                    mass: 0.8,
                                 }}
                             />
                         )}

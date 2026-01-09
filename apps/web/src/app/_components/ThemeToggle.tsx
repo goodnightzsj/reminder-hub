@@ -2,6 +2,8 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Magnetic } from "./Magnetic";
+import { Tooltip } from "./Tooltip";
 
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
@@ -15,10 +17,42 @@ export function ThemeToggle() {
 
     if (!mounted) return <div className="h-9 w-9" />; // Placeholder
 
-    const toggleTheme = () => {
-        if (theme === "light") setTheme("dark");
-        else if (theme === "dark") setTheme("system");
-        else setTheme("light");
+    const toggleTheme = (event: React.MouseEvent) => {
+        const x = event.clientX;
+        const y = event.clientY;
+
+        const mutateTheme = () => {
+            if (theme === "light") setTheme("dark");
+            else if (theme === "dark") setTheme("system");
+            else setTheme("light");
+        };
+
+        // Fallback for browsers that don't support View Transitions
+        if (!(document as any).startViewTransition) {
+            mutateTheme();
+            return;
+        }
+
+        const transition = (document as any).startViewTransition(() => {
+            mutateTheme();
+        });
+
+        transition.ready.then(() => {
+            const clipPath = [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(150% at ${x}px ${y}px)`,
+            ];
+            document.documentElement.animate(
+                {
+                    clipPath: theme === "dark" ? clipPath.reverse() : clipPath,
+                },
+                {
+                    duration: 500,
+                    easing: "ease-in-out",
+                    pseudoElement: theme === "dark" ? "::view-transition-old(root)" : "::view-transition-new(root)",
+                }
+            );
+        });
     };
 
     const getIcon = () => {
@@ -87,19 +121,22 @@ export function ThemeToggle() {
     };
 
     const getTooltip = () => {
-        if (theme === "light") return "Switch to Dark Mode";
-        if (theme === "dark") return "Switch to System";
-        return "Switch to Light Mode";
+        if (theme === "light") return "切换至深色模式";
+        if (theme === "dark") return "切换至系统模式";
+        return "切换至浅色模式";
     };
 
     return (
-        <button
-            onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-interactive-hover hover:text-primary"
-            aria-label="Toggle theme"
-            title={getTooltip()}
-        >
-            {getIcon()}
-        </button>
+        <Magnetic strength={0.3}>
+            <Tooltip content={getTooltip()} side="bottom">
+                <button
+                    onClick={(e) => toggleTheme(e)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-interactive-hover hover:text-primary active-press"
+                    aria-label="Toggle theme"
+                >
+                    {getIcon()}
+                </button>
+            </Tooltip>
+        </Magnetic>
     );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const themes = [
@@ -60,23 +61,42 @@ export function ThemeSwitcher() {
 
     return (
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
-            {themes.map((t) => (
-                <button
-                    key={t.id}
-                    onClick={() => setTheme(t.id)}
-                    className={`group flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all hover:bg-muted/50 ${theme === t.id ? "bg-muted ring-2 ring-brand-primary ring-offset-2 ring-offset-background" : ""
-                        }`}
-                    title={t.name}
-                >
-                    <div
-                        className="h-8 w-8 rounded-full border-2 border-white shadow-md transition-transform group-hover:scale-110"
-                        style={{ background: t.color }}
-                    />
-                    <span className="text-[10px] text-secondary group-hover:text-primary truncate max-w-full">
-                        {t.name}
-                    </span>
-                </button>
-            ))}
+            {themes.map((t) => {
+                const isActive = theme === t.id;
+                return (
+                    <button
+                        key={t.id}
+                        onClick={() => setTheme(t.id)}
+                        className="group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-muted/50"
+                        title={t.name}
+                    >
+                        {isActive && (
+                            <motion.div
+                                layoutId="theme-active-indicator"
+                                className="absolute inset-0 rounded-lg bg-muted border border-brand-primary/20 shadow-sm overflow-hidden"
+                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            >
+                                <motion.div
+                                    key={`shimmer-${t.id}`}
+                                    initial={{ x: "-100%", opacity: 0 }}
+                                    animate={{ x: "200%", opacity: 0.3 }}
+                                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-brand-primary/40 to-transparent -skew-x-12"
+                                />
+                            </motion.div>
+                        )}
+                        <div className="relative z-10 flex flex-col items-center gap-1.5">
+                            <div
+                                className={`h-8 w-8 rounded-full border-2 border-white shadow-md transition-transform group-hover:scale-110 ${isActive ? "ring-2 ring-brand-primary ring-offset-2 ring-offset-background" : ""}`}
+                                style={{ background: t.color }}
+                            />
+                            <span className={`text-[10px] truncate max-w-full font-medium transition-colors ${isActive ? "text-primary" : "text-secondary group-hover:text-primary"}`}>
+                                {t.name}
+                            </span>
+                        </div>
+                    </button>
+                );
+            })}
         </div>
     );
 }

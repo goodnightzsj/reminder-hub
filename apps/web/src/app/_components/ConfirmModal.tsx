@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "./Button";
+import { motion, AnimatePresence } from "framer-motion";
 
 type ConfirmModalProps = {
     isOpen: boolean;
@@ -28,16 +29,21 @@ export function ConfirmModal({
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        const raf = requestAnimationFrame(() => setMounted(true));
-        // Lock scroll when modal is open
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        const mainContent = document.getElementById("main-content");
         if (isOpen) {
             document.body.style.overflow = "hidden";
+            mainContent?.classList.add("recess-effect");
         } else {
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = "";
+            mainContent?.classList.remove("recess-effect");
         }
         return () => {
-            cancelAnimationFrame(raf);
-            document.body.style.overflow = "unset";
+            document.body.style.overflow = "";
+            mainContent?.classList.remove("recess-effect");
         };
     }, [isOpen]);
 
@@ -51,56 +57,69 @@ export function ConfirmModal({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, onClose]);
 
-    if (!mounted || !isOpen) return null;
+    if (!mounted) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in"
-                onClick={onClose}
-            />
-
-            {/* Modal */}
-            <div className={`relative w-full max-w-sm mx-4 transform overflow-hidden rounded-2xl border bg-elevated p-6 shadow-2xl transition-all animate-zoom-in ${isDestructive ? "border-danger/30" : "border-default"}`}>
-                <div className="flex flex-col items-center gap-4 text-center">
-                    {isDestructive && (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 text-danger animate-in zoom-in duration-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
-                        </div>
-                    )}
-
-                    <div className="space-y-1">
-                        <h3 className={`text-lg font-bold tracking-tight ${isDestructive ? "text-danger" : "text-primary"}`}>
-                            {title}
-                        </h3>
-                        <p className="text-sm font-medium text-secondary">
-                            {message}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-8 flex gap-3">
-                    <Button
-                        variant="ghost"
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="flex-1"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md"
+                    />
+
+                    {/* Modal */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        className={`relative w-full max-w-sm mx-4 transform overflow-hidden rounded-[2rem] border bg-elevated/80 backdrop-blur-2xl p-8 shadow-2xl ${isDestructive ? "border-danger/30" : "border-white/10"}`}
                     >
-                        {cancelLabel}
-                    </Button>
-                    <Button
-                        variant={isDestructive ? "danger" : "primary"}
-                        onClick={() => {
-                            onConfirm();
-                            onClose();
-                        }}
-                        className={`flex-1 ${isDestructive ? "shadow-lg shadow-danger/20" : ""}`}
-                    >
-                        {confirmLabel}
-                    </Button>
+                        <div className="flex flex-col items-center gap-6 text-center">
+                            {isDestructive && (
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/10 text-danger shadow-inner">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <h3 className={`text-xl font-bold tracking-tight ${isDestructive ? "text-danger" : "text-primary"}`}>
+                                    {title}
+                                </h3>
+                                <p className="text-base text-secondary/80 leading-relaxed font-medium">
+                                    {message}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-10 flex flex-col sm:flex-row gap-3">
+                            <Button
+                                variant="ghost"
+                                onClick={onClose}
+                                className="flex-1 h-12 rounded-xl text-base font-semibold"
+                            >
+                                {cancelLabel}
+                            </Button>
+                            <Button
+                                variant={isDestructive ? "danger" : "primary"}
+                                onClick={() => {
+                                    onConfirm();
+                                    onClose();
+                                }}
+                                className={`flex-1 h-12 rounded-xl text-base font-semibold ${isDestructive ? "shadow-lg shadow-danger/25" : "shadow-lg shadow-brand-primary/25"}`}
+                            >
+                                {confirmLabel}
+                            </Button>
+                        </div>
+                    </motion.div>
                 </div>
-            </div>
-        </div>,
+            )}
+        </AnimatePresence>,
         document.body
     );
 }

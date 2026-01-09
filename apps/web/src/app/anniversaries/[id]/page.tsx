@@ -186,7 +186,7 @@ export default async function AnniversaryDetailPage({
           </div>
         </div>
 
-        <div className="p-4 sm:p-8 animate-slide-up stagger-1 space-y-8">
+        <div className="p-4 sm:p-8 space-y-8">
           {saved ? (
             <div className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success animate-slide-up">
               ✓ 已保存修改
@@ -194,7 +194,7 @@ export default async function AnniversaryDetailPage({
           ) : null}
 
           {/* 状态概览 */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-slide-up stagger-1">
             <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
               <span className="text-xs text-muted">录入日期</span>
               <div className="text-lg font-semibold font-mono">
@@ -246,10 +246,10 @@ export default async function AnniversaryDetailPage({
             </div>
           </div>
 
-          <form id="anniversary-edit-form" action={updateAnniversary} className="space-y-8">
+          <form id="anniversary-edit-form" action={updateAnniversary} className="space-y-8 animate-slide-up stagger-2">
             <input type="hidden" name="id" value={item.id} />
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated overflow-hidden animate-slide-up stagger-3">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
                 基本信息
               </div>
@@ -321,7 +321,7 @@ export default async function AnniversaryDetailPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated overflow-hidden animate-slide-up stagger-4">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary flex items-center justify-between">
                 <span>提醒设置</span>
                 <span className="text-[10px] text-muted font-normal">可多选</span>

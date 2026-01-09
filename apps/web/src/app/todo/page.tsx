@@ -40,12 +40,11 @@ function getParam(
   return null;
 }
 
-type TodoFilter = "active" | "done" | "archived" | "trash" | "all";
+type TodoFilter = "active" | "done" | "trash" | "all";
 
 function parseTodoFilter(raw: string | null): TodoFilter {
   if (raw === "active") return "active";
   if (raw === "done") return "done";
-  if (raw === "archived") return "archived";
   if (raw === "trash") return "trash";
   if (raw === "all") return "all";
   return "active";
@@ -92,8 +91,6 @@ export default async function Home({ searchParams }: HomePageProps) {
       taskTypeStatusPredicates.push(eq(todos.isDone, false), eq(todos.isArchived, false));
     } else if (filter === "done") {
       taskTypeStatusPredicates.push(eq(todos.isDone, true), eq(todos.isArchived, false));
-    } else if (filter === "archived") {
-      taskTypeStatusPredicates.push(eq(todos.isArchived, true));
     }
     // filter === "all" has no additional predicates (just non-deleted)
   }
@@ -127,8 +124,6 @@ export default async function Home({ searchParams }: HomePageProps) {
       predicates.push(eq(todos.isDone, false), eq(todos.isArchived, false));
     } else if (filter === "done") {
       predicates.push(eq(todos.isDone, true), eq(todos.isArchived, false));
-    } else if (filter === "archived") {
-      predicates.push(eq(todos.isArchived, true));
     }
   }
 
@@ -236,7 +231,6 @@ export default async function Home({ searchParams }: HomePageProps) {
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="Todo"
-          description="MVP：本地 SQLite + CRUD + 截止/提醒预览/标签/子任务（外部通知后置）。"
         />
 
 
@@ -248,10 +242,11 @@ export default async function Home({ searchParams }: HomePageProps) {
           </CreateModal>
         )}
 
-        <section className="rounded-xl border border-default bg-elevated shadow-sm">
-          <div className="p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <h2 className="text-sm font-medium">列表</h2>
+        <section className="rounded-2xl border border-default bg-elevated shadow-sm overflow-hidden min-h-[600px]">
+          {/* Sticky Header with Glassmorphism */}
+          <div className="sticky top-0 z-20 border-b border-divider bg-glass backdrop-blur-xl px-4 py-3">
+            <div className="flex flex-wrap items-center justify-end gap-3 mb-3">
+
               <SegmentedControl
                 options={[
                   { key: "active", label: "进行中", href: buildHomeHref({ filter: "active", priority: priorityFilter, tag: tagFilter, taskType: taskTypeFilter }) },
@@ -263,81 +258,67 @@ export default async function Home({ searchParams }: HomePageProps) {
               />
             </div>
 
-            {/* ... (Filter controls - kept same) */}
-            <div className="border-t border-divider pt-4">
-              {/* Same filter controls for priority/type/tags */}
-              {/* NOTE: I am copying the whole updated logic here, but relying on user to see the diff via tool */}
-              <nav className="flex flex-wrap items-center gap-3 text-xs">
-                <span className="text-muted">优先级</span>
-                <SegmentedControl
-                  options={[
-                    { key: "all", label: "全部", href: buildHomeHref({ filter, priority: "all", tag: tagFilter, taskType: taskTypeFilter }) },
-                    { key: "high", label: "高", href: buildHomeHref({ filter, priority: "high", tag: tagFilter, taskType: taskTypeFilter }) },
-                    { key: "medium", label: "中", href: buildHomeHref({ filter, priority: "medium", tag: tagFilter, taskType: taskTypeFilter }) },
-                    { key: "low", label: "低", href: buildHomeHref({ filter, priority: "low", tag: tagFilter, taskType: taskTypeFilter }) },
-                  ]}
-                  currentValue={priorityFilter}
-                  layoutId="priority-filter"
-                />
+            {/* Filter Controls Row */}
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-muted font-medium">优先级</span>
+              <SegmentedControl
+                options={[
+                  { key: "all", label: "全部", href: buildHomeHref({ filter, priority: "all", tag: tagFilter, taskType: taskTypeFilter }) },
+                  { key: "high", label: "高", href: buildHomeHref({ filter, priority: "high", tag: tagFilter, taskType: taskTypeFilter }) },
+                  { key: "medium", label: "中", href: buildHomeHref({ filter, priority: "medium", tag: tagFilter, taskType: taskTypeFilter }) },
+                  { key: "low", label: "低", href: buildHomeHref({ filter, priority: "low", tag: tagFilter, taskType: taskTypeFilter }) },
+                ]}
+                currentValue={priorityFilter}
+                layoutId="priority-filter"
+              />
 
-                <span className="text-muted">分类</span>
-                <SegmentedControl
-                  options={[
-                    { key: "all", label: "全部", href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: null }) },
-                    ...taskTypes.map((t) => ({
-                      key: t,
-                      label: t,
-                      href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: t }),
-                    }))
-                  ]}
-                  currentValue={effectiveTaskTypeFilter ?? "all"}
-                  layoutId="category-filter"
-                />
+              <div className="h-4 w-px bg-divider mx-1" />
 
-                {tagFilter ||
-                  priorityFilter !== "all" ||
-                  effectiveTaskTypeFilter !== null ||
-                  filter !== "active" ? (
-                  <Link
-                    href="/todo"
-                    className="rounded-lg border border-default px-3 py-2 font-medium text-muted hover:bg-interactive-hover active-press"
-                  >
-                    清除筛选
-                  </Link>
-                ) : null}
-              </nav>
+              <span className="text-muted font-medium">分类</span>
+              <SegmentedControl
+                options={[
+                  { key: "all", label: "全部", href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: null }) },
+                  ...taskTypes.map((t) => ({
+                    key: t,
+                    label: t,
+                    href: buildHomeHref({ filter, priority: priorityFilter, tag: tagFilter, taskType: t }),
+                  }))
+                ]}
+                currentValue={effectiveTaskTypeFilter ?? "all"}
+                layoutId="category-filter"
+              />
 
-              {tagsSorted.length > 0 ? (
-                <div className="mt-3 border-t border-dashed border-divider pt-3 text-xs">
-                  <div className="mb-2 text-muted">标签</div>
-                  <div className="flex flex-wrap gap-2">
-                    {tagsSorted.map(([t, count]) => (
-                      <Link
-                        key={t}
-                        href={buildHomeHref({
-                          filter,
-                          priority: priorityFilter,
-                          tag: t,
-                          taskType: taskTypeFilter,
-                        })}
-                        className={[
-                          "rounded-lg border px-3 py-2 font-medium",
-                          t === tagFilter
-                            ? "border-brand-primary bg-brand-primary text-white"
-                            : "border-default hover:bg-interactive-hover",
-                        ].join(" ")}
-                      >
-                        {t}
-                        <span className="ml-1 text-inverted/70">
-                          {count}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+              {(tagFilter || priorityFilter !== "all" || effectiveTaskTypeFilter !== null || filter !== "active") && (
+                <Link
+                  href="/todo"
+                  className="ml-auto rounded-lg border border-default px-2.5 py-1.5 font-medium text-muted hover:bg-interactive-hover hover:text-primary active-press transition-colors"
+                >
+                  清除筛选
+                </Link>
+              )}
             </div>
+
+            {tagsSorted.length > 0 && (
+              <div className="mt-3 flex flex-nowrap overflow-x-auto gap-2 pb-1 scrollbar-hide mask-fade-right">
+                {tagsSorted.map(([t, count]) => (
+                  <Link
+                    key={t}
+                    href={buildHomeHref({ filter, priority: priorityFilter, tag: t, taskType: taskTypeFilter })}
+                    className={[
+                      "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                      t === tagFilter
+                        ? "border-brand-primary bg-brand-primary text-white"
+                        : "border-default bg-surface/50 text-secondary hover:bg-interactive-hover",
+                    ].join(" ")}
+                  >
+                    #{t}
+                    <span className="ml-1 opacity-60">{count}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
+
 
           <TodoList
             items={visibleItems}

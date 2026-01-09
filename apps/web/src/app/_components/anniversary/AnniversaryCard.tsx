@@ -3,12 +3,10 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { deleteAnniversary, setAnniversaryArchived, restoreAnniversary } from "@/app/_actions/anniversaries";
-import { UrgencyBadge } from "../UrgencyBadge";
+import { deleteAnniversary, restoreAnniversary } from "@/app/_actions/anniversaries";
 import { Icons } from "../Icons";
-import { Badge, getBadgeVariantFromLabel } from "../Badge";
-
-
+import { Badge } from "../Badge";
+import { Tooltip } from "../Tooltip";
 
 type AnniversaryCardProps = {
     item: {
@@ -18,7 +16,6 @@ type AnniversaryCardProps = {
         date: string;
         dateType: string;
         isLeapMonth: boolean;
-        isArchived: boolean;
         deletedAt?: Date | null;
     };
     daysLeft: number | null;
@@ -31,11 +28,9 @@ type AnniversaryCardProps = {
 };
 
 const categoryLabels: Record<string, string> = {
-    // 中文 keys
     "生日": "生日",
     "纪念日": "纪念日",
     "节日": "节日",
-    // Legacy English keys
     birthday: "生日",
     anniversary: "纪念日",
     festival: "节日",
@@ -43,141 +38,146 @@ const categoryLabels: Record<string, string> = {
 };
 
 const itemVariants = {
-    hidden: { opacity: 0, y: 12 },
-    visible: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 12, scale: 0.98 },
+    visible: { opacity: 1, y: 0, scale: 1 },
 };
 
 export function AnniversaryCard({ item, daysLeft, nextDate, preview }: AnniversaryCardProps) {
-    const now = new Date();
+    const isToday = daysLeft === 0;
+    const isUrgent = daysLeft !== null && daysLeft <= 3 && daysLeft > 0;
+    const isNear = daysLeft !== null && daysLeft <= 7 && daysLeft > 3;
+
+    // Dynamic styles based on urgency
+    let cardBorderClass = "border-default";
+    let daysEndColorClass = "text-primary";
+    let bgClass = "bg-elevated";
+
+    if (isToday) {
+        cardBorderClass = "border-red-500/50";
+        bgClass = "bg-gradient-to-br from-red-500/10 to-elevated";
+        daysEndColorClass = "text-red-500";
+    } else if (isUrgent) {
+        cardBorderClass = "border-orange-500/40";
+        daysEndColorClass = "text-orange-500";
+    } else if (isNear) {
+        cardBorderClass = "border-brand-primary/40";
+        daysEndColorClass = "text-brand-primary";
+    }
 
     return (
         <motion.div
             layout
             variants={itemVariants}
-            className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-default bg-elevated p-4 shadow-sm transition-all hover:bg-muted/30`}
+            className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border ${cardBorderClass} ${bgClass} p-5 shadow-sm transition-all hover:shadow-md hover-float`}
         >
-            <div className="mb-4">
-                <div className="flex items-start justify-between">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <Badge variant={item.dateType === "lunar" ? "purple" : "blue"} className="px-1.5 py-0 text-[10px]">
-                                {item.dateType === "lunar" ? "农历" : "公历"}
-                            </Badge>
-                            <Badge variant={getBadgeVariantFromLabel(item.category)} className="px-1.5 py-0 text-[10px]">
-                                {categoryLabels[item.category] || item.category}
-                            </Badge>
-                        </div>
-                        <Link
-                            href={`/anniversaries/${item.id}`}
-                            className="block truncate text-lg font-bold text-primary transition-colors hover:text-brand-primary"
-                            title={item.title}
-                        >
-                            {item.title}
-                        </Link>
-                    </div>
-
-                    {daysLeft !== null && <UrgencyBadge daysLeft={daysLeft} />}
+            {/* Header: Date Type + Category */}
+            <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                    <Badge variant={item.dateType === "lunar" ? "purple" : "blue"} className="px-1.5 py-0.5 text-[10px] uppercase tracking-wider">
+                        {item.dateType === "lunar" ? "农历" : "公历"}
+                    </Badge>
+                    <span className="text-xs text-secondary font-medium">
+                        {categoryLabels[item.category] || item.category}
+                    </span>
                 </div>
+            </div>
 
-                {/* Bento Cell: Date Info */}
-                <div className="mt-4 flex flex-col gap-2 rounded-lg bg-surface/60 p-3 border border-border/50 backdrop-blur-sm">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-secondary">目标日期</span>
-                        <span className="font-medium font-mono text-primary">
-                            {item.dateType === "solar"
-                                ? item.date
-                                : `农历${item.isLeapMonth ? "闰" : ""}${item.date}`}
-                        </span>
+            {/* Main Content: Days Left */}
+            <div className="flex flex-col items-center justify-center py-6">
+                {daysLeft !== null ? (
+                    <div className="text-center">
+                        {isToday ? (
+                            <div className="flex flex-col items-center animate-bounce-gentle">
+                                <span className="font-outfit text-4xl font-bold text-red-500">TODAY</span>
+                                <span className="text-sm font-medium text-red-500/80">今天</span>
+                            </div>
+                        ) : (
+                            <>
+                                <span className={`font-outfit text-5xl font-bold tracking-tight ${daysEndColorClass}`}>
+                                    {daysLeft}
+                                </span>
+                                <span className="text-xs font-medium text-muted-foreground mt-1 block">天后</span>
+                            </>
+                        )}
                     </div>
-                    {nextDate && (
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-secondary">下一次</span>
-                            <span className="font-medium text-brand-primary font-mono">{nextDate}</span>
-                        </div>
-                    )}
-                </div>
-
-                {preview.length > 0 && (
-                    <div className="mt-3">
-                        <div className="flex flex-wrap gap-1.5 opacity-80">
-                            {preview.slice(0, 3).map((p) => {
-                                const isPast = p.at.getTime() < now.getTime();
-                                const isToday = p.days === 0;
-
-                                // "Today" gets the special red badge
-                                if (isToday) {
-                                    return (
-                                        <span
-                                            key={`${item.id}:${p.days}`}
-                                            className="rounded px-2 py-0.5 text-[10px] bg-gradient-to-b from-red-500 to-red-600 text-white shadow-sm shadow-red-500/25 font-medium border-0"
-                                        >
-                                            {p.label}
-                                        </span>
-                                    );
-                                }
-
-                                return (
-                                    <span
-                                        key={`${item.id}:${p.days}`}
-                                        className={[
-                                            "rounded px-1.5 py-0.5 text-[10px] border",
-                                            isPast
-                                                ? "bg-danger/5 text-danger border-danger/20 opacity-70"
-                                                : "bg-surface text-secondary border-divider",
-                                        ].join(" ")}
-                                    >
-                                        {p.label}
-                                    </span>
-                                );
-                            })}
-                        </div>
-                    </div>
+                ) : (
+                    <span className="font-mono text-xl text-muted-foreground">--</span>
                 )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-divider pt-3 mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+            {/* Footer: Title & Next Date */}
+            <div className="space-y-1 text-center">
+                <Link
+                    href={`/anniversaries/${item.id}`}
+                    className="block truncate text-lg font-semibold text-primary transition-colors hover:text-brand-primary"
+                    title={item.title}
+                >
+                    {item.title}
+                </Link>
+                <div className="text-[11px] text-muted flex items-center justify-center gap-2">
+                    <Icons.Calendar className="h-3 w-3 opacity-70" />
+                    <span>
+                        {nextDate || "未知日期"}
+                        {item.dateType === "lunar" && item.isLeapMonth ? " (闰)" : ""}
+                    </span>
+                </div>
+            </div>
+
+            {/* Hover Actions Overlay */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm p-4">
                 {item.deletedAt ? (
                     <>
+                        <Tooltip content="查看详情">
+                            <Link
+                                href={`/anniversaries/${item.id}`}
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
+                            >
+                                <Icons.Edit className="h-5 w-5" />
+                            </Link>
+                        </Tooltip>
                         <form action={restoreAnniversary}>
                             <input type="hidden" name="id" value={item.id} />
-                            <button
-                                type="submit"
-                                className="h-7 rounded border border-brand-primary text-brand-primary px-2 text-xs font-medium hover:bg-brand-primary hover:text-white transition-colors active-press"
-                            >
-                                恢复
-                            </button>
+                            <Tooltip content="从回收站恢复">
+                                <button
+                                    type="submit"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-white shadow-lg shadow-success/20 hover:scale-110 active:scale-95 transition-all"
+                                >
+                                    <Icons.ArchiveRestore className="h-5 w-5" />
+                                </button>
+                            </Tooltip>
                         </form>
                         <form action={deleteAnniversary}>
                             <input type="hidden" name="id" value={item.id} />
-                            <ConfirmSubmitButton
-                                confirmMessage="确定彻底删除这个纪念日吗？此操作无法撤销。"
-                                className="h-7 rounded border border-transparent px-2 text-xs font-medium text-danger hover:bg-danger/10 active-press"
-                            >
-                                彻底删除
-                            </ConfirmSubmitButton>
+                            <Tooltip content="彻底删除">
+                                <ConfirmSubmitButton
+                                    confirmMessage="确定彻底删除这个纪念日吗？"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
+                                >
+                                    <Icons.Trash className="h-5 w-5" />
+                                </ConfirmSubmitButton>
+                            </Tooltip>
                         </form>
                     </>
                 ) : (
                     <>
-                        <form action={setAnniversaryArchived}>
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="isArchived" value={item.isArchived ? "0" : "1"} />
-                            <button
-                                type="submit"
-                                className="h-7 rounded border border-default px-2 text-xs font-medium hover:bg-interactive-hover text-secondary active-press"
+                        <Tooltip content="编辑资料">
+                            <Link
+                                href={`/anniversaries/${item.id}`}
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:scale-110 transition-all"
                             >
-                                {item.isArchived ? "取消归档" : "归档"}
-                            </button>
-                        </form>
-
+                                <Icons.Edit className="h-5 w-5" />
+                            </Link>
+                        </Tooltip>
                         <form action={deleteAnniversary}>
                             <input type="hidden" name="id" value={item.id} />
-                            <ConfirmSubmitButton
-                                confirmMessage="确定删除这个纪念日吗？它将被移至回收站。"
-                                className="h-7 rounded border border-transparent px-2 text-xs font-medium text-danger hover:bg-danger/10 active-press"
-                            >
-                                删除
-                            </ConfirmSubmitButton>
+                            <Tooltip content="移至回收站">
+                                <ConfirmSubmitButton
+                                    confirmMessage="确定删除这个纪念日吗？"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-danger border border-divider shadow-md hover:bg-danger hover:text-white hover:scale-110 active:scale-95 transition-all"
+                                >
+                                    <Icons.Trash className="h-5 w-5" />
+                                </ConfirmSubmitButton>
+                            </Tooltip>
                         </form>
                     </>
                 )}

@@ -115,7 +115,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="搜索"
-          description="跨 Todo / 纪念日 / 订阅 / 物品 的标题关键字搜索。"
         />
 
         <section className="mb-8 rounded-xl border border-default bg-elevated p-4 shadow-sm">

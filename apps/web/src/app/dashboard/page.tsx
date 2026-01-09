@@ -11,6 +11,10 @@ import { AppHeader } from "../_components/AppHeader";
 import { BentoCard } from "../_components/BentoCard";
 import { Button } from "../_components/Button";
 import { Icons } from "../_components/Icons";
+import { SpendBarChart } from "./_components/SpendBarChart";
+import { Tooltip } from "../_components/Tooltip";
+import { NumberTicker } from "../_components/NumberTicker";
+import { TiltCard } from "../_components/TiltCard";
 import {
   addDaysToDateString,
   diffDays,
@@ -79,10 +83,38 @@ type UpcomingItem =
     name: string;
   };
 
+// Helper for dynamic greeting
+function getTimeOfDay(hour: number) {
+  if (hour < 5) return "night";
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
+}
+
+function getGreeting(timeZone: string) {
+  const hour = parseInt(new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: false,
+    timeZone,
+  }).format(new Date()), 10);
+
+  const timeOfDay = getTimeOfDay(hour);
+
+  switch (timeOfDay) {
+    case "morning": return "早上好";
+    case "afternoon": return "下午好";
+    case "evening": return "晚上好";
+    case "night": return "夜深了";
+    default: return "你好";
+  }
+}
+
 export default async function DashboardPage() {
   const settings = await getAppSettings();
   const timeZone = settings.timeZone;
   const dateReminderTime = settings.dateReminderTime;
+
+  const greeting = getGreeting(timeZone);
 
   const now = new Date();
   const today = formatDateString(getDatePartsInTimeZone(now, timeZone));
@@ -334,16 +366,13 @@ export default async function DashboardPage() {
     upcomingCount: upcomingTotalCount,
   };
 
+  const maxMonthlySpend = Math.max(1, ...monthlySpendRows.map(r => r.amount));
+
   return (
     <div className="min-h-dvh bg-base font-sans text-primary animate-fade-in pb-20 sm:pb-10">
-      <main className="mx-auto max-w-5xl p-6 sm:p-10">
+      <main className="mx-auto max-w-5xl py-10 px-fluid">
         <AppHeader
-          title="仪表盘"
-          description={
-            <>
-              今日聚焦 + 即将到来（时区 <code className="font-mono">{timeZone}</code>）。
-            </>
-          }
+          title={greeting}
         />
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_auto_auto]">
@@ -351,9 +380,10 @@ export default async function DashboardPage() {
           <div className="sm:col-span-2 sm:row-span-2">
             <BentoCard
               title="今日聚焦"
-              className="h-full"
+              className="h-full border-brand-primary/20"
+              glow={true}
               delay={0.05}
-              icon={<Icons.Target className="h-5 w-5" />}
+              icon={<Icons.Zap className="h-5 w-5 text-brand-primary" />}
             >
               <div className="flex bg-surface/50 rounded-lg p-3 mb-4 items-center justify-between text-xs text-secondary">
                 <span>逾期 {stats.overdueTodos}</span>
@@ -383,9 +413,11 @@ export default async function DashboardPage() {
                           <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                             <input type="hidden" name="id" value={t.id} />
                             <input type="hidden" name="isDone" value="1" />
-                            <Button type="submit" variant="ghost" size="icon" className="h-6 w-6 hover:bg-success hover:text-white">
-                              <Icons.Check className="h-3 w-3" />
-                            </Button>
+                            <Tooltip content="标记为已完成" side="left">
+                              <Button type="submit" variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50">
+                                <Icons.Check active className="h-3 w-3" />
+                              </Button>
+                            </Tooltip>
                           </form>
                         </li>
                       ))}
@@ -414,9 +446,11 @@ export default async function DashboardPage() {
                           <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                             <input type="hidden" name="id" value={t.id} />
                             <input type="hidden" name="isDone" value="1" />
-                            <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-brand-primary hover:text-white">
-                              <Icons.Check className="h-3.5 w-3.5" />
-                            </Button>
+                            <Tooltip content="标记为已完成" side="left">
+                              <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50">
+                                <Icons.Check active className="h-3.5 w-3.5" />
+                              </Button>
+                            </Tooltip>
                           </form>
                         </li>
                       ))}
@@ -487,59 +521,67 @@ export default async function DashboardPage() {
           </div>
 
           {/* Stats 1: Todo */}
-          <BentoCard className="col-span-1" delay={0.1}>
-            <div className="flex items-center justify-center gap-6 h-full p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary shrink-0">
-                <Icons.CheckSquare className="h-6 w-6" />
+          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
+            <BentoCard className="h-full" delay={0.1}>
+              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-2">
+                  <Icons.CheckSquare className="h-6 w-6" />
+                </div>
+                <div className="text-3xl font-bold text-primary leading-none">
+                  <NumberTicker value={stats.activeTodos} delay={0.2} />
+                </div>
+                <div className="text-xs text-muted font-medium mt-1">剩余待办</div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.activeTodos}</div>
-                <div className="text-xs text-secondary font-medium mt-1 truncate">剩余待办</div>
-              </div>
-            </div>
-          </BentoCard>
+            </BentoCard>
+          </TiltCard>
 
           {/* Stats 2: Done */}
-          <BentoCard className="col-span-1" delay={0.15}>
-            <div className="flex items-center justify-center gap-6 h-full p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 shrink-0">
-                <Icons.CheckCircle className="h-6 w-6" />
+          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
+            <BentoCard className="h-full" delay={0.15}>
+              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 mb-2">
+                  <Icons.CheckCircle className="h-6 w-6" />
+                </div>
+                <div className="text-3xl font-bold text-primary leading-none">
+                  <NumberTicker value={stats.doneTodosToday} delay={0.3} />
+                </div>
+                <div className="text-xs text-muted font-medium mt-1">今日完成</div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.doneTodosToday}</div>
-                <div className="text-xs text-secondary font-medium mt-1 truncate">今日完成</div>
-              </div>
-            </div>
-          </BentoCard>
+            </BentoCard>
+          </TiltCard>
 
           {/* Stats 3: Upcoming */}
-          <BentoCard className="col-span-1" delay={0.2}>
-            <div className="flex items-center justify-center gap-6 h-full p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 shrink-0">
-                <Icons.Calendar className="h-6 w-6" />
+          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
+            <BentoCard className="h-full" delay={0.2}>
+              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 mb-2">
+                  <Icons.Calendar className="h-6 w-6" />
+                </div>
+                <div className="text-3xl font-bold text-primary leading-none">
+                  <NumberTicker value={stats.upcomingCount} delay={0.4} />
+                </div>
+                <div className="text-xs text-muted font-medium mt-1">一周待办</div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.upcomingCount}</div>
-                <div className="text-xs text-secondary font-medium mt-1 truncate">未来7天事项</div>
-              </div>
-            </div>
-          </BentoCard>
+            </BentoCard>
+          </TiltCard>
 
           {/* Stats 4: Subscriptions */}
-          <BentoCard className="col-span-1" delay={0.25}>
-            <div className="flex items-center justify-center gap-6 h-full p-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 shrink-0">
-                <Icons.CreditCard className="h-6 w-6" />
+          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
+            <BentoCard className="h-full" delay={0.25}>
+              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-2">
+                  <Icons.CreditCard className="h-6 w-6" />
+                </div>
+                <div className="text-3xl font-bold text-primary leading-none">
+                  <NumberTicker value={stats.activeSubscriptions} delay={0.5} />
+                </div>
+                <div className="text-xs text-muted font-medium mt-1">活跃订阅</div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <div className="text-3xl font-bold tabular-nums text-primary leading-none">{stats.activeSubscriptions}</div>
-                <div className="text-xs text-secondary font-medium mt-1 truncate">活跃订阅</div>
-              </div>
-            </div>
-          </BentoCard>
+            </BentoCard>
+          </TiltCard>
 
           {/* Upcoming: (2x2) */}
-          <div className="sm:col-span-2 sm:row-span-2">
+          <TiltCard className="sm:col-span-2 lg:col-span-2 lg:row-span-2" maxRotation={5}>
             <BentoCard title="即将到来" className="h-full" delay={0.3} icon={<Icons.CalendarClock className="h-5 w-5" />}>
               <div className="flex flex-col h-full">
                 {upcoming.length === 0 ? (
@@ -575,31 +617,19 @@ export default async function DashboardPage() {
                 )}
               </div>
             </BentoCard>
-          </div>
+          </TiltCard>
 
           {/* Insights: (2x2) */}
           <div className="sm:col-span-2 sm:row-span-2">
             <BentoCard title="财务与洞察" className="h-full" delay={0.35} icon={<Icons.LineChart className="h-5 w-5" />}>
               <div className="grid grid-cols-1 gap-4">
-                {/* Subscription Spend */}
-                <div className="rounded-xl bg-surface/50 p-4">
-                  <div className="text-xs font-semibold text-secondary mb-2">预估月度支出</div>
-                  {monthlySpendRows.length > 0 ? (
-                    <div className="space-y-2">
-                      {monthlySpendRows.map((row) => (
-                        <div key={row.currency} className="flex items-baseline justify-between">
-                          <span className="text-sm font-mono text-muted">{row.currency}</span>
-                          <span className="text-lg font-bold tabular-nums">{formatCurrencyAmount(row.amount, row.currency).replace(row.currency, '')}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted">暂无支出数据</div>
-                  )}
-                </div>
+                {/* Subscription Spend - Bar Chart */}
+                <SpendBarChart
+                  monthlySpendRows={monthlySpendRows}
+                  maxMonthlySpend={maxMonthlySpend}
+                />
 
-                {/* Item Daily Cost */}
-                <div className="rounded-xl bg-surface/50 p-4">
+                <div className="rounded-xl bg-surface/50 p-5">
                   <div className="text-xs font-semibold text-secondary mb-2">日均成本最低 (Top 3)</div>
                   {lowestDailyCostItems.length > 0 ? (
                     <ul className="space-y-3">
@@ -622,9 +652,9 @@ export default async function DashboardPage() {
               </div>
             </BentoCard>
           </div>
-
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }
+

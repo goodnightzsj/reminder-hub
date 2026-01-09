@@ -1,7 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
+import { motion } from "framer-motion";
+import { useTransition, useState } from "react";
 import { useConfetti } from "../ConfettiProvider";
+import { Tooltip } from "../Tooltip";
+import { Icons } from "../Icons";
 
 type TodoCompleteButtonProps = {
     todoId: string;
@@ -15,9 +18,17 @@ export function TodoCompleteButton({
     onToggle,
 }: TodoCompleteButtonProps) {
     const [isPending, startTransition] = useTransition();
-    const { triggerConfetti } = useConfetti();
+    const { triggerConfetti, triggerMicroConfetti } = useConfetti();
+    const [isAnimating, setIsAnimating] = useState(false);
 
-    const handleClick = () => {
+    const handleClick = (e: React.MouseEvent) => {
+        setIsAnimating(true);
+        // Reset animation state after duration
+        setTimeout(() => setIsAnimating(false), 500);
+
+        const x = e.clientX;
+        const y = e.clientY;
+
         startTransition(async () => {
             const formData = new FormData();
             formData.append("id", todoId);
@@ -26,19 +37,37 @@ export function TodoCompleteButton({
 
             // Trigger confetti only when completing (not uncompleting)
             if (!isDone) {
+                // Localized splash
+                triggerMicroConfetti(x, y);
+                // Big celebration
                 triggerConfetti();
             }
         });
     };
 
     return (
-        <button
-            type="button"
-            disabled={isPending}
-            onClick={handleClick}
-            className="h-9 rounded-lg border border-default px-3 text-xs font-medium hover:bg-interactive-hover disabled:opacity-50"
-        >
-            {isDone ? "取消完成" : "完成"}
-        </button>
+        <Tooltip content={isDone ? "标记为未完成" : "完成任务"} side="bottom">
+            <motion.button
+                type="button"
+                disabled={isPending}
+                onClick={(e) => handleClick(e)}
+                whileTap={{ scale: 0.9 }}
+                className={`
+                    group relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all
+                    ${isDone
+                        ? "bg-brand-primary border-brand-primary text-white"
+                        : "bg-transparent border-muted hover:border-brand-primary"
+                    }
+                    disabled:opacity-50
+                `}
+            >
+                <span className="sr-only">{isDone ? "取消完成" : "完成"}</span>
+                {isDone ? (
+                    <Icons.RotateCcw className="w-3.5 h-3.5" />
+                ) : (
+                    <Icons.Check active className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-brand-primary dark:text-brand-primary" />
+                )}
+            </motion.button>
+        </Tooltip>
     );
 }

@@ -4,20 +4,23 @@ import { MainNav } from "./MainNav";
 
 type AppHeaderProps = {
     title: string;
-    description: React.ReactNode;
+    description?: React.ReactNode;
+    children?: React.ReactNode;
 };
 
-export function AppHeader({ title, description }: AppHeaderProps) {
+export function AppHeader({ title, description, children }: AppHeaderProps) {
     return (
-        <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-start md:justify-between animate-fade-in">
+        <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between animate-fade-in">
             <div className="flex-1 flex justify-between items-start gap-4">
-                <div className="space-y-1.5">
-                    <h1 className="text-2xl font-semibold tracking-tight text-primary">
+                <div className="space-y-1">
+                    <h1 className="text-lg font-semibold tracking-tight text-primary">
                         {title}
                     </h1>
-                    <div className="text-sm text-muted">
-                        {description}
-                    </div>
+                    {description && (
+                        <div className="text-sm text-muted">
+                            {description}
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Top Right Actions */}
@@ -34,6 +37,8 @@ export function AppHeader({ title, description }: AppHeaderProps) {
             </div>
 
             <div className="hidden md:flex md:items-center md:gap-4">
+                {children}
+                <div className="h-6 w-px bg-divider/50" />
                 <MainNav />
                 <div className="h-4 w-px bg-divider" />
                 <ThemeToggle />
