@@ -142,6 +142,21 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                 <div className="flex min-w-0 flex-1 flex-col pl-2">
                     <div className="flex flex-wrap items-center gap-2">
                         {/* Priority Badge */}
+                        {/* Delete/Archive Status */}
+                        {isDeleted ? (
+                            <SmartCategoryBadge overrideColor="red" variant="solid">
+                                已删除
+                            </SmartCategoryBadge>
+                        ) : item.isDone ? (
+                            <SmartCategoryBadge overrideColor="emerald" variant="solid">
+                                已完成
+                            </SmartCategoryBadge>
+                        ) : (
+                            <SmartCategoryBadge overrideColor="sky" variant="solid">
+                                进行中
+                            </SmartCategoryBadge>
+                        )}
+
                         {/* Priority Badge */}
                         <SmartCategoryBadge
                             overrideColor={

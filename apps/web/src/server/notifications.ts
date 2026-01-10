@@ -1,4 +1,4 @@
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull } from "drizzle-orm";
 
 import {
   addDaysToDateString,
@@ -94,7 +94,14 @@ export async function collectDueNotificationCandidates({
       reminderOffsetsMinutes: todos.reminderOffsetsMinutes,
     })
     .from(todos)
-    .where(and(eq(todos.isDone, false), eq(todos.isArchived, false), isNotNull(todos.dueAt)));
+    .where(
+      and(
+        eq(todos.isDone, false),
+        eq(todos.isArchived, false),
+        isNull(todos.deletedAt), // Exclude deleted
+        isNotNull(todos.dueAt)
+      )
+    );
 
   for (const todo of activeTodos) {
     if (!todo.dueAt) continue;
@@ -123,7 +130,12 @@ export async function collectDueNotificationCandidates({
   const activeAnniversaries = await db
     .select()
     .from(anniversaries)
-    .where(eq(anniversaries.isArchived, false));
+    .where(
+      and(
+        eq(anniversaries.isArchived, false),
+        isNull(anniversaries.deletedAt) // Exclude deleted
+      )
+    );
 
   for (const ann of activeAnniversaries) {
     const offsets = parseNumberArrayJson(ann.remindOffsetsDays);
@@ -166,7 +178,12 @@ export async function collectDueNotificationCandidates({
   const activeSubscriptions = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.isArchived, false));
+    .where(
+      and(
+        eq(subscriptions.isArchived, false),
+        isNull(subscriptions.deletedAt) // Exclude deleted
+      )
+    );
 
   for (const sub of activeSubscriptions) {
     const offsets = parseNumberArrayJson(sub.remindOffsetsDays);

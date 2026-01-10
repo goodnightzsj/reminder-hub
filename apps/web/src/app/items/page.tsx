@@ -204,7 +204,8 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
 
           <ItemList
             items={rows.map((it) => {
-              const daysUsed = computeDaysUsed(it.purchasedDate, today);
+              const dateToUse = it.purchasedDate ?? formatDateString(getDatePartsInTimeZone(it.createdAt, timeZone));
+              const daysUsed = computeDaysUsed(dateToUse, today);
               const dailyCents =
                 typeof it.priceCents === "number" && typeof daysUsed === "number" && daysUsed > 0
                   ? Math.round(it.priceCents / daysUsed)

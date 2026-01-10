@@ -123,6 +123,24 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor, pr
                             <div className="min-w-0 flex-1 py-0.5">
                                 <h3 className="font-semibold text-lg text-primary leading-tight truncate">{item.name}</h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    {item.deletedAt && (
+                                        <SmartCategoryBadge overrideColor="red" variant="solid">
+                                            已删除
+                                        </SmartCategoryBadge>
+                                    )}
+
+                                    {item.isArchived && !item.deletedAt && (
+                                        <SmartCategoryBadge overrideColor="slate" variant="solid">
+                                            已停用
+                                        </SmartCategoryBadge>
+                                    )}
+
+                                    {!item.deletedAt && !item.isArchived && (
+                                        <SmartCategoryBadge overrideColor="sky" variant="solid">
+                                            进行中
+                                        </SmartCategoryBadge>
+                                    )}
+
                                     <SmartCategoryBadge overrideColor="cyan">
                                         {cycleLabel}
                                     </SmartCategoryBadge>
@@ -133,14 +151,16 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor, pr
 
                                     {/* Reminder Moved to Date Section */}
 
-                                    {item.autoRenew ? (
-                                        <SmartCategoryBadge overrideColor="indigo" variant="solid">
-                                            自动续费
-                                        </SmartCategoryBadge>
-                                    ) : (
-                                        <SmartCategoryBadge overrideColor="amber" variant="solid">
-                                            手动扣款
-                                        </SmartCategoryBadge>
+                                    {!item.deletedAt && !item.isArchived && (
+                                        item.autoRenew ? (
+                                            <SmartCategoryBadge overrideColor="indigo" variant="solid">
+                                                自动续费
+                                            </SmartCategoryBadge>
+                                        ) : (
+                                            <SmartCategoryBadge overrideColor="amber" variant="solid">
+                                                手动扣款
+                                            </SmartCategoryBadge>
+                                        )
                                     )}
                                 </div>
                             </div>
@@ -218,9 +238,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor, pr
                                 续费总计: <span className="font-outfit font-bold text-primary">{formatPrice(item.priceCents, item.currency)}</span>
                             </span>
                         </div>
-                        <Link href={`/subscriptions/${item.id}`} className="text-[11px] font-medium text-brand-primary hover:underline">
-                            管理详情
-                        </Link>
+
                     </div>
                 </div>
 

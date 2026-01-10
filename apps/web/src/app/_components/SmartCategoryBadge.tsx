@@ -1,7 +1,7 @@
 import { Badge } from "@/app/_components/Badge";
 
 const COLORS = [
-    "rose", "orange", "amber", "yellow", "lime", "green", "emerald", "teal",
+    "orange", "amber", "yellow", "lime", "green", "emerald", "teal",
     "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink"
 ] as const;
 
@@ -11,6 +11,7 @@ const COLORS = [
 */
 const GLASS_STYLES: Record<string, string> = {
     rose: "text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-rose-500/5",
+    red: "text-red-600 bg-red-500/10 border-red-500/20 shadow-red-500/5",
     orange: "text-orange-500 bg-orange-500/10 border-orange-500/20 shadow-orange-500/5",
     amber: "text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-amber-500/5",
     yellow: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20 shadow-yellow-500/5",
@@ -30,6 +31,7 @@ const GLASS_STYLES: Record<string, string> = {
 
 const SOLID_STYLES: Record<string, string> = {
     rose: "border-0 bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-sm shadow-rose-500/25",
+    red: "border-0 bg-gradient-to-b from-red-600 to-red-700 text-white shadow-sm shadow-red-600/25",
     orange: "border-0 bg-gradient-to-b from-orange-400 to-orange-500 text-white shadow-sm shadow-orange-500/25",
     amber: "border-0 bg-gradient-to-b from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-500/25",
     yellow: "border-0 bg-gradient-to-b from-yellow-400 to-yellow-500 text-white shadow-sm shadow-yellow-500/25",
@@ -81,8 +83,7 @@ export function SmartCategoryBadge({ children, className, overrideColor, variant
 
     // Determine color
     let colorName = overrideColor || getColorName(text);
-    // Normalize fuzzy colors
-    if (colorName === "red") colorName = "rose";
+    // Removed red->rose normalization
 
     // Get style class
     const styleMap = variant === "solid" ? SOLID_STYLES : GLASS_STYLES;

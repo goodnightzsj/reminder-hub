@@ -97,20 +97,31 @@ export function ItemCard({ item, filter, daysUsed, dailyCents }: ItemCardProps) 
                         </div>
                     </div>
                 </div>
-                <Badge
-                    variant={
-                        item.status === 'using' ? 'success' :
-                            item.status === 'retired' ? 'custom' :
-                                'warning'
-                    }
-                    className={`shrink-0 px-2 py-0.5 text-[11px] font-semibold gap-1 ${item.status === 'retired'
-                        ? 'bg-zinc-100/10 dark:bg-zinc-800/20 backdrop-blur-md border border-white/20 dark:border-zinc-700/50 text-muted-foreground shadow-sm'
-                        : ''
-                        }`}
-                >
-                    {item.status === 'retired' && <Icons.History className="w-3 h-3" />}
-                    {statusLabel[item.status]}
-                </Badge>
+                {item.deletedAt ? (
+                    <SmartCategoryBadge overrideColor="red" variant="solid">
+                        已删除
+                    </SmartCategoryBadge>
+                ) : (
+                    <>
+                        {item.status === "using" && (
+                            <SmartCategoryBadge overrideColor="emerald" variant="solid">
+                                使用中
+                            </SmartCategoryBadge>
+                        )}
+                        {item.status === "idle" && (
+                            <SmartCategoryBadge overrideColor="amber" variant="solid">
+                                <Icons.Coffee className="w-3 h-3 mr-0.5" />
+                                闲置
+                            </SmartCategoryBadge>
+                        )}
+                        {item.status === "retired" && (
+                            <SmartCategoryBadge overrideColor="slate">
+                                <Icons.History className="w-3 h-3 mr-0.5" />
+                                淘汰
+                            </SmartCategoryBadge>
+                        )}
+                    </>
+                )}
             </div>
 
             {/* Main Stats: Daily Cost (Hero) */}

@@ -74,6 +74,24 @@ export function AnniversaryCard({ item, daysLeft, nextDate, preview }: Anniversa
             {/* Header: Date Type + Category */}
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
+                    {item.deletedAt && (
+                        <SmartCategoryBadge overrideColor="red" variant="solid">
+                            已删除
+                        </SmartCategoryBadge>
+                    )}
+
+                    {!item.deletedAt && (item as any).isArchived && (
+                        <SmartCategoryBadge overrideColor="slate" variant="solid">
+                            已归档
+                        </SmartCategoryBadge>
+                    )}
+
+                    {!item.deletedAt && !(item as any).isArchived && (
+                        <SmartCategoryBadge overrideColor="sky" variant="solid">
+                            进行中
+                        </SmartCategoryBadge>
+                    )}
+
                     <SmartCategoryBadge overrideColor={item.dateType === "lunar" ? "purple" : "blue"} variant="solid">
                         {item.dateType === "lunar" ? "农历" : "公历"}
                     </SmartCategoryBadge>

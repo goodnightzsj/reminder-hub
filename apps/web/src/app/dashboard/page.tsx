@@ -137,10 +137,15 @@ export default async function DashboardPage() {
     throw new Error("Failed to compute dashboard UTC range");
   }
 
-  const baseActiveTodoWhere = and(eq(todos.isDone, false), eq(todos.isArchived, false));
+  const baseActiveTodoWhere = and(
+    eq(todos.isDone, false),
+    eq(todos.isArchived, false),
+    isNull(todos.deletedAt)
+  );
   const baseTodoWhere = and(
     eq(todos.isDone, false),
     eq(todos.isArchived, false),
+    isNull(todos.deletedAt),
     isNotNull(todos.dueAt),
   );
 
@@ -211,7 +216,12 @@ export default async function DashboardPage() {
   const activeAnniversaries = await db
     .select()
     .from(anniversaries)
-    .where(eq(anniversaries.isArchived, false))
+    .where(
+      and(
+        eq(anniversaries.isArchived, false),
+        isNull(anniversaries.deletedAt)
+      )
+    )
     .orderBy(desc(anniversaries.createdAt));
 
   const anniversariesWithNext = activeAnniversaries
@@ -240,7 +250,12 @@ export default async function DashboardPage() {
   const activeSubscriptions = await db
     .select()
     .from(subscriptions)
-    .where(eq(subscriptions.isArchived, false))
+    .where(
+      and(
+        eq(subscriptions.isArchived, false),
+        isNull(subscriptions.deletedAt)
+      )
+    )
     .orderBy(asc(subscriptions.nextRenewDate));
 
   const todaySubscriptions = activeSubscriptions.filter(
@@ -261,7 +276,12 @@ export default async function DashboardPage() {
       createdAt: items.createdAt,
     })
     .from(items)
-    .where(ne(items.status, "retired"))
+    .where(
+      and(
+        ne(items.status, "retired"),
+        isNull(items.deletedAt)
+      )
+    )
     .orderBy(desc(items.createdAt))
     .limit(500);
 
@@ -624,13 +644,22 @@ export default async function DashboardPage() {
             <BentoCard title="财务与洞察" className="h-full" delay={0.35} icon={<Icons.LineChart className="h-5 w-5" />}>
               <div className="grid grid-cols-1 gap-4">
                 {/* Subscription Spend - Bar Chart */}
-                <SpendBarChart
-                  monthlySpendRows={monthlySpendRows}
-                  maxMonthlySpend={maxMonthlySpend}
-                />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-secondary px-1">
+                    <Icons.CreditCard className="h-3.5 w-3.5 text-brand-primary" />
+                    <span>订阅支出 (月度归纳)</span>
+                  </div>
+                  <SpendBarChart
+                    monthlySpendRows={monthlySpendRows}
+                    maxMonthlySpend={maxMonthlySpend}
+                  />
+                </div>
 
-                <div className="rounded-xl bg-surface/50 p-5">
-                  <div className="text-xs font-semibold text-secondary mb-2">日均成本最低 (Top 3)</div>
+                <div className="rounded-xl bg-surface/50 p-4 border border-border/40">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-secondary mb-3">
+                    <Icons.Package className="h-3.5 w-3.5 text-amber-500" />
+                    <span>物品性价比 (日均成本 Top 3)</span>
+                  </div>
                   {lowestDailyCostItems.length > 0 ? (
                     <ul className="space-y-3">
                       {lowestDailyCostItems.map((it) => (

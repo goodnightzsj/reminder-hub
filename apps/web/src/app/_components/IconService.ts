@@ -43,8 +43,12 @@ const aliases: Record<string, string> = {
     "gcp": "gcp", "google cloud": "gcp",
     "digitalocean": "digital_ocean", "do": "digital_ocean",
     "cloudflare": "cloudflare",
-    "aliyun": "aliyun", "alibaba cloud": "aliyun", "阿里云": "aliyun",
-    "tencent cloud": "tencent_cloud", "腾讯云": "tencent_cloud",
+    "aliyun": "aliyun", "alibaba cloud": "aliyun", "阿里云": "aliyun", "wanwang": "aliyun",
+    "tencent cloud": "tencent_cloud", "腾讯云": "tencent_cloud", "dnspod": "tencent_cloud",
+    "namecheap": "namecheap", "nameship": "namecheap",
+    "spaceship": "spaceship",
+    "godaddy": "godaddy",
+    "porkbun": "porkbun",
     "huawei cloud": "huawei_cloud", "华为云": "huawei_cloud",
     "oracle": "oracle",
     "ibm": "ibm",
@@ -240,6 +244,8 @@ const aliases: Record<string, string> = {
     "google play pass": "google_play",
     "genshin": "genshin", "原神": "genshin",
     "honkai": "honkai", "崩坏": "honkai",
+
+
 };
 
 // 2. Icon Definitions (Key -> Data)
@@ -278,6 +284,10 @@ const iconMap: Record<string, BrandIconData> = {
     cloudflare: { icon: "simple-icons:cloudflare", color: "#F38020", title: "Cloudflare" },
     aliyun: { icon: "simple-icons:alibabacloud", color: "#FF6A00", title: "阿里云" },
     tencent_cloud: { icon: "ri:cloud-fill", color: "#00A4FF", title: "腾讯云" },
+    namecheap: { icon: "simple-icons:namecheap", color: "#DE3723", title: "Namecheap" },
+    spaceship: { icon: "simple-icons:spaceship", color: "#A855F7", title: "Spaceship" }, // Purple-500 approx, or use brand color
+    godaddy: { icon: "simple-icons:godaddy", color: "#1BDBDB", title: "GoDaddy" },
+    porkbun: { icon: "ri:piggy-bank-fill", color: "#F08080", title: "Porkbun" },
     huawei_cloud: { icon: "simple-icons:huawei", color: "#FF0000", title: "华为云" },
     oracle: { icon: "simple-icons:oracle", color: "#F80000", title: "Oracle" },
     ibm: { icon: "simple-icons:ibm", color: "#052FAD", title: "IBM" },
@@ -473,11 +483,17 @@ const iconMap: Record<string, BrandIconData> = {
     google_play: { icon: "simple-icons:googleplay", color: "#414141", title: "Google Play" },
     genshin: { icon: "simple-icons:genshinimpact", color: "#FFFFFF", title: "Genshin Impact" },
     honkai: { icon: "simple-icons:honkaistarrail", color: "#FFFFFF", title: "Honkai" },
+
+    // === Domain ===
+
 };
 
+
+
 // Default fallback
+// Set icon to empty string to let ServiceIconBadge render the First Letter
 const DEFAULT_ICON: BrandIconData = {
-    icon: "ri:star-fill",
+    icon: "", 
     color: "#64748b", // slate-500
     title: "Service"
 };
@@ -486,10 +502,26 @@ export function findServiceIcon(name: string): BrandIconData {
     const lowerName = name.toLowerCase().trim();
 
     // 1. Check exact alias match
+    // Optimization: Check for exact match first, then includes?
+    // Current logic: `if (lowerName.includes(alias))`
+    // This is dangerous for short aliases like "x", "do", "mj".
+    // "nameship xy" matches "x". "adobe" matches "do". "midjourney" matches "mj".
+    
+    // Improved logic: Prefer exact match or word boundary if possible, but simple check:
+    // Sort aliases by length (longest first) to match "google cloud" before "google"?
+    // OR: Just remove very short dangerous aliases from the map or verify them strictly.
+    
     for (const [alias, key] of Object.entries(aliases)) {
-        if (lowerName.includes(alias)) {
-            return iconMap[key] || DEFAULT_ICON;
-        }
+         // Fix: strictly match short aliases (< 3 chars)
+         if (alias.length < 3) {
+             if (lowerName === alias || lowerName.startsWith(alias + " ") || lowerName.endsWith(" " + alias) || lowerName.includes(" " + alias + " ")) {
+                 return iconMap[key] || DEFAULT_ICON;
+             }
+         } else {
+             if (lowerName.includes(alias)) {
+                 return iconMap[key] || DEFAULT_ICON;
+             }
+         }
     }
 
     // 2. Check direct key match in iconMap
@@ -499,20 +531,9 @@ export function findServiceIcon(name: string): BrandIconData {
         }
     }
 
-    // 3. Fallback: Try to use simple-icons directly for English names
-    // This allows "any" simple-icon name to work (e.g. "Linear", "Vercel")
-    // CAUTION: We won't have the color here unless we fetch metadata. 
-    // We'll return a generic entry, component can try to render `simple-icons:${slug}`
-    // But for safety, let's just return default. 
-    // Or we could try to guess logic:
-    const cleanName = lowerName.replace(/\s+/g, '');
-    if (/^[a-z0-9]+$/.test(cleanName)) {
-        return {
-            icon: `simple-icons:${cleanName}`,
-            color: "#334155", // Default text color, letting Iconify handle shape
-            title: name
-        };
-    }
+    // 3. Removed blind simple-icons guessing to prevent broken icons.
+    // If we want to support it, we need a list of valid icons, which we don't have.
+    // Better to fall back to Text Letter.
 
     return {
         ...DEFAULT_ICON,
