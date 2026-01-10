@@ -6,6 +6,7 @@ import { Badge } from "../Badge";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { ServiceIconBadge } from "../ServiceIconBadge";
 import { deleteSubscription, renewSubscription, setSubscriptionArchived, restoreSubscription } from "@/app/_actions/subscriptions";
+import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Icons } from "../Icons";
 import { Tooltip } from "../Tooltip";
 
@@ -13,6 +14,7 @@ type SubscriptionCardProps = {
     item: {
         id: string;
         name: string;
+        category: string;
         priceCents: number;
         currency: string;
         cycleInterval: number;
@@ -70,7 +72,7 @@ function ProgressRing({ radius, stroke, progress, color }: { radius: number; str
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
-                    className="text-muted/20"
+                    className="text-muted/40"
                 />
                 <circle
                     stroke="currentColor"
@@ -89,7 +91,7 @@ function ProgressRing({ radius, stroke, progress, color }: { radius: number; str
     );
 }
 
-export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor }: SubscriptionCardProps) {
+export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor, preview }: SubscriptionCardProps) {
     // Calculate progress (Estimation)
     let totalDays = 30;
     if (item.cycleUnit === 'year') totalDays = 365;
@@ -112,80 +114,118 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor }: 
             variants={itemVariants}
             className="group relative flex flex-col overflow-hidden rounded-2xl border border-default bg-elevated shadow-sm transition-all hover:shadow-lg hover-float min-h-[220px]"
         >
-            {/* Ticket Perforation */}
-            <div className="absolute -left-2 top-20 h-4 w-4 rounded-full bg-base border border-r-default" />
-            <div className="absolute -right-2 top-20 h-4 w-4 rounded-full bg-base border border-l-default" />
-            <div className="absolute top-[5.2rem] left-2 right-2 border-b border-dashed border-divider/60" />
+            <div className="flex-1 flex flex-col">
+                <div className="p-6 pb-4 relative z-10">
+                    {/* Header: Icon + Name */}
+                    <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-4 min-w-0">
+                            <ServiceIconBadge serviceName={item.name} size="md" className="rounded-xl shadow-md shrink-0" />
+                            <div className="min-w-0 flex-1 py-0.5">
+                                <h3 className="font-semibold text-lg text-primary leading-tight truncate">{item.name}</h3>
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    <SmartCategoryBadge overrideColor="cyan">
+                                        {cycleLabel}
+                                    </SmartCategoryBadge>
 
-            <div className="p-6 pb-4">
-                {/* Header: Icon + Name */}
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                        <ServiceIconBadge serviceName={item.name} size="md" className="rounded-xl shadow-md shrink-0" />
-                        <div className="min-w-0 flex-1">
-                            <h3 className="font-semibold text-lg text-primary leading-tight truncate">{item.name}</h3>
-                            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                                <Badge variant="secondary" className="px-1.5 py-0 text-[10px] h-4 leading-none font-semibold uppercase tracking-tight whitespace-nowrap">
-                                    {cycleLabel}
-                                </Badge>
-                                {item.autoRenew ? (
-                                    <Badge variant="indigo" className="text-[10px] px-1.5 py-0 h-4 whitespace-nowrap font-semibold shadow-indigo-500/20 shadow-sm border-0">
-                                        自动续费
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="warning" className="text-[10px] px-1.5 py-0 h-4 whitespace-nowrap font-semibold shadow-amber-500/20 shadow-sm border-0">
-                                        手动扣款
-                                    </Badge>
-                                )}
+                                    {item.category && item.category !== "其他" && (
+                                        <SmartCategoryBadge>{item.category}</SmartCategoryBadge>
+                                    )}
+
+                                    {/* Reminder Moved to Date Section */}
+
+                                    {item.autoRenew ? (
+                                        <SmartCategoryBadge overrideColor="indigo" variant="solid">
+                                            自动续费
+                                        </SmartCategoryBadge>
+                                    ) : (
+                                        <SmartCategoryBadge overrideColor="amber" variant="solid">
+                                            手动扣款
+                                        </SmartCategoryBadge>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                        {/* Ring Progress - Dynamic Size */}
+                        {(() => {
+                            // Calculate dynamic radius based on text length
+                            const displayText = `${daysLeft ?? "?"}d`;
+                            const textLength = displayText.length;
+                            // Base radius + extra padding per character
+                            const dynamicRadius = textLength >= 4 ? 28 : textLength >= 3 ? 24 : 20;
+                            const strokeWidth = 3;
+
+                            return (
+                                <div className="relative shrink-0 flex items-center justify-center">
+                                    <ProgressRing
+                                        radius={dynamicRadius}
+                                        stroke={strokeWidth}
+                                        progress={progressPercent}
+                                        color={daysLeft !== null && daysLeft <= 7 ? "text-warning" : "text-brand-primary"}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="font-bold text-secondary text-xs leading-none select-none">
+                                            {displayText}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
-                    {/* Ring Progress */}
-                    <div className="relative shrink-0">
-                        <ProgressRing radius={20} stroke={3} progress={progressPercent} color={daysLeft !== null && daysLeft <= 7 ? "text-warning" : "text-brand-primary"} />
-                        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-secondary">
-                            {daysLeft ?? "?"}d
+                </div>
+
+                {/* Ticket Perforation - Relative Flow */}
+                <div className="relative h-px w-full my-2">
+                    <div className="absolute inset-0 border-b border-dashed border-divider/60" />
+                    <div className="absolute -left-2 -top-2 h-4 w-4 rounded-full bg-base border border-r-default" />
+                    <div className="absolute -right-2 -top-2 h-4 w-4 rounded-full bg-base border border-l-default" />
+                </div>
+
+                {/* Main Stats: Daily Cost (Hero) */}
+                <div className="px-6 py-2">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] uppercase text-muted-foreground font-medium tracking-wider">日均成本</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="font-outfit text-2xl font-bold text-brand-primary">
+                                {formatPrice(dailyPriceCents, item.currency)}
+                            </span>
+                            <span className="text-xs text-muted-foreground leading-none">/天</span>
+                        </div>
+                    </div>
+                    <div className="text-right flex flex-col items-end">
+                        <span className="text-[10px] uppercase text-muted-foreground font-medium tracking-wider">下次周期</span>
+                        <div className="flex flex-col items-end">
+                            <span className="font-mono text-sm font-semibold text-primary">
+                                {item.nextRenewDate}
+                            </span>
+                            {preview.length > 0 && (
+                                <Tooltip content={`所有提醒: ${preview.map(p => p.label).join(", ")}`}>
+                                    <div className="flex items-center gap-1 mt-0.5 text-[10px] text-brand-primary animate-pulse cursor-help">
+                                        <Icons.Bell className="h-2.5 w-2.5" />
+                                        <span>{preview[0].label}{preview.length > 1 ? ` +${preview.length - 1}` : ""}</span>
+                                    </div>
+                                </Tooltip>
+                            )}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Main Stats: Daily Cost (Hero) */}
-            <div className="mt-2 flex items-center justify-between px-6 py-2">
-                <div className="flex flex-col">
-                    <span className="text-[10px] uppercase text-muted-foreground font-medium tracking-wider">日均成本</span>
-                    <div className="flex items-baseline gap-1">
-                        <span className="font-outfit text-2xl font-bold text-brand-primary">
-                            {formatPrice(dailyPriceCents, item.currency)}
-                        </span>
-                        <span className="text-xs text-muted-foreground leading-none">/天</span>
+                {/* Footer / Total Price Area */}
+                <div className="mt-4 flex flex-1 flex-col justify-end bg-surface/50 p-6 pt-4 border-t border-divider/40">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Icons.Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-xs text-secondary">
+                                续费总计: <span className="font-outfit font-bold text-primary">{formatPrice(item.priceCents, item.currency)}</span>
+                            </span>
+                        </div>
+                        <Link href={`/subscriptions/${item.id}`} className="text-[11px] font-medium text-brand-primary hover:underline">
+                            管理详情
+                        </Link>
                     </div>
                 </div>
-                <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] uppercase text-muted-foreground font-medium tracking-wider">下次周期</span>
-                    <span className="font-mono text-sm font-semibold text-primary">
-                        {item.nextRenewDate}
-                    </span>
-                </div>
-            </div>
 
-            {/* Footer / Total Price Area */}
-            <div className="mt-4 flex flex-1 flex-col justify-end bg-surface/50 p-6 pt-4 border-t border-divider/40">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Icons.Wallet className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-xs text-secondary">
-                            续费总计: <span className="font-outfit font-bold text-primary">{formatPrice(item.priceCents, item.currency)}</span>
-                        </span>
-                    </div>
-                    <Link href={`/subscriptions/${item.id}`} className="text-[11px] font-medium text-brand-primary hover:underline">
-                        管理详情
-                    </Link>
-                </div>
             </div>
-
-            {/* Hover Overlay Actions */}
-            <div className="absolute inset-0 z-10 flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm p-4">
+            {/* Hover Overlay Actions */}<div className="absolute inset-0 z-10 flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm p-4">
                 {item.deletedAt ? (
                     <>
                         <Tooltip content="查看详情/编辑">

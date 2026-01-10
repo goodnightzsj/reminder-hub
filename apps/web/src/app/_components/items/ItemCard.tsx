@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteItem, setItemStatus, restoreItem } from "@/app/_actions/items";
 import { Badge } from "../Badge";
+import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Button } from "../Button";
 import { Icons } from "../Icons";
 import { Tooltip } from "../Tooltip";
@@ -88,9 +89,7 @@ export function ItemCard({ item, filter, daysUsed, dailyCents }: ItemCardProps) 
                         <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                             {/* Tags Row */}
                             {item.category && (
-                                <span className="inline-flex items-center rounded-md bg-surface px-1.5 py-0.5 border border-border/40">
-                                    {item.category}
-                                </span>
+                                <SmartCategoryBadge>{item.category}</SmartCategoryBadge>
                             )}
                             {item.purchasedDate && (
                                 <span>{item.purchasedDate} 购入</span>

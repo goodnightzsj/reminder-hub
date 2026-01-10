@@ -17,7 +17,7 @@ export function BottomNav() {
     ];
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-center justify-around border-t border-white/10 bg-glass px-2 pb-safe sm:hidden transition-all duration-500">
+        <div className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-center justify-around border-t border-white/10 bg-glass px-2 pb-safe md:hidden transition-all duration-500">
             {links.map((link) => {
                 const isActive = pathname.startsWith(link.href);
 

@@ -1,4 +1,4 @@
-import { asc, desc, eq, isNull, isNotNull, and, type SQL } from "drizzle-orm";
+import { asc, desc, eq, ne, isNull, isNotNull, and, type SQL } from "drizzle-orm";
 
 import { SegmentedControl } from "@/app/_components/SegmentedControl";
 
@@ -24,6 +24,8 @@ import {
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
 import { subscriptions } from "@/server/db/schema";
+import Link from "next/link";
+import { getColorClass } from "@/app/_components/SmartCategoryBadge";
 
 export const dynamic = "force-dynamic";
 
@@ -70,12 +72,22 @@ export default async function SubscriptionsPage({
 }: SubscriptionsPageProps) {
   const params = (await searchParams) ?? {};
   const filter = parseFilter(getParam(params, "filter"));
+  const categoryFilter = getParam(params, "category");
+
+  function buildHref({ filter: f, category: c }: { filter: SubscriptionFilter; category: string | null }) {
+    const p = new URLSearchParams();
+    if (f !== "active") p.set("filter", f);
+    if (c) p.set("category", c);
+    const qs = p.toString();
+    return qs.length > 0 ? `/subscriptions?${qs}` : "/subscriptions";
+  }
 
   const settings = await getAppSettings();
   const timeZone = settings.timeZone;
   const dateReminderTime = settings.dateReminderTime;
   const today = formatDateString(getDatePartsInTimeZone(new Date(), timeZone));
 
+  // Base filter condition
   const baseWhere =
     filter === "trash"
       ? isNotNull(subscriptions.deletedAt)
@@ -89,15 +101,37 @@ export default async function SubscriptionsPage({
     where = and(baseWhere, eq(subscriptions.isArchived, true));
   }
 
+  // Combine with Category Filter
+  if (categoryFilter) {
+    where = and(where, eq(subscriptions.category, categoryFilter));
+  }
+
   // 废纸篓：按删除时间升序（先删除的在上面）
+  // 按照要求：默认按创建时间排序 (Creation Time Newest First)
   const orderByClause = filter === "trash"
     ? [asc(subscriptions.deletedAt)]
-    : [asc(subscriptions.isArchived), asc(subscriptions.nextRenewDate), desc(subscriptions.createdAt)];
+    : [desc(subscriptions.createdAt)];
 
   const rows = await (where
     ? db.select().from(subscriptions).where(where)
     : db.select().from(subscriptions)
   ).orderBy(...orderByClause);
+
+  const distinctCategories = await db
+    .selectDistinct({ name: subscriptions.category })
+    .from(subscriptions)
+    .where(and(
+      isNotNull(subscriptions.category),
+      ne(subscriptions.category, ""),
+      // Filter categories based on the CURRENT status filter (baseWhere)
+      // We want to see categories that exist in the current tab (Active/Archived/Trash)
+      baseWhere,
+      // Also respect archive status for categories if needed
+      filter === "active" ? eq(subscriptions.isArchived, false) :
+        filter === "archived" ? eq(subscriptions.isArchived, true) : undefined
+    ))
+    .orderBy(subscriptions.category);
+
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
@@ -115,17 +149,49 @@ export default async function SubscriptionsPage({
           />
         </CreateModal>
 
-        <section className="rounded-xl border border-default bg-elevated shadow-sm">
-          <div className="flex flex-wrap items-center justify-end gap-3 p-4">
+        <section className="space-y-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
+              <SegmentedControl
+                options={[
+                  { key: "active", label: "进行中", href: buildHref({ filter: "active", category: categoryFilter }) },
+                  { key: "trash", label: "回收站", href: buildHref({ filter: "trash", category: categoryFilter }) },
+                ]}
+                currentValue={filter}
+                layoutId="subscription-filter"
+              />
+            </div>
 
-            <SegmentedControl
-              options={[
-                { key: "active", label: "进行中", href: "/subscriptions" },
-                { key: "trash", label: "回收站", href: "/subscriptions?filter=trash" },
-              ]}
-              currentValue={filter}
-              layoutId="subscription-filter"
-            />
+            {distinctCategories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-2 text-xs scrollbar-hide">
+                <span className="text-muted shrink-0 mr-1">分类</span>
+                <Link
+                  href={buildHref({ filter, category: null })}
+                  className={`inline-flex items-center rounded-full px-3 py-1 transition-colors ${!categoryFilter
+                    ? "bg-brand-primary/10 text-brand-primary font-medium"
+                    : "bg-surface hover:bg-surface/80 text-secondary"
+                    }`}
+                >
+                  全部
+                </Link>
+                {distinctCategories.map((c) => {
+                  const colorClass = getColorClass(c.name);
+                  const isSelected = categoryFilter === c.name;
+                  return (
+                    <Link
+                      key={c.name}
+                      href={buildHref({ filter, category: c.name })}
+                      className={`inline-flex items-center rounded-full px-3 py-1 transition-all border ${isSelected
+                        ? colorClass
+                        : "bg-surface hover:bg-surface/80 text-secondary border-transparent"
+                        }`}
+                    >
+                      {c.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <SubscriptionList
@@ -170,6 +236,7 @@ export default async function SubscriptionsPage({
 
               return { item, cycleLabel, daysLeft, progressColor, urgencyClass, preview };
             })}
+            filter={filter}
           />
 
           {rows.length === 0 && (

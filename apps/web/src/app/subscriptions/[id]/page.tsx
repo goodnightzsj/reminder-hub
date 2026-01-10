@@ -6,6 +6,7 @@ import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
 import { Select } from "@/app/_components/Select";
+import { CustomSelect } from "@/app/_components/CustomSelect";
 import { Textarea } from "@/app/_components/Textarea";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
@@ -242,9 +243,26 @@ export default async function SubscriptionDetailPage({
                 基本信息
               </div>
               <div className="p-4 grid gap-6 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-secondary mb-1.5">名称</label>
-                  <Input name="name" defaultValue={item.name} required className="h-10 bg-base/50" />
+                <div className="sm:col-span-2 grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-medium text-secondary mb-1.5">名称</label>
+                    <Input name="name" defaultValue={item.name} required className="h-10 bg-base/50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-secondary mb-1.5">分类</label>
+                    <CustomSelect
+                      name="category"
+                      defaultValue={item.category}
+                      placeholder="输入自定义..."
+                      className="h-10 bg-base/50"
+                      options={[
+                        { value: "娱乐", label: "娱乐" },
+                        { value: "工具", label: "工具" },
+                        { value: "学习", label: "学习" },
+                        { value: "办公", label: "办公" },
+                      ]}
+                    />
+                  </div>
                 </div>
 
                 <div>

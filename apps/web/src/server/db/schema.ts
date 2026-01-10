@@ -104,6 +104,7 @@ export const subscriptions = sqliteTable("subscriptions", {
   name: text("name").notNull(),
   description: text("description"),
   priceCents: integer("price_cents"),
+  category: text("category").notNull().default("其他"),
   currency: text("currency").notNull().default("CNY"),
   cycleUnit: text("cycle_unit", { enum: subscriptionCycleUnitValues })
     .notNull()

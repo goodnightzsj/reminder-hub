@@ -105,6 +105,7 @@ function parseRedirectToField(formData: FormData, key: string): string | null {
 
 export async function createSubscription(formData: FormData) {
   const name = parseStringField(formData, "name");
+  const category = parseStringField(formData, "category") || "其他";
   const nextRenewDate = parseDateField(formData, "nextRenewDate");
   if (!name || !nextRenewDate) return;
 
@@ -122,6 +123,7 @@ export async function createSubscription(formData: FormData) {
   await db.insert(subscriptions).values({
     id: randomUUID(),
     name,
+    category,
     description,
     priceCents,
     currency,
@@ -139,6 +141,7 @@ export async function createSubscription(formData: FormData) {
 export async function updateSubscription(formData: FormData) {
   const id = parseStringField(formData, "id");
   const name = parseStringField(formData, "name");
+  const category = parseStringField(formData, "category") || "其他";
   const nextRenewDate = parseDateField(formData, "nextRenewDate");
   if (!id || !name || !nextRenewDate) return;
 
@@ -157,6 +160,7 @@ export async function updateSubscription(formData: FormData) {
     .update(subscriptions)
     .set({
       name,
+      category,
       description,
       priceCents,
       currency,

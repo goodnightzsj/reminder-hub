@@ -17,7 +17,7 @@ type AnniversaryListProps = {
 
 export function AnniversaryList({ items, filter }: AnniversaryListProps) {
     return (
-        <div className="border-t border-divider p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <AnimatePresence mode="popLayout" initial={false}>
                 {filter === "active" && (
                     <motion.div

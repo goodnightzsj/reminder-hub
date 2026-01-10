@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
+import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
 import { Select } from "@/app/_components/Select";
@@ -148,9 +149,9 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
                   {statusLabel[item.status]}
                 </Badge>
                 {item.category && (
-                  <Badge variant={getBadgeVariantFromLabel(item.category)}>
+                  <SmartCategoryBadge>
                     {item.category}
-                  </Badge>
+                  </SmartCategoryBadge>
                 )}
                 {targetReached && <Badge variant="success">已达成目标</Badge>}
               </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
+import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
 import { Select } from "@/app/_components/Select";
@@ -168,9 +169,7 @@ export default async function AnniversaryDetailPage({
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-semibold text-primary">编辑纪念日</h1>
-                <Badge variant={getBadgeVariantFromLabel(item.category)} className="px-1.5 py-0 text-[10px]">
-                  {categoryLabels[item.category] || item.category}
-                </Badge>
+                <SmartCategoryBadge>{categoryLabels[item.category] || item.category}</SmartCategoryBadge>
               </div>
               <span className="text-xs text-muted font-mono">ID: {item.id.slice(0, 8)}</span>
             </div>

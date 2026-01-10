@@ -6,6 +6,7 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteAnniversary, restoreAnniversary } from "@/app/_actions/anniversaries";
 import { Icons } from "../Icons";
 import { Badge } from "../Badge";
+import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Tooltip } from "../Tooltip";
 
 type AnniversaryCardProps = {
@@ -73,12 +74,12 @@ export function AnniversaryCard({ item, daysLeft, nextDate, preview }: Anniversa
             {/* Header: Date Type + Category */}
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                    <Badge variant={item.dateType === "lunar" ? "purple" : "blue"} className="px-1.5 py-0.5 text-[10px] uppercase tracking-wider">
+                    <SmartCategoryBadge overrideColor={item.dateType === "lunar" ? "purple" : "blue"} variant="solid">
                         {item.dateType === "lunar" ? "农历" : "公历"}
-                    </Badge>
-                    <span className="text-xs text-secondary font-medium">
+                    </SmartCategoryBadge>
+                    <SmartCategoryBadge>
                         {categoryLabels[item.category] || item.category}
-                    </span>
+                    </SmartCategoryBadge>
                 </div>
             </div>
 

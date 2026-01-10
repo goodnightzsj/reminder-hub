@@ -4,6 +4,7 @@ import { Tooltip } from "../Tooltip";
 import { formatRecurrenceRuleZh, parseRecurrenceRuleJson } from "@/server/recurrence";
 import { Icons } from "../Icons";
 import { Badge, getBadgeVariantFromLabel } from "../Badge";
+import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Button } from "../Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
@@ -141,26 +142,36 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                 <div className="flex min-w-0 flex-1 flex-col pl-2">
                     <div className="flex flex-wrap items-center gap-2">
                         {/* Priority Badge */}
-                        <Badge variant={
-                            item.priority === 'high' ? 'danger' :
-                                item.priority === 'medium' ? 'warning' :
-                                    'blue'
-                        }>
+                        {/* Priority Badge */}
+                        <SmartCategoryBadge
+                            overrideColor={
+                                item.priority === 'high' ? 'rose' :
+                                    item.priority === 'medium' ? 'amber' :
+                                        'blue'
+                            }
+                            variant="solid"
+                        >
                             {priorityLabels[item.priority]}
-                        </Badge>
+                        </SmartCategoryBadge>
 
                         {/* Category Badge */}
-                        <Badge
-                            variant={getBadgeVariantFromLabel(item.taskType)}
-                            className="border"
-                        >
+                        <SmartCategoryBadge>
                             {item.taskType}
-                        </Badge>
+                        </SmartCategoryBadge>
 
                         {(() => {
                             const rule = parseRecurrenceRuleJson(item.recurrenceRule ?? null);
                             if (!rule) return null;
-                            return <Badge variant="secondary" className="gap-1"><Icons.Repeat className="w-3 h-3" /> {formatRecurrenceRuleZh(rule)}</Badge>;
+                            return (
+                                <div className="flex items-center">
+                                    <SmartCategoryBadge overrideColor="teal">
+                                        <span className="flex items-center gap-1">
+                                            <Icons.Repeat className="w-3 h-3" />
+                                            {formatRecurrenceRuleZh(rule)}
+                                        </span>
+                                    </SmartCategoryBadge>
+                                </div>
+                            );
                         })()}
 
 

@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/app/_components/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
+import { CustomSelect } from "@/app/_components/CustomSelect";
 import { createSubscription } from "@/app/_actions/subscriptions";
 import { Icons } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/Toast";
@@ -80,15 +81,31 @@ export function SubscriptionCreateForm({
         <form ref={formRef} action={handleSubmit} className={`flex flex-col gap-5 ${className}`}>
             <div key={formKey} className="contents">
                 <div className="flex flex-col gap-4">
-                    <div className="w-full">
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">订阅名称</label>
-                        <Input
-                            name="name"
-                            placeholder="新增订阅（如 Netflix / iCloud / 域名）"
-                            className="h-12 bg-surface"
-                            autoComplete="off"
-                            required
-                        />
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                        <div className="flex-1">
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">订阅名称</label>
+                            <Input
+                                name="name"
+                                placeholder="新增订阅（如 Netflix / iCloud / 域名）"
+                                className="h-12 bg-surface"
+                                autoComplete="off"
+                                required
+                            />
+                        </div>
+                        <div className="w-full sm:w-40">
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">分类</label>
+                            <CustomSelect
+                                name="category"
+                                placeholder="输入自定义..."
+                                className="h-12 bg-surface"
+                                options={[
+                                    { value: "娱乐", label: "娱乐" },
+                                    { value: "工具", label: "工具" },
+                                    { value: "学习", label: "学习" },
+                                    { value: "办公", label: "办公" },
+                                ]}
+                            />
+                        </div>
                     </div>
                 </div>
 
