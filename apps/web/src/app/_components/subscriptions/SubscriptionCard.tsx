@@ -24,6 +24,8 @@ type SubscriptionCardProps = {
         description: string | null;
         isArchived: boolean;
         deletedAt?: Date | null;
+        icon?: string | null;
+        color?: string | null;
     };
     cycleLabel: string;
     daysLeft: number | null;
@@ -119,7 +121,13 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, progressColor, pr
                     {/* Header: Icon + Name */}
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-4 min-w-0">
-                            <ServiceIconBadge serviceName={item.name} size="md" className="rounded-xl shadow-md shrink-0" />
+                            <ServiceIconBadge
+                                serviceName={item.name}
+                                size="md"
+                                className="rounded-xl shadow-md shrink-0"
+                                overrideIcon={item.icon}
+                                overrideColor={item.color}
+                            />
                             <div className="min-w-0 flex-1 py-0.5">
                                 <h3 className="font-semibold text-lg text-primary leading-tight truncate">{item.name}</h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-2">

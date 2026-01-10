@@ -23,7 +23,9 @@ import {
 } from "@/server/date";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
-import { subscriptions } from "@/server/db/schema";
+
+import { subscriptions, serviceIcons } from "@/server/db/schema";
+
 import Link from "next/link";
 import { getColorClass } from "@/app/_components/SmartCategoryBadge";
 
@@ -112,10 +114,22 @@ export default async function SubscriptionsPage({
     ? [asc(subscriptions.deletedAt)]
     : [desc(subscriptions.createdAt)];
 
-  const rows = await (where
-    ? db.select().from(subscriptions).where(where)
-    : db.select().from(subscriptions)
-  ).orderBy(...orderByClause);
+
+
+
+
+  const query = where
+    ? db.select().from(subscriptions).leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name)).where(where)
+    : db.select().from(subscriptions).leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name));
+
+  const results = await query.orderBy(...orderByClause);
+
+  const rows = results.map(({ subscriptions: s, service_icons: i }) => ({
+    ...s,
+    icon: i?.icon ?? s.icon,
+    color: i?.color ?? s.color,
+  }));
+
 
   const distinctCategories = await db
     .selectDistinct({ name: subscriptions.category })

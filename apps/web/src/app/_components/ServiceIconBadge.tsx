@@ -5,6 +5,8 @@ type ServiceIconBadgeProps = {
     serviceName: string;
     size?: "sm" | "md" | "lg";
     className?: string;
+    overrideIcon?: string | null;
+    overrideColor?: string | null;
 };
 
 const sizeClasses = {
@@ -23,8 +25,15 @@ export function ServiceIconBadge({
     serviceName,
     size = "md",
     className = "",
+    overrideIcon,
+    overrideColor,
 }: ServiceIconBadgeProps) {
-    const { icon, color, title } = findServiceIcon(serviceName);
+    const { icon: serviceIcon, color: serviceColor, title: serviceTitle } = findServiceIcon(serviceName);
+
+    // Priority: Override -> Service Default
+    const icon = overrideIcon || serviceIcon;
+    const color = overrideColor || serviceColor;
+    const title = serviceTitle;
 
     return (
         <div

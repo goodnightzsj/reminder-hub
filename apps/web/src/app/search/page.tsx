@@ -1,4 +1,4 @@
-import { desc, like } from "drizzle-orm";
+import { desc, like, eq } from "drizzle-orm";
 import Link from "next/link";
 
 import { AppHeader } from "@/app/_components/AppHeader";
@@ -9,7 +9,7 @@ import { Input } from "@/app/_components/Input";
 import { ServiceIconBadge } from "@/app/_components/ServiceIconBadge";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
-import { anniversaries, items, subscriptions, todos } from "@/server/db/schema";
+import { serviceIcons, anniversaries, items, subscriptions, todos } from "@/server/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -87,8 +87,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             nextRenewDate: subscriptions.nextRenewDate,
             isArchived: subscriptions.isArchived,
             createdAt: subscriptions.createdAt,
+            icon: serviceIcons.icon,
+            color: serviceIcons.color,
           })
           .from(subscriptions)
+          .leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name))
           .where(like(subscriptions.name, pattern))
           .orderBy(desc(subscriptions.createdAt))
           .limit(20),
@@ -256,7 +259,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <ServiceIconBadge serviceName={s.name} size="sm" className="mt-0.5" />
+                          <ServiceIconBadge
+                            serviceName={s.name}
+                            overrideIcon={s.icon || undefined}
+                            overrideColor={s.color || undefined}
+                            size="sm"
+                            className="mt-0.5"
+                          />
                           <div className="min-w-0 flex-1">
                             <Link href={`/subscriptions/${s.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
                               {s.name}
@@ -321,4 +330,3 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     </div>
   );
 }
-

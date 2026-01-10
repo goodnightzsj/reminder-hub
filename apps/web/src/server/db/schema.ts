@@ -113,6 +113,8 @@ export const subscriptions = sqliteTable("subscriptions", {
   nextRenewDate: text("next_renew_date").notNull(),
   autoRenew: integer("auto_renew", { mode: "boolean" }).notNull().default(true),
   remindOffsetsDays: text("remind_offsets_days").notNull().default("[]"),
+  icon: text("icon"), // Iconify ID or similar
+  color: text("color"), // Hex color code
   isArchived: integer("is_archived", { mode: "boolean" })
     .notNull()
     .default(false),
@@ -203,6 +205,20 @@ export const notificationDeliveryStatusValues = ["sending", "sent", "failed"] as
 export type NotificationDeliveryStatus =
   (typeof notificationDeliveryStatusValues)[number];
 
+
+export const serviceIcons = sqliteTable("service_icons", {
+  name: text("name").primaryKey(), // Service name 
+  icon: text("icon"), // Iconify ID
+  color: text("color"), // Hex color
+  lastFetchedAt: integer("last_fetched_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch()*1000)`),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch()*1000)`),
+});
+
 export const notificationDeliveries = sqliteTable("notification_deliveries", {
   id: text("id").primaryKey(),
   channel: text("channel", { enum: notificationChannelValues })
@@ -220,6 +236,15 @@ export const notificationDeliveries = sqliteTable("notification_deliveries", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch()*1000)`),
+});
+
+export const brandMetadata = sqliteTable("brand_metadata", {
+  slug: text("slug").primaryKey(),
+  title: text("title").notNull(),
+  hex: text("hex").notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch()*1000)`),

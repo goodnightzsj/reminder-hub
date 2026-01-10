@@ -27,7 +27,9 @@ import {
 } from "@/server/date";
 import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
-import { subscriptions } from "@/server/db/schema";
+
+import { subscriptions, serviceIcons } from "@/server/db/schema";
+
 
 export const dynamic = "force-dynamic";
 
@@ -104,12 +106,26 @@ export default async function SubscriptionDetailPage({
   const now = new Date();
   const today = formatDateString(getDatePartsInTimeZone(now, timeZone));
 
+
+
+
+
   const rows = await db
     .select()
     .from(subscriptions)
+    .leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name))
     .where(eq(subscriptions.id, id))
     .limit(1);
-  const item = rows[0];
+
+  const result = rows[0];
+  if (!result) notFound();
+
+  const item = {
+    ...result.subscriptions,
+    icon: result.service_icons?.icon ?? result.subscriptions.icon,
+    color: result.service_icons?.color ?? result.subscriptions.color,
+  };
+
   if (!item) notFound();
 
   const offsets = parseNumberArrayJson(item.remindOffsetsDays);

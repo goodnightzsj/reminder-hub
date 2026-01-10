@@ -103,6 +103,11 @@ function parseRedirectToField(formData: FormData, key: string): string | null {
   return value;
 }
 
+
+import { getOrFetchServiceIcon } from "@/server/lib/icon-fetcher";
+
+// ... existing helper functions ...
+
 export async function createSubscription(formData: FormData) {
   const name = parseStringField(formData, "name");
   const category = parseStringField(formData, "category") || "其他";
@@ -119,6 +124,12 @@ export async function createSubscription(formData: FormData) {
   );
   const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
   const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
+  
+  // Ensure icon is available in shared service_icons table
+  await getOrFetchServiceIcon(name);
+
+  // We no longer write to subscription.icon/color directly, logic is moved to service_icons
+  // But we pass null to be explicit or let DB default handle it (nullable)
 
   await db.insert(subscriptions).values({
     id: randomUUID(),
@@ -132,6 +143,8 @@ export async function createSubscription(formData: FormData) {
     nextRenewDate,
     autoRenew,
     remindOffsetsDays: JSON.stringify(remindOffsetsDays),
+    // icon: null, // Legacy
+    // color: null, // Legacy
     updatedAt: new Date(),
   });
 
@@ -155,10 +168,11 @@ export async function updateSubscription(formData: FormData) {
   );
   const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
   const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
+  
+  // Ensure icon update if name changed or just in case
+  await getOrFetchServiceIcon(name);
 
-  await db
-    .update(subscriptions)
-    .set({
+  const updateData: any = {
       name,
       category,
       description,
@@ -170,13 +184,21 @@ export async function updateSubscription(formData: FormData) {
       autoRenew,
       remindOffsetsDays: JSON.stringify(remindOffsetsDays),
       updatedAt: new Date(),
-    })
+      // We explicitly DO NOT update icon/color here to avoid overwriting with null if we wanted to keep legacy?
+      // Actually we want to stop using them.
+      // So we don't set them.
+  };
+  
+  await db
+    .update(subscriptions)
+    .set(updateData)
     .where(eq(subscriptions.id, id));
 
   revalidatePath("/subscriptions");
   revalidatePath(`/subscriptions/${id}`);
   redirect("/subscriptions?action=updated");
 }
+
 
 export async function setSubscriptionArchived(formData: FormData) {
   const id = parseStringField(formData, "id");
