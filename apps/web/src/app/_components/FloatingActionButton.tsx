@@ -37,7 +37,7 @@ export function FloatingActionButton() {
     };
 
     return (
-        <div className="fixed right-6 bottom-24 md:bottom-10 z-50 flex flex-col items-end gap-3 pointer-events-none">
+        <div className="fixed right-6 bottom-24 md:bottom-10 z-50 flex flex-col items-end gap-3 pointer-events-none md:hidden">
             {/* Action Menu (Only for Dashboard / No Context) */}
             {isOpen && !currentAction && (
                 <div className="pointer-events-auto flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -70,13 +70,18 @@ export function FloatingActionButton() {
                         if (currentAction) setIsOpen(!isOpen); // Long press to force menu?
                     }}
                     className={[
-                        "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20 transition-all duration-300 active:scale-90 active:rotate-90",
-                        "bg-theme-aware text-white border border-white/10 backdrop-blur-md", // Enhanced glass
+                        "relative flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20",
+                        "transition-all duration-300 active:scale-90 active:rotate-90",
+                        "bg-theme-aware text-white border border-white/10 backdrop-blur-md overflow-hidden", // Enhanced glass
+                        !isOpen && "animate-pulse-subtle", // Add subtle pulse when closed
                         isOpen ? "rotate-45" : "",
                     ].join(" ")}
                     aria-label={currentAction ? "新建" : (isOpen ? "关闭" : "添加")}
                 >
-                    <Icons.Plus className="h-7 w-7 stroke-[2.5px]" />
+                    {/* Ripple/Glow Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 transition-opacity hover:opacity-100" />
+
+                    <Icons.Plus className="h-7 w-7 stroke-[2.5px] relative z-10" />
                 </button>
             </Magnetic>
         </div>

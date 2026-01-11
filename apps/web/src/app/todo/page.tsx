@@ -13,6 +13,7 @@ import { TodoCreateForm } from "../_components/todo/TodoCreateForm";
 import { TodoList } from "../_components/todo/TodoList";
 import { CreateModal } from "../_components/CreateModal";
 import { SegmentedControl } from "../_components/SegmentedControl";
+import { MagicCapsuleButton } from "../_components/todo/MagicCapsuleButton";
 
 export const dynamic = "force-dynamic";
 
@@ -242,10 +243,19 @@ export default async function Home({ searchParams }: HomePageProps) {
           </CreateModal>
         )}
 
+        {/* ... inside Home component render ... */}
+
         <section className="rounded-2xl border border-default bg-elevated shadow-sm overflow-hidden min-h-[600px]">
           {/* Sticky Header with Glassmorphism */}
           <div className="sticky top-0 z-20 border-b border-divider bg-glass backdrop-blur-xl px-4 py-3">
-            <div className="flex flex-wrap items-center justify-end gap-3 mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              {/* Desktop Create Button (Left) */}
+              <div className="hidden md:block">
+                <MagicCapsuleButton />
+              </div>
+
+              {/* Mobile Title or Spacer (keep layout stable) */}
+              <div className="md:hidden" />
 
               <SegmentedControl
                 options={[
