@@ -5,7 +5,6 @@ import { formatRecurrenceRuleZh, parseRecurrenceRuleJson } from "@/server/recurr
 import { Icons } from "../Icons";
 import { Badge, getBadgeVariantFromLabel } from "../Badge";
 import { SmartCategoryBadge } from "../SmartCategoryBadge";
-import { Button } from "../Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import {
     deleteTodo,
@@ -165,7 +164,7 @@ export function TodoItem({ item, settings }: TodoItemProps) {
 
                         {/* Overdue Badge (for completed/deleted items that are past due) */}
                         {isPastDue && (item.isDone || isDeleted) && (
-                            <SmartCategoryBadge overrideColor="red" variant="outline">
+                            <SmartCategoryBadge overrideColor="red" variant="glass">
                                 逾期
                             </SmartCategoryBadge>
                         )}
@@ -258,24 +257,31 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                 </div>
 
                 {/* Actions Column */}
-                <div className="flex shrink-0 items-start gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                     {isDeleted ? (
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center gap-1.5">
                             <form action={restoreTodo}>
                                 <input type="hidden" name="id" value={item.id} />
-                                <Button type="submit" size="sm" className="h-8 bg-brand-primary text-white hover:bg-brand-primary/90">
-                                    恢复
-                                </Button>
+                                <Tooltip content="恢复">
+                                    <button
+                                        type="submit"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-white shadow-md shadow-success/20 hover:scale-110 active:scale-95 transition-all"
+                                    >
+                                        <Icons.ArchiveRestore className="h-4 w-4" />
+                                    </button>
+                                </Tooltip>
                             </form>
 
                             <form action={deleteTodo}>
                                 <input type="hidden" name="id" value={item.id} />
-                                <ConfirmSubmitButton
-                                    confirmMessage="确定彻底删除这个 Todo 吗？"
-                                    className="h-8 rounded-lg border border-danger/20 bg-danger/10 px-3 text-xs font-medium text-danger hover:bg-danger hover:text-white"
-                                >
-                                    彻底删除
-                                </ConfirmSubmitButton>
+                                <Tooltip content="彻底删除">
+                                    <ConfirmSubmitButton
+                                        confirmMessage="确定彻底删除这个 Todo 吗？"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-danger text-white shadow-md shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
+                                    >
+                                        <Icons.Trash className="h-4 w-4" />
+                                    </ConfirmSubmitButton>
+                                </Tooltip>
                             </form>
                         </div>
                     ) : (
