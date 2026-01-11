@@ -101,6 +101,7 @@ export function TodoItem({ item, settings }: TodoItemProps) {
     const now = new Date();
     const isDeleted = !!item.deletedAt;
     const isOverdue = item.dueAt && item.dueAt < now && !item.isDone;
+    const isPastDue = item.dueAt && item.dueAt < now;
 
     return (
         <motion.li
@@ -162,6 +163,13 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                             </SmartCategoryBadge>
                         )}
 
+                        {/* Overdue Badge (for completed/deleted items that are past due) */}
+                        {isPastDue && (item.isDone || isDeleted) && (
+                            <SmartCategoryBadge overrideColor="red" variant="outline">
+                                逾期
+                            </SmartCategoryBadge>
+                        )}
+
                         {/* Priority Badge */}
                         <SmartCategoryBadge
                             overrideColor={
@@ -193,8 +201,6 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                                 </div>
                             );
                         })()}
-
-
                     </div>
 
                     <Link
