@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "../Icons";
 import { getLunarDayText } from "@/lib/lunar-utils";
+import { TimePicker } from "./TimePicker";
 
 type ModernCalendarProps = {
     value?: Date;
@@ -54,12 +55,9 @@ export function ModernCalendar({ value, onChange, showTime = false, showLunar = 
         }
     };
 
-    const handleTimeChange = (type: "h" | "m", val: number) => {
-        const current = value || new Date();
-        const newDate = new Date(current);
-        if (type === "h") newDate.setHours(val);
-        else newDate.setMinutes(val);
-        onChange(newDate);
+    const isToday = (d: number) => {
+        const now = new Date();
+        return now.getDate() === d && now.getMonth() === month && now.getFullYear() === year;
     };
 
     const { days, firstDay, year, month } = getDaysInMonth(viewDate);
@@ -76,14 +74,6 @@ export function ModernCalendar({ value, onChange, showTime = false, showLunar = 
         if (!value) return false;
         return value.getDate() === d && value.getMonth() === month && value.getFullYear() === year;
     };
-
-    const isToday = (d: number) => {
-        const now = new Date();
-        return now.getDate() === d && now.getMonth() === month && now.getFullYear() === year;
-    };
-
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const minutes = Array.from({ length: 12 }, (_, i) => i * 5); // 0, 5, 10...
 
     return (
         <div
@@ -208,42 +198,13 @@ export function ModernCalendar({ value, onChange, showTime = false, showLunar = 
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                             transition={{ duration: 0.2 }}
-                            className="flex flex-col gap-6 py-4"
+                            className="p-2"
                         >
-                            <div className="grid grid-cols-2 gap-8 h-[240px]">
-                                <div className="space-y-2 flex flex-col">
-                                    <label className="text-center text-xs font-bold text-muted uppercase tracking-widest">小时</label>
-                                    <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
-                                        <div className="flex flex-wrap gap-2 justify-center">
-                                            {hours.map(h => (
-                                                <button
-                                                    key={h}
-                                                    onClick={() => handleTimeChange("h", h)}
-                                                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium transition-all ${value?.getHours() === h ? "bg-brand-primary text-white shadow-md" : "hover:bg-white/10 text-primary"}`}
-                                                >
-                                                    {String(h).padStart(2, '0')}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="space-y-2 flex flex-col">
-                                    <label className="text-center text-xs font-bold text-muted uppercase tracking-widest">分钟</label>
-                                    <div className="flex-1 overflow-y-auto pr-1 hide-scrollbar">
-                                        <div className="flex flex-wrap gap-2 justify-center">
-                                            {minutes.map(m => (
-                                                <button
-                                                    key={m}
-                                                    onClick={() => handleTimeChange("m", m)}
-                                                    className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-medium transition-all ${Math.floor((value?.getMinutes() || 0) / 5) * 5 === m ? "bg-brand-primary text-white shadow-md" : "hover:bg-white/10 text-primary"}`}
-                                                >
-                                                    {String(m).padStart(2, '0')}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <TimePicker
+                                value={value || new Date()}
+                                onChange={onChange}
+                                className="h-[240px]"
+                            />
                         </motion.div>
                     )}
                 </AnimatePresence>

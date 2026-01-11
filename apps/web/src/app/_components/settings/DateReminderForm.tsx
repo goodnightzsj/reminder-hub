@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { Button } from "@/app/_components/Button";
-import { Input } from "@/app/_components/Input";
+import { TimeInput } from "@/app/_components/TimeInput";
 import { updateDateReminderTime } from "@/app/_actions/settings";
 import { useToast } from "@/app/_components/Toast";
 
@@ -33,13 +33,12 @@ export function DateReminderForm({ initialTime }: DateReminderFormProps) {
     return (
         <form action={handleSubmit} className="flex items-center gap-3">
             <div className="relative">
-                <Input
-                    type="time"
+                <TimeInput
                     name="dateReminderTime"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
                     required
-                    className="h-10 w-32 text-sm font-medium bg-surface border-default focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all rounded-xl"
+                    className="h-10 w-32"
                 />
             </div>
 
