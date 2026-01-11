@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState, useEffect, KeyboardEvent, ChangeEvent, useCallback } from "react";
+import { useRef, useState, useEffect, KeyboardEvent, ChangeEvent, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ModernCalendar } from "./ui/ModernCalendar";
+import { solarToLunar } from "@/lib/lunar-utils";
 
 type SmartDateInputProps = {
     name: string;
     type?: "date" | "datetime-local";
+    dateType?: "solar" | "lunar";
     defaultValue?: string;
     required?: boolean;
     className?: string; // Applied to container
@@ -15,6 +17,7 @@ type SmartDateInputProps = {
 export function SmartDateInput({
     name,
     type = "date",
+    dateType = "solar",
     defaultValue,
     required,
     className = "",
@@ -52,6 +55,17 @@ export function SmartDateInput({
     const minRef = useRef<HTMLInputElement>(null);
 
     const isDateTime = type === "datetime-local";
+    const isLunar = dateType === "lunar";
+
+    // 农历日期信息（仅当选择了有效日期时计算）
+    const lunarInfo = useMemo(() => {
+        if (!isLunar || !parts.y || !parts.m || !parts.d) return null;
+        const year = parseInt(parts.y);
+        const month = parseInt(parts.m);
+        const day = parseInt(parts.d);
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+        return solarToLunar(year, month, day);
+    }, [isLunar, parts.y, parts.m, parts.d]);
 
     // Reconstruct string value from parts
     const constructValue = useCallback((p: typeof parts) => {
@@ -162,6 +176,15 @@ export function SmartDateInput({
                 tabIndex={-1}
                 onChange={handleNativeChange}
             />
+
+            {/* 农历模式下提交农历日期信息 */}
+            {isLunar && lunarInfo && (
+                <>
+                    <input type="hidden" name="lunarMonth" value={lunarInfo.month} />
+                    <input type="hidden" name="lunarDay" value={lunarInfo.day} />
+                    <input type="hidden" name="isLeapMonth" value={lunarInfo.isLeap ? "1" : "0"} />
+                </>
+            )}
 
             {/* Year */}
             <input
@@ -294,6 +317,7 @@ export function SmartDateInput({
                                         : undefined
                                 }
                                 showTime={type === "datetime-local"}
+                                showLunar={isLunar}
                                 onChange={(date) => {
                                     if (!date) {
                                         setParts({ y: "", m: "", d: "", h: "", min: "" });

@@ -113,36 +113,10 @@ export function AnniversaryCreateForm({
                     )}
 
                     {dateType === "lunar" && (
-                        <>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-secondary">农历月</label>
-                                <Select name="lunarMonth" defaultValue="1" className="h-12 bg-base/50">
-                                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </Select>
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-secondary">农历日</label>
-                                <Select name="lunarDay" defaultValue="1" className="h-12 bg-base/50">
-                                    {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                                        <option key={d} value={d}>{d}</option>
-                                    ))}
-                                </Select>
-                            </div>
-                            <div>
-                                <label className="mb-1.5 block text-xs font-medium text-secondary">闰月</label>
-                                <div className="flex h-12 items-center rounded-lg border border-default bg-surface px-3">
-                                    <input
-                                        type="checkbox"
-                                        name="isLeapMonth"
-                                        value="1"
-                                        className="h-5 w-5 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
-                                    />
-                                    <span className="ml-3 text-sm text-primary">是</span>
-                                </div>
-                            </div>
-                        </>
+                        <div className="sm:col-span-3">
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">日期（选择公历日期，自动转换农历）</label>
+                            <SmartDateInput type="date" name="solarDate" dateType="lunar" required className="h-12 bg-base/50" />
+                        </div>
                     )}
                 </div>
 

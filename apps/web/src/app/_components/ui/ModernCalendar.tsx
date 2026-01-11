@@ -3,17 +3,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "../Icons";
+import { getLunarDayText } from "@/lib/lunar-utils";
 
 type ModernCalendarProps = {
     value?: Date;
     onChange: (date: Date) => void;
     showTime?: boolean;
+    showLunar?: boolean;
     className?: string;
 };
 
 const DAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
-export function ModernCalendar({ value, onChange, showTime = false, className = "" }: ModernCalendarProps) {
+export function ModernCalendar({ value, onChange, showTime = false, showLunar = false, className = "" }: ModernCalendarProps) {
     const [viewDate, setViewDate] = useState(value || new Date());
     const [direction, setDirection] = useState(0);
     const [activeTab, setActiveTab] = useState<"date" | "time">("date");
@@ -147,7 +149,7 @@ export function ModernCalendar({ value, onChange, showTime = false, className = 
                             </div>
 
                             {/* Calendar Grid */}
-                            <div className="relative h-[240px]">
+                            <div className={`relative ${showLunar ? "h-[280px]" : "h-[240px]"}`}>
                                 <AnimatePresence initial={false} custom={direction} mode="popLayout">
                                     <motion.div
                                         key={viewDate.toISOString()}
@@ -169,7 +171,8 @@ export function ModernCalendar({ value, onChange, showTime = false, className = 
                                                     <button
                                                         onClick={() => handleDateClick(day)}
                                                         className={`
-                                                            relative w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all duration-300
+                                                            relative rounded-xl flex flex-col items-center justify-center font-medium transition-all duration-300
+                                                            ${showLunar ? "w-10 h-12 text-xs" : "w-10 h-10 text-sm"}
                                                             ${selected
                                                                 ? "bg-gradient-to-br from-brand-primary to-blue-600 text-white shadow-lg shadow-brand-primary/40 scale-105"
                                                                 : "hover:bg-white/10 text-primary hover:scale-110"
@@ -177,7 +180,12 @@ export function ModernCalendar({ value, onChange, showTime = false, className = 
                                                             ${today && !selected ? "ring-2 ring-brand-primary/50 text-brand-primary font-bold" : ""}
                                                         `}
                                                     >
-                                                        {day}
+                                                        <span>{day}</span>
+                                                        {showLunar && (
+                                                            <span className={`text-[9px] leading-tight ${selected ? "text-white/70" : "text-muted"}`}>
+                                                                {getLunarDayText(year, month + 1, day)}
+                                                            </span>
+                                                        )}
                                                         {selected && (
                                                             <motion.div
                                                                 layoutId="selected-ring"

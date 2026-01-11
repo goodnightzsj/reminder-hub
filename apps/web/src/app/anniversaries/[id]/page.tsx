@@ -12,6 +12,7 @@ import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
 import { ExpandableSearch } from "@/app/_components/ExpandableSearch";
+import { AnniversaryDateFields } from "@/app/_components/anniversary/AnniversaryDateFields";
 import {
   deleteAnniversary,
   setAnniversaryArchived,
@@ -275,49 +276,13 @@ export default async function AnniversaryDetailPage({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-secondary mb-1.5">日期类型</label>
-                  <Select name="dateType" defaultValue={item.dateType} className="h-10 bg-base/50">
-                    <option value="solar">公历</option>
-                    <option value="lunar">农历</option>
-                  </Select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-secondary mb-1.5">日期（公历）</label>
-                  <SmartDateInput name="solarDate" defaultValue={item.dateType === "solar" ? item.date : ""} className="h-10 bg-base/50" />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-secondary mb-1.5">农历月</label>
-                  <Select name="lunarMonth" defaultValue={lunarMd?.month ?? 1} className="h-10 bg-base/50">
-                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                      <option key={m} value={m}>{m}月</option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-secondary mb-1.5">农历日</label>
-                  <Select name="lunarDay" defaultValue={lunarMd?.day ?? 1} className="h-10 bg-base/50">
-                    {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                      <option key={d} value={d}>{d}日</option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="flex items-center gap-3 text-sm cursor-pointer p-2 rounded-lg hover:bg-surface/50 w-max">
-                    <input
-                      type="checkbox"
-                      name="isLeapMonth"
-                      value="1"
-                      defaultChecked={item.isLeapMonth}
-                      className="h-4 w-4 rounded border-emphasis text-brand-primary focus:ring-brand-primary/20"
-                    />
-                    <span className="text-secondary">是否闰月</span>
-                  </label>
-                </div>
+                <AnniversaryDateFields
+                  defaultDateType={item.dateType as "solar" | "lunar"}
+                  defaultSolarDate={item.dateType === "solar" ? item.date : undefined}
+                  defaultLunarMonth={lunarMd?.month}
+                  defaultLunarDay={lunarMd?.day}
+                  defaultIsLeapMonth={item.isLeapMonth}
+                />
               </div>
             </div>
 
