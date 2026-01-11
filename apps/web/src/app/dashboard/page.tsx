@@ -15,6 +15,7 @@ import { SpendBarChart } from "./_components/SpendBarChart";
 import { Tooltip } from "../_components/Tooltip";
 import { NumberTicker } from "../_components/NumberTicker";
 import { TiltCard } from "../_components/TiltCard";
+import { UpcomingList } from "../_components/dashboard/UpcomingList";
 import {
   addDaysToDateString,
   diffDays,
@@ -603,38 +604,8 @@ export default async function DashboardPage() {
           {/* Upcoming: (2x2) */}
           <TiltCard className="sm:col-span-2 lg:col-span-2 lg:row-span-2" maxRotation={5}>
             <BentoCard title="即将到来" className="h-full" delay={0.3} icon={<Icons.CalendarClock className="h-5 w-5" />}>
-              <div className="flex flex-col h-full">
-                {upcoming.length === 0 ? (
-                  <div className="flex-1 flex flex-col items-center justify-center text-muted">
-                    <p className="text-sm">未来 7 天暂无安排</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {upcomingVisible.map((u) => (
-                      <div key={`${u.kind}:${u.id}`} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/30 transition-colors">
-                        <div className={`
-                                        h-10 w-10 shrink-0 rounded-lg flex items-center justify-center text-white
-                                        ${u.kind === "todo" ? "bg-brand-primary" : u.kind === "anniversary" ? "bg-pink-500" : "bg-purple-500"}
-                                     `}>
-                          <div className="text-center">
-                            <div className="text-[10px] uppercase font-bold opacity-80">{u.at.toLocaleString('en-US', { month: 'short' })}</div>
-                            <div className="text-sm font-bold leading-none">{u.at.getDate()}</div>
-                          </div>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <Link href={u.kind === "todo" ? `/todo/${u.id}` : u.kind === "anniversary" ? `/anniversaries/${u.id}` : `/subscriptions/${u.id}`} className="block truncate text-sm font-medium hover:underline">
-                            {u.kind === "todo" ? u.title : u.kind === "anniversary" ? u.title : u.name}
-                          </Link>
-                          <div className="text-xs text-muted flex items-center gap-2">
-                            <span>{u.kind === "todo" ? "任务" : u.kind === "anniversary" ? "纪念日" : "订阅"}</span>
-                            <span>•</span>
-                            <span>{formatDateTime(u.at, timeZone).split(' ')[1]}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="flex flex-col h-full overflow-y-auto custom-scrollbar pr-2 -mr-2">
+                <UpcomingList items={upcomingVisible} timeZone={timeZone} />
               </div>
             </BentoCard>
           </TiltCard>
