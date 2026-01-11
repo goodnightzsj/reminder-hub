@@ -6,6 +6,7 @@ import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
 import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
+import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
@@ -248,7 +249,7 @@ export default async function AnniversaryDetailPage({
           <form id="anniversary-edit-form" action={updateAnniversary} className="space-y-8 animate-slide-up stagger-2">
             <input type="hidden" name="id" value={item.id} />
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden animate-slide-up stagger-3">
+            <div className="rounded-xl border border-default bg-elevated relative animate-slide-up stagger-3">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
                 基本信息
               </div>
@@ -284,7 +285,7 @@ export default async function AnniversaryDetailPage({
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-secondary mb-1.5">日期（公历）</label>
-                  <Input type="date" name="solarDate" defaultValue={item.dateType === "solar" ? item.date : ""} className="h-10 bg-base/50" />
+                  <SmartDateInput name="solarDate" defaultValue={item.dateType === "solar" ? item.date : ""} className="h-10 bg-base/50" />
                 </div>
 
                 <div>
@@ -320,7 +321,7 @@ export default async function AnniversaryDetailPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden animate-slide-up stagger-4">
+            <div className="rounded-xl border border-default bg-elevated relative animate-slide-up stagger-4">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary flex items-center justify-between">
                 <span>提醒设置</span>
                 <span className="text-[10px] text-muted font-normal">可多选</span>

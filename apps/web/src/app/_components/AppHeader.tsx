@@ -10,7 +10,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ title, description, children }: AppHeaderProps) {
     return (
-        <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between animate-fade-in">
+        <header className="sticky top-0 z-50 mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between animate-fade-in bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-6 md:px-6">
             <div className="flex-1 flex justify-between items-start gap-4">
                 <div className="space-y-1">
                     <h1 className="text-lg font-semibold tracking-tight text-primary">

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
+import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { Textarea } from "@/app/_components/Textarea";
@@ -254,7 +255,7 @@ export default async function SubscriptionDetailPage({
           <form id="subscription-edit-form" action={updateSubscription} className="space-y-8">
             <input type="hidden" name="id" value={item.id} />
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated relative">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
                 基本信息
               </div>
@@ -283,7 +284,7 @@ export default async function SubscriptionDetailPage({
 
                 <div>
                   <label className="block text-xs font-medium text-secondary mb-1.5">下次到期日</label>
-                  <Input type="date" name="nextRenewDate" defaultValue={item.nextRenewDate} required className="h-10 bg-base/50" />
+                  <SmartDateInput name="nextRenewDate" defaultValue={item.nextRenewDate} required className="h-10 bg-base/50" />
                 </div>
 
                 <div>
@@ -324,7 +325,7 @@ export default async function SubscriptionDetailPage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated relative">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary flex items-center justify-between">
                 <span>提醒设置</span>
                 <span className="text-[10px] text-muted font-normal">可多选</span>

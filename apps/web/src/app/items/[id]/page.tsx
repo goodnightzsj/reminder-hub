@@ -257,7 +257,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
           <form id="item-edit-form" action={updateItem} className="space-y-8">
             <input type="hidden" name="id" value={item.id} />
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated relative">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
                 基本信息
               </div>
@@ -301,7 +301,7 @@ export default async function ItemDetailPage({ params, searchParams }: ItemDetai
               </div>
             </div>
 
-            <div className="rounded-xl border border-default bg-elevated overflow-hidden">
+            <div className="rounded-xl border border-default bg-elevated relative">
               <div className="border-b border-divider bg-surface/50 px-4 py-3 text-xs font-medium text-secondary">
                 成本与统计
               </div>
