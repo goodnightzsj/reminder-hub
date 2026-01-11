@@ -100,6 +100,7 @@ const itemVariants = {
 export function TodoItem({ item, settings }: TodoItemProps) {
     const now = new Date();
     const isDeleted = !!item.deletedAt;
+    const isOverdue = item.dueAt && item.dueAt < now && !item.isDone;
 
     return (
         <motion.li
@@ -109,9 +110,13 @@ export function TodoItem({ item, settings }: TodoItemProps) {
             animate="visible"
             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
             className={`
-                group relative overflow-hidden rounded-xl bg-elevated border border-transparent transition-all hover:bg-muted/30
-                ${item.priority === 'high' ? 'shadow-[0_0_15px_-3px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_-3px_rgba(239,68,68,0.25)] dark:shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]' : ''}
-                ${item.priority === 'medium' ? 'shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]' : ''}
+                group relative overflow-hidden rounded-xl border transition-all
+                ${isOverdue
+                    ? 'bg-red-500/10 border-red-500 shadow-[0_0_20px_-5px_rgba(239,68,68,0.6)] hover:bg-red-500/20 dark:bg-red-900/20 dark:border-red-400'
+                    : 'bg-elevated border-transparent hover:bg-muted/30'
+                }
+                ${!isOverdue && item.priority === 'high' ? 'shadow-[0_0_15px_-3px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_-3px_rgba(239,68,68,0.25)] dark:shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]' : ''}
+                ${!isOverdue && item.priority === 'medium' ? 'shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]' : ''}
             `}
         >
             {/* Mobile Swipe Action (Delete) - Background Layer */}
@@ -131,11 +136,11 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                 drag={!isDeleted ? "x" : false}
                 dragConstraints={{ left: -100, right: 0 }}
                 dragElastic={0.05}
-                className="relative z-10 flex items-start gap-4 bg-elevated p-4"
+                className="relative z-10 flex items-start gap-4 bg-elevated px-5 py-4"
                 whileDrag={{ x: -50 }}
             >
-                {/* Priority Indicator Dot/Line (Optional, reusing left border logic but cleaner) */}
-                <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${item.priority === "high" ? "bg-danger" :
+                {/* Priority Indicator Dot/Line */}
+                <div className={`absolute left-1.5 top-2 bottom-2 w-[4px] rounded-full ${item.priority === "high" ? "bg-danger" :
                     item.priority === "medium" ? "bg-warning" : "bg-transparent"
                     }`} />
 
@@ -238,7 +243,7 @@ export function TodoItem({ item, settings }: TodoItemProps) {
                         )}
 
                         {item.dueAt && (
-                            <div className={`flex items-center gap-1 ${item.dueAt < now && !item.isDone ? "text-danger" : ""}`}>
+                            <div className={`flex items-center gap-1 ${isOverdue ? "text-danger font-bold" : ""}`}>
                                 <Icons.Calendar className="h-3.5 w-3.5" />
                                 <span>{formatDueAt(item.dueAt, settings.timeZone)}</span>
                             </div>
@@ -307,4 +312,3 @@ export function TodoItem({ item, settings }: TodoItemProps) {
         </motion.li >
     );
 }
-
