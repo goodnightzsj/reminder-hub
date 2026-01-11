@@ -93,6 +93,7 @@
   --sidebar: 0 0% 100%;
   --sidebar-foreground: 240 10% 4%;
   --sidebar-border: 240 6% 90%;
+  --theme-gradient: none;
 }
 
 /* === Theme 1: Ocean Blue (Default) - Enhanced Saturation === */
@@ -220,6 +221,7 @@
   --theme-accent-foreground: hsl(180 100% 35%);
   --theme-ring: hsl(210 100% 50%);
   --theme-cta: hsl(24 95% 53%);
+  --theme-gradient: linear-gradient(135deg, hsl(210 100% 50%), hsl(328 100% 54%));
 }
 
 .dark {
@@ -468,6 +470,12 @@ small {
   filter: none;
 }
 
+/* === Theme Aware Button Background (Supports Gradient) === */
+@utility bg-theme-aware {
+  background-color: hsl(var(--brand-primary));
+  background-image: var(--theme-gradient);
+}
+
 /* === Status Utilities === */
 @utility text-danger {
   color: hsl(var(--destructive));
@@ -645,29 +653,6 @@ small {
   border-radius: 2rem;
 }
 
-/* Theme Sweep View Transition */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-::view-transition-old(root) {
-  z-index: 1;
-}
-
-::view-transition-new(root) {
-  z-index: 9999;
-}
-
-.dark::view-transition-old(root) {
-  z-index: 9999;
-}
-
-.dark::view-transition-new(root) {
-  z-index: 1;
-}
-
 @utility p-fluid {
   padding: var(--space-container);
 }
@@ -728,4 +713,20 @@ input[type="radio"] {
   .active-press:active {
     transform: none;
   }
+}
+
+/* === View Transitions === */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Ensure 'New' view is always on top for the circular reveal */
+::view-transition-new(root) {
+  z-index: 2147483646;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
 }

@@ -18,18 +18,25 @@ export function ConfirmSubmitButton({
 }: ConfirmSubmitButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [targetForm, setTargetForm] = useState<HTMLFormElement | null>(null);
+  const [submitter, setSubmitter] = useState<HTMLButtonElement | null>(null);
   const [pendingEvent, setPendingEvent] = useState<MouseEvent<HTMLButtonElement> | null>(null);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setTargetForm(event.currentTarget.closest('form'));
+    setSubmitter(event.currentTarget);
     setPendingEvent(event);
     setShowModal(true);
   };
 
   const handleConfirm = () => {
     if (targetForm) {
-      targetForm.requestSubmit();
+      // Pass the submitter to support formAction (Server Actions)
+      if (submitter) {
+        targetForm.requestSubmit(submitter);
+      } else {
+        targetForm.requestSubmit();
+      }
     }
 
     if (onClick && pendingEvent) {

@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { Magnetic } from "./Magnetic";
 import { Tooltip } from "./Tooltip";
 
@@ -27,14 +28,16 @@ export function ThemeToggle() {
             else setTheme("light");
         };
 
-        // Fallback for browsers that don't support View Transitions
+        // Fallback or Skip if no change (basic check, refined logic below)
         if (!(document as any).startViewTransition) {
             mutateTheme();
             return;
         }
 
         const transition = (document as any).startViewTransition(() => {
-            mutateTheme();
+            flushSync(() => {
+                mutateTheme();
+            });
         });
 
         transition.ready.then(() => {
@@ -44,12 +47,12 @@ export function ThemeToggle() {
             ];
             document.documentElement.animate(
                 {
-                    clipPath: theme === "dark" ? clipPath.reverse() : clipPath,
+                    clipPath: clipPath,
                 },
                 {
                     duration: 500,
                     easing: "ease-in-out",
-                    pseudoElement: theme === "dark" ? "::view-transition-old(root)" : "::view-transition-new(root)",
+                    pseudoElement: "::view-transition-new(root)",
                 }
             );
         });

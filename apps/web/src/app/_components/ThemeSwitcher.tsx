@@ -1,7 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Icon } from "@iconify/react";
 
 const themes = [
     { id: "ocean-blue", name: "信任蓝", color: "hsl(217 91% 60%)" },
@@ -48,11 +49,11 @@ export function ThemeSwitcher() {
 
     if (!mounted) {
         return (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex flex-wrap gap-4">
                 {themes.map((t) => (
                     <div
                         key={t.id}
-                        className="h-8 w-8 rounded-full bg-muted animate-pulse"
+                        className="h-9 w-9 rounded-full bg-muted animate-pulse"
                     />
                 ))}
             </div>
@@ -60,40 +61,65 @@ export function ThemeSwitcher() {
     }
 
     return (
-        <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">
+        <div className="flex flex-wrap gap-5">
             {themes.map((t) => {
                 const isActive = theme === t.id;
                 return (
                     <button
                         key={t.id}
                         onClick={() => setTheme(t.id)}
-                        className="group relative flex flex-col items-center gap-1.5 rounded-lg p-2 transition-colors hover:bg-muted/50"
+                        className="group relative flex flex-col items-center gap-2"
                         title={t.name}
                     >
-                        {isActive && (
+                        {/* 容器 */}
+                        <div className="relative flex h-9 w-9 items-center justify-center">
+
+                            {/* 选中态：外圈圆环 (支持渐变) */}
                             <motion.div
-                                layoutId="theme-active-indicator"
-                                className="absolute inset-0 rounded-lg bg-muted border border-brand-primary/20 shadow-sm overflow-hidden"
-                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            >
-                                <motion.div
-                                    key={`shimmer-${t.id}`}
-                                    initial={{ x: "-100%", opacity: 0 }}
-                                    animate={{ x: "200%", opacity: 0.3 }}
-                                    transition={{ duration: 0.6, ease: "easeInOut" }}
-                                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-brand-primary/40 to-transparent -skew-x-12"
-                                />
-                            </motion.div>
-                        )}
-                        <div className="relative z-10 flex flex-col items-center gap-1.5">
-                            <div
-                                className={`h-8 w-8 rounded-full border-2 border-white shadow-md transition-transform group-hover:scale-110 ${isActive ? "ring-2 ring-brand-primary ring-offset-2 ring-offset-background" : ""}`}
-                                style={{ background: t.color }}
+                                initial={false}
+                                animate={{
+                                    scale: isActive ? 1 : 0.8,
+                                    opacity: isActive ? 1 : 0,
+                                }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: t.color,
+                                    maskImage: "radial-gradient(circle closest-side, transparent 83%, black 85%)",
+                                    WebkitMaskImage: "radial-gradient(circle closest-side, transparent 83%, black 85%)",
+                                }}
                             />
-                            <span className={`text-[10px] truncate max-w-full font-medium transition-colors ${isActive ? "text-primary" : "text-secondary group-hover:text-primary"}`}>
-                                {t.name}
-                            </span>
+
+                            {/* 颜色圆球 (isActive时缩小) */}
+                            <motion.div
+                                className="absolute inset-0 rounded-full flex items-center justify-center"
+                                initial={false}
+                                animate={{
+                                    scale: isActive ? 0.78 : 1, // 选中时缩小到 78% (约缩小 4px 边距)
+                                }}
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                style={{ background: t.color }}
+                            >
+                                {/* 选中态：对号 (仅在选中且缩小后显示) */}
+                                <AnimatePresence>
+                                    {isActive && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0 }}
+                                            transition={{ delay: 0.1, duration: 0.2 }}
+                                        >
+                                            <Icon icon="ri:check-line" className="text-white h-4 w-4" />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
                         </div>
+
+                        {/* 文本标签 */}
+                        <span className={`text-[11px] font-medium transition-colors ${isActive ? "text-primary font-semibold" : "text-muted-foreground group-hover:text-primary"}`}>
+                            {t.name}
+                        </span>
                     </button>
                 );
             })}

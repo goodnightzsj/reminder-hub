@@ -71,7 +71,7 @@ export function FloatingActionButton() {
                     }}
                     className={[
                         "flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20 transition-all duration-300 active:scale-90 active:rotate-90",
-                        "bg-brand-primary text-white border border-white/10 backdrop-blur-md", // Enhanced glass
+                        "bg-theme-aware text-white border border-white/10 backdrop-blur-md", // Enhanced glass
                         isOpen ? "rotate-45" : "",
                     ].join(" ")}
                     aria-label={currentAction ? "新建" : (isOpen ? "关闭" : "添加")}

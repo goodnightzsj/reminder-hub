@@ -1,14 +1,12 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
+import { Icon } from "@iconify/react";
 
-import { Badge } from "@/app/_components/Badge";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { AppHeader } from "@/app/_components/AppHeader";
 import { ToastListener } from "@/app/_components/ToastListener";
 import { getAppSettings } from "@/server/db/settings";
+import { NotificationSettingsSection } from "@/app/_components/settings/NotificationSettingsSection";
 
-
-// Notifications moved to /settings/notifications
 import { importBackupMerge, importBackupOverwrite } from "../_actions/backup";
 import { clearAllData } from "../_actions/settings";
 import { DateReminderForm } from "../_components/settings/DateReminderForm";
@@ -16,150 +14,136 @@ import { ThemeSwitcher } from "../_components/ThemeSwitcher";
 
 export const dynamic = "force-dynamic";
 
-type SettingsPageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
-
-
-
 export default async function SettingsPage() {
   const settings = await getAppSettings();
 
   return (
-    <div className="min-h-dvh bg-base font-sans text-primary">
+    <div className="min-h-dvh bg-base font-sans text-primary pb-20">
       <main className="mx-auto max-w-5xl p-6 sm:p-10">
         <AppHeader
           title="设置"
+          description="管理应用外观、通知渠道、数据备份及其他偏好设置。"
         />
 
         <ToastListener />
 
-        {/* 
-        <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <h2 className="text-sm font-medium">时区 (默认)</h2>
-          <p className="mt-1 text-xs text-secondary">
-            影响 Todo 截止时间及提醒调度。已锁定为上海时间。
-          </p>
+        <div className="mt-8 grid gap-6 grid-cols-1 lg:grid-cols-2">
 
-          <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
-            当前时区：<code className="font-mono">{settings.timeZone}</code>
-            <span className="mx-2 text-muted">·</span>
-            当前时间：{nowText}
-          </div>
-        </section> 
-        */}
-
-        {/* Appearance Section */}
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-1 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
-          <h2 className="text-sm font-medium">外观设置</h2>
-          <p className="mt-1 text-xs text-secondary">
-            选择你喜欢的配色主题，搭配浅色/深色模式使用。
-          </p>
-          <div className="mt-4">
+          {/* 1. 外观设置 */}
+          <section className="rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-primary to-brand-secondary" />
+              <span className="text-sm font-semibold">外观主题</span>
+            </div>
             <ThemeSwitcher />
-          </div>
-        </section>
+          </section>
 
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-2 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
-          <h2 className="text-sm font-medium">日期类提醒</h2>
-          <p className="mt-1 text-xs text-secondary">
-            纪念日/订阅等“只填日期”的提醒，会在该时刻触发。
-          </p>
+          {/* 2. 日期类提醒 */}
+          <section className="rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-2 flex flex-col justify-center">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Icon icon="ri:calendar-event-line" className="text-brand-primary" />
+                  <span className="text-sm font-semibold">日期默认提醒</span>
+                </div>
+                <p className="text-xs text-secondary">
+                  无具体时间的纪念日/订阅将在此刻触发。
+                </p>
+              </div>
+              <DateReminderForm initialTime={settings.dateReminderTime} />
+            </div>
+          </section>
 
-          <div className="mt-3 rounded-lg border border-divider bg-surface p-3 text-xs text-secondary">
-            默认提醒时刻：<code className="font-mono">{settings.dateReminderTime}</code>
-          </div>
-
-          <DateReminderForm initialTime={settings.dateReminderTime} />
-        </section>
-
-        <Link
-          href="/settings/notifications"
-          className="mt-6 flex items-center justify-between rounded-xl border border-default bg-elevated p-4 shadow-sm hover:border-brand-primary/50 transition-colors group"
-        >
-          <div>
-            <h2 className="text-sm font-medium group-hover:text-brand-primary">通知配置 →</h2>
-            <p className="mt-1 text-xs text-secondary">
-              配置 Telegram, Webhook, 企业微信, 邮件等消息推送渠道。
-            </p>
-          </div>
-        </Link>
-
-        {/* Backup Section */}
-        <section className="mt-6 rounded-xl border border-default bg-elevated p-4 shadow-sm animate-slide-up stagger-3 transition-shadow hover:shadow-lg hover:shadow-brand-primary/5">
-          <h2 className="text-sm font-medium">备份（导出 / 导入）</h2>
-          <p className="mt-1 text-xs text-secondary">
-            导入为“覆盖导入”：会清空并恢复 Todo / 子任务 / 纪念日 / 订阅 / 物品 /
-            通知记录；不会包含通知渠道密钥（Token/SMTP 密码等）。
-          </p>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <a
-              href="/api/backup/export"
-              className="h-9 rounded-lg border border-default px-3 text-xs font-medium leading-9 hover:bg-interactive-hover"
-            >
-              下载 JSON 备份
-            </a>
+          {/* 3. 通知渠道 (占满两列) */}
+          <div className="lg:col-span-2 space-y-4 animate-slide-up stagger-3">
+            <div className="flex items-center gap-2 px-1">
+              <Icon icon="ri:notification-3-line" className="text-brand-primary h-5 w-5" />
+              <span className="text-sm font-bold">通知渠道</span>
+            </div>
+            <NotificationSettingsSection settings={settings} />
           </div>
 
-          <form action={importBackupOverwrite} className="mt-4 flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-xs text-secondary">
-              选择备份文件（.json）
-              <input
-                type="file"
-                name="backupFile"
-                accept="application/json"
-                required
-                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-surface file:px-3 file:py-2 file:text-xs file:font-medium file:text-primary hover:file:bg-interactive-hover"
-              />
-            </label>
+          {/* 4. 备份与恢复 (占满两列) */}
+          <section className="lg:col-span-2 rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-primary to-brand-secondary" />
+              <span className="text-sm font-semibold">备份与恢复</span>
+            </div>
 
-            <ConfirmSubmitButton
-              confirmMessage="确定用备份覆盖当前所有数据吗？此操作不可撤销。"
-              className="h-11 self-start rounded-lg border border-danger bg-danger px-4 text-sm font-medium text-white hover:bg-danger-hover"
-            >
-              覆盖导入
-            </ConfirmSubmitButton>
-          </form>
+            <div className="flex flex-col xl:flex-row xl:items-center gap-6">
+              {/* 导出 */}
+              <div className="shrink-0">
+                <p className="text-xs text-secondary mb-2">保存当前数据快照</p>
+                <a
+                  href="/api/backup/export"
+                  className="inline-flex h-10 w-full xl:w-auto items-center justify-center gap-2 rounded-lg border border-default bg-surface px-4 text-sm font-medium hover:bg-interactive-hover transition-colors active-press"
+                >
+                  <Icon icon="ri:download-cloud-2-line" className="h-4 w-4" />
+                  下载备份 (.json)
+                </a>
+              </div>
 
-          <form action={importBackupMerge} className="mt-4 flex flex-col gap-3">
-            <label className="flex flex-col gap-1 text-xs text-secondary">
-              选择备份文件（.json）
-              <input
-                type="file"
-                name="backupFile"
-                accept="application/json"
-                required
-                className="block w-full rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-brand-primary file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-brand-secondary"
-              />
-            </label>
+              <div className="hidden xl:block h-12 w-px bg-divider mx-2"></div>
+              <div className="xl:hidden w-full h-px bg-divider"></div>
 
-            <ConfirmSubmitButton
-              confirmMessage="确定将备份合并到当前数据吗？相同 ID 的记录会被跳过，不会覆盖。"
-              className="h-11 self-start rounded-lg border border-default bg-elevated px-4 text-sm font-medium text-primary hover:bg-interactive-hover"
-            >
-              合并导入（跳过重复）
-            </ConfirmSubmitButton>
-          </form>
-        </section>
+              {/* 导入 */}
+              <div className="flex-1">
+                <p className="text-xs text-secondary mb-2">从备份文件恢复</p>
+                <form className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                  <input
+                    type="file"
+                    name="backupFile"
+                    accept="application/json"
+                    required
+                    className="block w-full sm:flex-1 rounded-lg border border-default bg-transparent px-3 py-2 text-sm text-primary file:mr-3 file:rounded-md file:border-0 file:bg-surface file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-primary hover:file:bg-interactive-hover cursor-pointer"
+                  />
 
-        <section className="mt-6 rounded-xl border border-danger bg-danger/10 p-4 shadow-sm animate-slide-up stagger-4">
-          <h2 className="text-sm font-medium text-danger">
-            危险操作
-          </h2>
-          <p className="mt-1 text-xs text-danger opacity-80">
-            清空所有数据（Todo/纪念日/订阅/物品/通知记录）。此操作不可撤销。
-          </p>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <ConfirmSubmitButton
+                      formAction={importBackupOverwrite}
+                      confirmMessage="⚠️ 警告：这将清除当前所有数据并用备份覆盖！此操作不可撤销。"
+                      className="h-10 flex-1 sm:flex-none rounded-lg bg-danger px-4 text-xs font-medium text-white hover:bg-danger/90 transition-colors active-press shadow-sm shadow-danger/20"
+                    >
+                      覆盖导入
+                    </ConfirmSubmitButton>
 
-          <form action={clearAllData} className="mt-3">
-            <ConfirmSubmitButton
-              confirmMessage="确定清空所有数据吗？此操作不可撤销。"
-              className="h-11 rounded-lg border border-danger bg-danger px-4 text-sm font-medium text-white hover:bg-danger-hover"
-            >
-              清空所有数据
-            </ConfirmSubmitButton>
-          </form>
-        </section>
+                    <ConfirmSubmitButton
+                      formAction={importBackupMerge}
+                      confirmMessage="确定将备份合并到当前数据吗？相同 ID 的记录会被跳过。"
+                      className="h-10 flex-1 sm:flex-none rounded-lg border border-default bg-surface px-4 text-xs font-medium text-primary hover:bg-interactive-hover transition-colors active-press"
+                    >
+                      合并导入
+                    </ConfirmSubmitButton>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          {/* 5. 危险区域 */}
+          <section className="lg:col-span-2 mt-4 rounded-2xl border border-danger/20 bg-danger/5 p-6 animate-slide-up stagger-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-sm font-semibold text-danger flex items-center gap-2">
+                  <Icon icon="ri:alarm-warning-line" />
+                  危险操作区
+                </span>
+                <p className="text-xs text-danger/70 mt-1">
+                  清空所有数据（Todo、纪念日、订阅、物品及通知记录）。一旦执行无法撤销。
+                </p>
+              </div>
+              <form action={clearAllData}>
+                <ConfirmSubmitButton
+                  confirmMessage="🚨 最终确认：确定清空所有数据吗？此操作不可撤销！"
+                  className="h-9 w-full sm:w-auto whitespace-nowrap rounded-lg border border-danger bg-danger px-4 text-xs font-medium text-white hover:bg-danger-hover active-press"
+                >
+                  清空所有数据
+                </ConfirmSubmitButton>
+              </form>
+            </div>
+          </section>
+
+        </div>
       </main>
     </div>
   );
