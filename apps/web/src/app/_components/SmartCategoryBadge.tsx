@@ -1,9 +1,43 @@
 import { Badge } from "@/app/_components/Badge";
+import { getStableHashCode } from "@/lib/hash";
 
 const COLORS = [
     "orange", "amber", "yellow", "lime", "green", "emerald", "teal",
-    "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink"
+    "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink", "rose"
 ] as const;
+
+/**
+ * Known labels should map to stable, intentionally distinct colors.
+ * This avoids confusing collisions (e.g. different categories sharing the same/similar colors).
+ */
+const LABEL_COLOR_OVERRIDES: Record<string, string> = {
+    // Common / defaults
+    其他: "zinc",
+
+    // Items
+    数码: "blue",
+    家居: "orange",
+    衣物: "pink",
+    虚拟: "violet",
+    运动: "lime",
+
+    // Subscriptions
+    娱乐: "fuchsia",
+    工具: "orange",
+    学习: "emerald",
+    办公: "green",
+
+    // Todo task types
+    个人: "indigo",
+    公司: "purple",
+    生活: "yellow",
+
+    // Anniversaries
+    生日: "rose",
+    纪念日: "pink",
+    节日: "amber",
+    自定义: "slate",
+};
 
 /*
   显式样式定义：确保 Tailwind JIT 能识别并生成对应类名。
@@ -12,6 +46,8 @@ const COLORS = [
 const GLASS_STYLES: Record<string, string> = {
     rose: "text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-rose-500/5",
     red: "text-red-600 bg-red-500/10 border-red-500/20 shadow-red-500/5",
+    zinc: "text-zinc-500 bg-zinc-500/10 border-zinc-500/20 shadow-zinc-500/5",
+    slate: "text-slate-500 bg-slate-500/10 border-slate-500/20 shadow-slate-500/5",
     orange: "text-orange-500 bg-orange-500/10 border-orange-500/20 shadow-orange-500/5",
     amber: "text-amber-500 bg-amber-500/10 border-amber-500/20 shadow-amber-500/5",
     yellow: "text-yellow-500 bg-yellow-500/10 border-yellow-500/20 shadow-yellow-500/5",
@@ -32,6 +68,8 @@ const GLASS_STYLES: Record<string, string> = {
 const SOLID_STYLES: Record<string, string> = {
     rose: "border-0 bg-gradient-to-b from-rose-500 to-rose-600 text-white shadow-sm shadow-rose-500/25",
     red: "border-0 bg-gradient-to-b from-red-600 to-red-700 text-white shadow-sm shadow-red-600/25",
+    zinc: "border-0 bg-gradient-to-b from-zinc-600 to-zinc-700 text-white shadow-sm shadow-zinc-600/25",
+    slate: "border-0 bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-sm shadow-slate-600/25",
     orange: "border-0 bg-gradient-to-b from-orange-400 to-orange-500 text-white shadow-sm shadow-orange-500/25",
     amber: "border-0 bg-gradient-to-b from-amber-400 to-amber-500 text-white shadow-sm shadow-amber-500/25",
     yellow: "border-0 bg-gradient-to-b from-yellow-400 to-yellow-500 text-white shadow-sm shadow-yellow-500/25",
@@ -49,17 +87,12 @@ const SOLID_STYLES: Record<string, string> = {
     pink: "border-0 bg-gradient-to-b from-pink-500 to-pink-600 text-white shadow-sm shadow-pink-500/25",
 };
 
-function getHashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return hash;
-}
-
 export function getColorName(str: string): string {
-    if (!str) return COLORS[0];
-    const hash = Math.abs(getHashCode(str));
+    const normalized = (str ?? "").trim();
+    if (!normalized) return COLORS[0];
+    const override = LABEL_COLOR_OVERRIDES[normalized];
+    if (override) return override;
+    const hash = Math.abs(getStableHashCode(normalized));
     return COLORS[hash % COLORS.length];
 }
 

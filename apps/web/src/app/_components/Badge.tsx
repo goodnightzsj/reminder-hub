@@ -1,5 +1,7 @@
 import { ReactNode } from "react";
 
+import { getStableHashCode } from "@/lib/hash";
+
 type BadgeVariant = "default" | "secondary" | "outline" | "primary" | "danger" | "warning" | "success" | "blue" | "orange" | "pink" | "purple" | "cyan" | "rose" | "indigo" | "teal" | "custom";
 
 type BadgeProps = {
@@ -47,10 +49,6 @@ export function Badge({ children, variant = "default", className = "" }: BadgePr
 export function getBadgeVariantFromLabel(label: string | null | undefined): BadgeVariant {
     if (!label) return 'default';
     const semanticVariants: BadgeVariant[] = ['blue', 'orange', 'pink', 'purple', 'cyan', 'rose', 'indigo', 'teal'];
-    let hash = 0;
-    for (let i = 0; i < label.length; i++) {
-        hash = label.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const index = Math.abs(hash) % semanticVariants.length;
+    const index = Math.abs(getStableHashCode(label)) % semanticVariants.length;
     return semanticVariants[index];
 }

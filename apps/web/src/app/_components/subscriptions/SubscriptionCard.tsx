@@ -72,6 +72,8 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
             )
         ) : null;
 
+    const cycleBadgeColor = item.cycleUnit === SUBSCRIPTION_CYCLE_UNIT.YEAR ? "violet" : "teal";
+
     const displayText = `${daysLeft ?? "?"}d`;
     const textLength = displayText.length;
     const dynamicRadius = textLength >= 4 ? 28 : textLength >= 3 ? 24 : 20;
@@ -101,7 +103,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
                                     {statusBadge}
 
-                                    <SmartCategoryBadge overrideColor="cyan">
+                                    <SmartCategoryBadge overrideColor={cycleBadgeColor}>
                                         {cycleLabel}
                                     </SmartCategoryBadge>
 
