@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, type CSSProperties } from "react";
 
 import { getStableHashCode } from "@/lib/hash";
 
@@ -8,9 +8,10 @@ type BadgeProps = {
     children: ReactNode;
     variant?: BadgeVariant;
     className?: string;
+    style?: CSSProperties;
 };
 
-export function Badge({ children, variant = "default", className = "" }: BadgeProps) {
+export function Badge({ children, variant = "default", className = "", style }: BadgeProps) {
     const base = "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-default";
 
     const variants: Record<BadgeVariant, string> = {
@@ -40,15 +41,15 @@ export function Badge({ children, variant = "default", className = "" }: BadgePr
     };
 
     return (
-        <span className={`${base} ${variants[variant]} ${className}`} >
+        <span className={`${base} ${variants[variant]} ${className}`} style={style}>
             {children}
-        </span >
+        </span>
     );
 }
 
 export function getBadgeVariantFromLabel(label: string | null | undefined): BadgeVariant {
-    if (!label) return 'default';
-    const semanticVariants: BadgeVariant[] = ['blue', 'orange', 'pink', 'purple', 'cyan', 'rose', 'indigo', 'teal'];
+    if (!label) return "default";
+    const semanticVariants: BadgeVariant[] = ["blue", "orange", "pink", "purple", "cyan", "rose", "indigo", "teal"];
     const index = Math.abs(getStableHashCode(label)) % semanticVariants.length;
     return semanticVariants[index];
 }

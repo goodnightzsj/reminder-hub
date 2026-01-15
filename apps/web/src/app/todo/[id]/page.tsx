@@ -8,7 +8,8 @@ import { ROUTES } from "@/lib/routes";
 import { SubtaskList } from "../../_components/todo/SubtaskList";
 import { TodoUpdateForm } from "../../_components/todo/TodoUpdateForm";
 import { Icons } from "../../_components/Icons";
-import { Badge, getBadgeVariantFromLabel } from "../../_components/Badge";
+import { Badge } from "../../_components/Badge";
+import { getSmartColorStyle } from "../../_components/SmartCategoryBadge";
 import { PageBackgroundDecoration } from "../../_components/PageBackgroundDecoration";
 
 import { getTodoDetailPageData } from "./_lib/todo-detail";
@@ -67,7 +68,8 @@ export default async function TodoPage({ params }: TodoPageProps) {
                   {getTodoPriorityLabel(todo.priority)}
                 </Badge>
                 <Badge
-                  variant={getBadgeVariantFromLabel(todo.taskType)}
+                  variant="custom"
+                  style={getSmartColorStyle(todo.taskType, "solid")}
                   className="px-1.5 py-0 text-[10px]"
                 >
                   {todo.taskType}

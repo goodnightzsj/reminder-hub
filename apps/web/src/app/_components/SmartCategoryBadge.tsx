@@ -1,43 +1,7 @@
 import { Badge } from "@/app/_components/Badge";
 import { getStableHashCode } from "@/lib/hash";
 
-const COLORS = [
-    "orange", "amber", "yellow", "lime", "green", "emerald", "teal",
-    "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink", "rose"
-] as const;
-
-/**
- * Known labels should map to stable, intentionally distinct colors.
- * This avoids confusing collisions (e.g. different categories sharing the same/similar colors).
- */
-const LABEL_COLOR_OVERRIDES: Record<string, string> = {
-    // Common / defaults
-    其他: "zinc",
-
-    // Items
-    数码: "blue",
-    家居: "orange",
-    衣物: "pink",
-    虚拟: "violet",
-    运动: "lime",
-
-    // Subscriptions
-    娱乐: "fuchsia",
-    工具: "orange",
-    学习: "emerald",
-    办公: "green",
-
-    // Todo task types
-    个人: "indigo",
-    公司: "purple",
-    生活: "yellow",
-
-    // Anniversaries
-    生日: "rose",
-    纪念日: "pink",
-    节日: "amber",
-    自定义: "slate",
-};
+export type SmartColorVariant = "glass" | "solid";
 
 /*
   显式样式定义：确保 Tailwind JIT 能识别并生成对应类名。
@@ -87,20 +51,41 @@ const SOLID_STYLES: Record<string, string> = {
     pink: "border-0 bg-gradient-to-b from-pink-500 to-pink-600 text-white shadow-sm shadow-pink-500/25",
 };
 
-export function getColorName(str: string): string {
-    const normalized = (str ?? "").trim();
-    if (!normalized) return COLORS[0];
-    const override = LABEL_COLOR_OVERRIDES[normalized];
-    if (override) return override;
-    const hash = Math.abs(getStableHashCode(normalized));
-    return COLORS[hash % COLORS.length];
+function getHueFromLabel(label: string): number {
+    const normalized = label.trim();
+    const hash = getStableHashCode(normalized) >>> 0;
+    const goldenAngle = 137.508;
+    return (hash * goldenAngle) % 360;
 }
 
-export function getColorClass(str: string, variant: "glass" | "solid" = "glass"): string {
-    const name = getColorName(str);
-    return variant === "solid"
-        ? (SOLID_STYLES[name] || SOLID_STYLES.rose)
-        : (GLASS_STYLES[name] || GLASS_STYLES.rose);
+export function getSmartColorStyle(label: string, variant: SmartColorVariant = "glass"): React.CSSProperties {
+    const normalized = label.trim();
+    const hue = getHueFromLabel(normalized);
+
+    if (variant === "solid") {
+        const saturation = 82;
+        const fromLightness = 55;
+        const toLightness = 45;
+        const shadowLightness = 42;
+
+        return {
+            color: "white",
+            borderWidth: 0,
+            backgroundImage: `linear-gradient(to bottom, hsl(${hue} ${saturation}% ${fromLightness}%), hsl(${hue} ${saturation}% ${toLightness}%))`,
+            boxShadow: `0 1px 2px 0 hsl(${hue} ${saturation}% ${shadowLightness}% / 0.25)`,
+        };
+    }
+
+    const saturation = 82;
+    const textLightness = 45;
+    const surfaceLightness = 50;
+
+    return {
+        color: `hsl(${hue} ${saturation}% ${textLightness}%)`,
+        backgroundColor: `hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.12)`,
+        borderColor: `hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.25)`,
+        boxShadow: `0 1px 2px 0 hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.08)`,
+    };
 }
 
 type SmartCategoryBadgeProps = {
@@ -114,18 +99,14 @@ export function SmartCategoryBadge({ children, className, overrideColor, variant
     if (!children) return null;
     const text = String(children);
 
-    // 计算颜色
-    const colorName = overrideColor || getColorName(text);
-    // 不再将 red 归一化为 rose
-
-    // 获取样式类
     const styleMap = variant === "solid" ? SOLID_STYLES : GLASS_STYLES;
-    const colorClass = styleMap[colorName] || styleMap["blue"]; // 兜底
+    const overrideClass = overrideColor ? styleMap[overrideColor] : null;
 
     return (
         <Badge
             variant={variant === "solid" ? "custom" : "outline"}
-            className={`px-1.5 py-0 text-[10px] h-4 leading-none font-semibold tracking-tight whitespace-nowrap ${colorClass} ${className || ""}`}
+            style={!overrideClass ? getSmartColorStyle(overrideColor || text, variant) : undefined}
+            className={`px-1.5 py-0 text-[10px] h-4 leading-none font-semibold tracking-tight whitespace-nowrap ${overrideClass || ""} ${className || ""}`}
         >
             {children}
         </Badge>

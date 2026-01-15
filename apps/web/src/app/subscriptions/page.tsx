@@ -4,7 +4,7 @@ import { AppHeader } from "@/app/_components/AppHeader";
 import { CreateModal } from "@/app/_components/CreateModal";
 import { EmptyState } from "@/app/_components/EmptyState";
 import { SegmentedControl } from "@/app/_components/SegmentedControl";
-import { getColorClass } from "@/app/_components/SmartCategoryBadge";
+import { getSmartColorStyle } from "@/app/_components/SmartCategoryBadge";
 import { SubscriptionCreateForm } from "@/app/_components/subscriptions/SubscriptionCreateForm";
 import { SubscriptionList } from "@/app/_components/subscriptions/SubscriptionList";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
@@ -73,15 +73,15 @@ export default async function SubscriptionsPage({ searchParams }: SubscriptionsP
                   全部
                 </Link>
                 {distinctCategories.map((category) => {
-                  const colorClass = getColorClass(category);
                   const isSelected = categoryFilter === category;
                   return (
                     <Link
                       key={category}
                       href={buildHref({ filter, category })}
+                      style={isSelected ? getSmartColorStyle(category, "glass") : undefined}
                       className={`inline-flex items-center rounded-full px-3 py-1 transition-all border ${
                         isSelected
-                          ? colorClass
+                          ? "font-medium"
                           : "bg-surface hover:bg-surface/80 text-secondary border-transparent"
                       }`}
                     >
