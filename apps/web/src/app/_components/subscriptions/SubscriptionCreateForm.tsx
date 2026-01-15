@@ -13,7 +13,12 @@ import { useTimeouts } from "@/app/_components/useTimeouts";
 import { useCreateModal } from "@/app/_components/useCreateModal";
 import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
 import { subscriptionReminderOptionsDays } from "@/lib/reminder-options";
-import { DEFAULT_SUBSCRIPTION_CYCLE_UNIT, subscriptionCategoryOptions, subscriptionCycleUnitOptions } from "@/lib/subscriptions";
+import {
+    DEFAULT_SUBSCRIPTION_CATEGORY,
+    DEFAULT_SUBSCRIPTION_CYCLE_UNIT,
+    subscriptionCategoryOptions,
+    subscriptionCycleUnitOptions,
+} from "@/lib/subscriptions";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 type SubscriptionCreateFormProps = {
@@ -87,6 +92,7 @@ export function SubscriptionCreateForm({
                             <label className="mb-1.5 block text-xs font-medium text-secondary">分类</label>
                             <CustomSelect
                                 name="category"
+                                defaultValue={DEFAULT_SUBSCRIPTION_CATEGORY}
                                 placeholder="输入自定义..."
                                 className="h-12 bg-surface"
                                 options={subscriptionCategoryOptions}

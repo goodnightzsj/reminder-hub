@@ -31,6 +31,8 @@ export const itemFilterValues = [
 
 export const DEFAULT_ITEM_FILTER: ItemFilter = ITEM_FILTER.USING;
 
+export const DEFAULT_ITEM_CATEGORY = "其他";
+
 export function isItemStatus(value: string): value is ItemStatus {
   return (itemStatusValues as readonly string[]).includes(value);
 }
@@ -52,6 +54,7 @@ export const itemStatusOptions: { value: ItemStatus; label: string }[] = [
 ];
 
 export const itemCategoryOptions: { value: string; label: string }[] = [
+  { value: DEFAULT_ITEM_CATEGORY, label: DEFAULT_ITEM_CATEGORY },
   { value: "数码", label: "数码" },
   { value: "家居", label: "家居" },
   { value: "衣物", label: "衣物" },

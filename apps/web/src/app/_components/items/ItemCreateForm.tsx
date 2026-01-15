@@ -11,7 +11,13 @@ import { useToast } from "@/app/_components/Toast";
 import { useTimeouts } from "@/app/_components/useTimeouts";
 import { useCreateModal } from "@/app/_components/useCreateModal";
 import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
-import { DEFAULT_ITEM_STATUS, itemCategoryOptions, itemCurrencyOptions, itemStatusOptions } from "@/lib/items";
+import {
+    DEFAULT_ITEM_CATEGORY,
+    DEFAULT_ITEM_STATUS,
+    itemCategoryOptions,
+    itemCurrencyOptions,
+    itemStatusOptions,
+} from "@/lib/items";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 type ItemCreateFormProps = {
@@ -88,6 +94,7 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                         <label className="mb-1.5 block text-xs font-medium text-secondary">类别</label>
                         <CustomSelect
                             name="category"
+                            defaultValue={DEFAULT_ITEM_CATEGORY}
                             placeholder="输入自定义类别..."
                             className="h-12 bg-surface"
                             options={itemCategoryOptions}

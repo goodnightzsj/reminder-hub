@@ -6,7 +6,7 @@ import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { ServiceIconBadge } from "../ServiceIconBadge";
 import { deleteSubscription, renewSubscription, restoreSubscription } from "@/app/_actions/subscriptions";
 import { formatCurrencyCents } from "@/lib/format";
-import { DEFAULT_SUBSCRIPTION_CATEGORY, SUBSCRIPTION_CYCLE_UNIT } from "@/lib/subscriptions";
+import { SUBSCRIPTION_CYCLE_UNIT } from "@/lib/subscriptions";
 import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Icons } from "../Icons";
 import { Tooltip } from "../Tooltip";
@@ -57,9 +57,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
         </SmartCategoryBadge>
     );
 
-    const categoryBadge = item.category && item.category !== DEFAULT_SUBSCRIPTION_CATEGORY ? (
-        <SmartCategoryBadge>{item.category}</SmartCategoryBadge>
-    ) : null;
+    const categoryBadge = item.category ? <SmartCategoryBadge>{item.category}</SmartCategoryBadge> : null;
 
     const autoRenewBadge =
         !item.deletedAt && !item.isArchived ? (

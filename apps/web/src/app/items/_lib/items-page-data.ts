@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, ne, isNotNull, isNull, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ne, or, isNotNull, isNull, type SQL } from "drizzle-orm";
 
 import type { ItemCardItemData } from "@/app/_components/items/ItemCard";
 import { formatDateInTimeZone } from "@/server/date";
@@ -8,7 +8,7 @@ import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
 import { items } from "@/server/db/schema";
 import { computeDaysUsed } from "@/server/item-metrics";
-import { ITEM_STATUS } from "@/lib/items";
+import { DEFAULT_ITEM_CATEGORY, ITEM_STATUS } from "@/lib/items";
 
 import { ITEM_FILTER, type ItemFilter } from "./item-filters";
 
@@ -29,6 +29,11 @@ type ItemRow = {
   deletedAt: Date | null;
   createdAt: Date;
 };
+
+function canonicalizeItemCategory(category: string | null): string {
+  const trimmed = (category ?? "").trim();
+  return trimmed.length > 0 ? trimmed : DEFAULT_ITEM_CATEGORY;
+}
 
 function buildItemOrderBy(filter: ItemFilter): SQL[] {
   // Trash: sort by deletion time (oldest first)
@@ -62,6 +67,15 @@ function buildItemBaseWhere(filter: ItemFilter): SQL {
 function buildItemWhere(filter: ItemFilter, category: string | null): SQL {
   const baseWhere = buildItemBaseWhere(filter);
   if (!category) return baseWhere;
+  if (category === DEFAULT_ITEM_CATEGORY) {
+    return (
+      and(
+        baseWhere,
+        or(isNull(items.category), eq(items.category, ""), eq(items.category, DEFAULT_ITEM_CATEGORY)),
+      ) ?? baseWhere
+    );
+  }
+
   return and(baseWhere, eq(items.category, category)) ?? baseWhere;
 }
 
@@ -92,12 +106,12 @@ export async function getItemsPageData(args: {
   const distinctCategoriesRows = await db
     .selectDistinct({ name: items.category })
     .from(items)
-    .where(and(isNotNull(items.category), ne(items.category, ""), categoryBaseWhere))
+    .where(categoryBaseWhere)
     .orderBy(items.category);
 
-  const distinctCategories = distinctCategoriesRows
-    .map((c) => c.name)
-    .filter((c): c is string => typeof c === "string" && c.length > 0);
+  const distinctCategories = Array.from(
+    new Set(distinctCategoriesRows.map((c) => canonicalizeItemCategory(c.name))),
+  ).sort((a, b) => a.localeCompare(b, "zh-CN"));
 
   const { timeZone } = await getAppTimeSettings();
   const today = formatDateInTimeZone(new Date(), timeZone);
@@ -112,7 +126,7 @@ export async function getItemsPageData(args: {
     const itemForUi: ItemCardItemData = {
       id: it.id,
       name: it.name,
-      category: it.category,
+      category: canonicalizeItemCategory(it.category),
       status: it.status,
       purchasedDate: it.purchasedDate,
       priceCents: it.priceCents,

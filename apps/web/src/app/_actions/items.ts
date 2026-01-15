@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
-import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
+import { DEFAULT_ITEM_CATEGORY, DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
 import { items } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
 import type { FlashAction } from "@/lib/flash";
@@ -43,7 +43,7 @@ export async function createItem(formData: FormData) {
   const priceCents = parsePriceCentsField(formData, "price");
   const currency = parseCurrencyField(formData, "currency");
   const purchasedDate = parseDateField(formData, "purchasedDate");
-  const category = parseStringField(formData, "category");
+  const category = parseStringField(formData, "category") || DEFAULT_ITEM_CATEGORY;
   const status = parseItemStatusField(formData, "status");
   const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
   const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");
@@ -73,7 +73,7 @@ export async function updateItem(formData: FormData) {
   const priceCents = parsePriceCentsField(formData, "price");
   const currency = parseCurrencyField(formData, "currency");
   const purchasedDate = parseDateField(formData, "purchasedDate");
-  const category = parseStringField(formData, "category");
+  const category = parseStringField(formData, "category") || DEFAULT_ITEM_CATEGORY;
   const status = parseItemStatusField(formData, "status");
   const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
   const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");

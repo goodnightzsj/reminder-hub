@@ -1,11 +1,12 @@
+export const DEFAULT_SUBSCRIPTION_CATEGORY = "其他";
+
 export const subscriptionCategoryOptions: { value: string; label: string }[] = [
+  { value: DEFAULT_SUBSCRIPTION_CATEGORY, label: DEFAULT_SUBSCRIPTION_CATEGORY },
   { value: "娱乐", label: "娱乐" },
   { value: "工具", label: "工具" },
   { value: "学习", label: "学习" },
   { value: "办公", label: "办公" },
 ];
-
-export const DEFAULT_SUBSCRIPTION_CATEGORY = "其他";
 
 export const SUBSCRIPTION_FILTER = {
   ACTIVE: "active",

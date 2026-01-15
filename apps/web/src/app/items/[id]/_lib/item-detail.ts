@@ -7,7 +7,7 @@ import { getAppTimeSettings } from "@/server/db/settings";
 import { items } from "@/server/db/schema";
 import { formatDateInTimeZone } from "@/server/date";
 import { computeDaysUsed } from "@/server/item-metrics";
-import { DEFAULT_ITEM_STATUS, isItemStatus, type ItemStatus } from "@/lib/items";
+import { DEFAULT_ITEM_CATEGORY, DEFAULT_ITEM_STATUS, isItemStatus, type ItemStatus } from "@/lib/items";
 import { ROUTES } from "@/lib/routes";
 
 export type ItemDetailItemData = {
@@ -57,8 +57,11 @@ export async function getItemDetailPageData(id: string): Promise<ItemDetailPageD
       ? row.status
       : DEFAULT_ITEM_STATUS;
 
+  const category = (row.category ?? "").trim() || DEFAULT_ITEM_CATEGORY;
+
   const item: ItemDetailItemData = {
     ...row,
+    category,
     status,
   };
 
