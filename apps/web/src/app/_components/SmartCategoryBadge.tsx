@@ -53,9 +53,20 @@ const SOLID_STYLES: Record<string, string> = {
 
 function getHueFromLabel(label: string): number {
     const normalized = label.trim();
-    const hash = getStableHashCode(normalized) >>> 0;
-    const goldenAngle = 137.508;
-    return (hash * goldenAngle) % 360;
+    const hash = getStableHashCode(normalized);
+    const mixed = mixHash32(hash);
+    return (mixed / 4294967296) * 360;
+}
+
+function mixHash32(input: number): number {
+    // MurmurHash3 finalizer-style mix to decorrelate short/nearby hashes (e.g. 2-char categories).
+    let value = input >>> 0;
+    value ^= value >>> 16;
+    value = Math.imul(value, 0x85ebca6b);
+    value ^= value >>> 13;
+    value = Math.imul(value, 0xc2b2ae35);
+    value ^= value >>> 16;
+    return value >>> 0;
 }
 
 export function getSmartColorStyle(label: string, variant: SmartColorVariant = "glass"): React.CSSProperties {
