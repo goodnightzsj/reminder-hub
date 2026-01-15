@@ -1,3 +1,5 @@
+import "server-only";
+
 export type DateParts = {
   year: number;
   month: number;
@@ -10,6 +12,10 @@ function pad2(n: number): string {
 
 export function formatDateString(parts: DateParts): string {
   return `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}`;
+}
+
+export function formatDateInTimeZone(date: Date, timeZone: string): string {
+  return formatDateString(getDatePartsInTimeZone(date, timeZone));
 }
 
 export function parseDateString(value: string): DateParts | null {
@@ -103,4 +109,3 @@ export function diffDays(fromDateString: string, toDateString: string): number |
   const toUtc = Date.UTC(to.year, to.month - 1, to.day);
   return Math.round((toUtc - fromUtc) / 86400000);
 }
-

@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion } from "framer-motion";
 import { Icons } from "./Icons";
 import { TimePicker } from "./ui/TimePicker";
+import { Portal } from "./Portal";
 
 type TimeInputProps = {
     name: string;
@@ -72,49 +72,50 @@ export function TimeInput({ name, value, onChange, required, className = "", dis
             </div>
 
             {/* Portal for Popover */}
-            {isOpen && createPortal(
-                <>
-                    <div
-                        className="fixed inset-0 z-[9998]"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsOpen(false);
-                        }}
-                    />
-                    <div
-                        className="fixed z-[9999]"
-                        style={{
-                            top: position.top,
-                            left: position.left,
-                        }}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                            transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
-                            className="bg-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-4 w-[280px]"
-                            onClick={(e) => e.stopPropagation()}
+            {isOpen && (
+                <Portal>
+                    <>
+                        <div
+                            className="fixed inset-0 z-[9998]"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsOpen(false);
+                            }}
+                        />
+                        <div
+                            className="fixed z-[9999]"
+                            style={{
+                                top: position.top,
+                                left: position.left,
+                            }}
                         >
-                            <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/5">
-                                <span className="text-xs font-bold text-muted uppercase tracking-wider">选择时间</span>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="p-1 hover:bg-white/10 rounded-md text-muted hover:text-primary transition-colors"
-                                >
-                                    <Icons.Check className="w-4 h-4" />
-                                </button>
-                            </div>
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+                                className="bg-surface/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl p-4 w-[280px]"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/5">
+                                    <span className="text-xs font-bold text-muted uppercase tracking-wider">选择时间</span>
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className="p-1 hover:bg-white/10 rounded-md text-muted hover:text-primary transition-colors"
+                                    >
+                                        <Icons.Check className="w-4 h-4" />
+                                    </button>
+                                </div>
 
-                            <TimePicker
-                                value={value}
-                                onChange={handleTimeChange}
-                                className="h-[200px]"
-                            />
-                        </motion.div>
-                    </div>
-                </>,
-                document.body
+                                <TimePicker
+                                    value={value}
+                                    onChange={handleTimeChange}
+                                    className="h-[200px]"
+                                />
+                            </motion.div>
+                        </div>
+                    </>
+                </Portal>
             )}
         </div>
     );

@@ -4,16 +4,17 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "./Icons";
 import { Magnetic } from "./Magnetic";
+import { ROUTES } from "@/lib/routes";
 
 export function BottomNav() {
     const pathname = usePathname();
 
     const links = [
-        { href: "/dashboard", label: "概览", icon: Icons.Dashboard },
-        { href: "/todo", label: "待办", icon: Icons.Todo },
-        { href: "/anniversaries", label: "纪念日", icon: Icons.Calendar },
-        { href: "/subscriptions", label: "订阅", icon: Icons.CreditCard },
-        { href: "/items", label: "物品", icon: Icons.Box },
+        { href: ROUTES.dashboard, label: "概览", icon: Icons.Dashboard },
+        { href: ROUTES.todo, label: "待办", icon: Icons.Todo },
+        { href: ROUTES.anniversaries, label: "纪念日", icon: Icons.Calendar },
+        { href: ROUTES.subscriptions, label: "订阅", icon: Icons.CreditCard },
+        { href: ROUTES.items, label: "物品", icon: Icons.Box },
     ];
 
     return (

@@ -24,18 +24,18 @@
 
 ## 🛠️ 技术栈 (Tech Stack)
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
-- **Database**: SQLite (via `libsql`)
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-- **UI**: Tailwind CSS + Semantic Tokens
-- **Language**: TypeScript
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router；build 默认使用 Webpack 以保证稳定性)
+- **Database**: SQLite（运行时 `better-sqlite3`）
+- **ORM**: [Drizzle ORM](https://orm.drizzle.team/) + `drizzle-kit` 迁移
+- **UI**: Tailwind CSS v4 + 语义化配色 (Semantic Tokens)
+- **Language**: TypeScript + React 19
 
 ## 🚀 快速开始 (Getting Started)
 
 ### 1. 依赖安装
 
 ```bash
-npm install
+npm -C apps/web install
 ```
 
 ### 2. 环境变量配置
@@ -46,10 +46,14 @@ npm install
 cp apps/web/.env.example apps/web/.env
 ```
 
-配置 `apps/web/.env` 中的数据库路径（默认为本地 SQLite）：
+配置 `apps/web/.env` 中的数据库路径（默认使用本地 SQLite 文件）：
 
 ```env
-DATABASE_URL="file:./data/sqlite.db"
+# SQLite database file path (app runtime)
+DATABASE_FILE_PATH=./data/app.db
+
+# SQLite database URL (drizzle-kit)
+DATABASE_URL=file:./data/app.db
 ```
 
 ### 3. 数据库迁移
@@ -57,14 +61,13 @@ DATABASE_URL="file:./data/sqlite.db"
 初始化数据库表结构：
 
 ```bash
-npm --prefix apps/web run db:push
-# 或者 npm --prefix apps/web run db:migrate
+npm -C apps/web run db:migrate
 ```
 
 ### 4. 启动开发服务器
 
 ```bash
-npm --prefix apps/web run dev
+npm -C apps/web run dev
 ```
 
 访问 [http://localhost:3000](http://localhost:3000) 即可使用。
@@ -79,7 +82,13 @@ npm --prefix apps/web run dev
 ## 📄 设计文档
 
 - [PRD & 设计规划 (Plan.md)](./Plan.md)
-- [开发任务清单 (task.md)](./task.md) (Artitact)
+- [开发规范（3M / 敏捷 / 低耦合）(DEVELOPMENT.md)](./DEVELOPMENT.md)
+
+## ✅ 质量检查（推荐）
+
+```bash
+npm -C apps/web run check
+```
 
 ## 🤝 贡献
 

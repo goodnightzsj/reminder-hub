@@ -6,23 +6,21 @@ import { useState } from "react";
 import { SearchModal } from "./SearchModal";
 import { Icons } from "./Icons";
 import { Magnetic } from "./Magnetic";
+import { cn } from "@/lib/utils";
+import { ROUTES } from "@/lib/routes";
 
 export function MainNav() {
     const pathname = usePathname();
 
     const links = [
-        { href: "/dashboard", label: "仪表盘" },
-        { href: "/todo", label: "Todo" },
-        { href: "/anniversaries", label: "纪念日" },
-        { href: "/subscriptions", label: "订阅" },
-        { href: "/items", label: "物品" },
-        // Search moved to icon
-        { href: "/settings", label: "设置" },
+        { href: ROUTES.dashboard, label: "仪表盘" },
+        { href: ROUTES.todo, label: "Todo" },
+        { href: ROUTES.anniversaries, label: "纪念日" },
+        { href: ROUTES.subscriptions, label: "订阅" },
+        { href: ROUTES.items, label: "物品" },
+        // 搜索入口已改为图标按钮
+        { href: ROUTES.settings, label: "设置" },
     ];
-
-    function cn(...classes: (string | undefined | null | false)[]) {
-        return classes.filter(Boolean).join(" ");
-    }
 
     const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -30,9 +28,7 @@ export function MainNav() {
         <>
             <nav className="hidden items-center gap-1 md:flex">
                 {links.map(({ href, label }) => {
-                    const isActive = href === "/"
-                        ? pathname === "/"
-                        : pathname.startsWith(href);
+                    const isActive = pathname.startsWith(href);
 
                     return (
                         <Magnetic key={href} strength={0.2}>

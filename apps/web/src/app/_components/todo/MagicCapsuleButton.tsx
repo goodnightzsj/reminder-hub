@@ -4,6 +4,7 @@ import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Icons } from "../Icons";
 import { motion } from "framer-motion";
+import { MODAL_CREATE_VALUE, MODAL_QUERY_KEY, setSearchParamOnPathname } from "@/lib/url";
 
 export function MagicCapsuleButton() {
     const searchParams = useSearchParams();
@@ -11,9 +12,12 @@ export function MagicCapsuleButton() {
 
     // Preserve existing params and add modal=create
     const getHref = () => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("modal", "create");
-        return `${pathname}?${params.toString()}`;
+        return setSearchParamOnPathname(
+            pathname,
+            searchParams.toString(),
+            MODAL_QUERY_KEY,
+            MODAL_CREATE_VALUE,
+        );
     };
 
     return (

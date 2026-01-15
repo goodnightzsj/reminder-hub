@@ -1,27 +1,15 @@
 "use client";
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { NumberTicker } from "../../_components/NumberTicker";
-import { useEffect } from "react";
+import { formatCurrencyAmount } from "@/lib/format";
+
+import type { SpendRow } from "../_lib/dashboard-utils";
 
 type SpendBarChartProps = {
-    monthlySpendRows: { currency: string; amount: number }[];
+    monthlySpendRows: SpendRow[];
     maxMonthlySpend: number;
 };
-
-function formatCurrencyAmount(value: number, currency: string): string {
-    try {
-        return new Intl.NumberFormat("zh-CN", {
-            style: "currency",
-            currency,
-            currencyDisplay: "narrowSymbol",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2,
-        }).format(value);
-    } catch {
-        return `${value.toFixed(2)} ${currency}`;
-    }
-}
 
 export function SpendBarChart({ monthlySpendRows, maxMonthlySpend }: SpendBarChartProps) {
     return (

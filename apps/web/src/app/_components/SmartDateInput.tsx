@@ -1,172 +1,62 @@
 "use client";
 
-import { useRef, useState, useEffect, KeyboardEvent, ChangeEvent, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { ModernCalendar } from "./ui/ModernCalendar";
-import { solarToLunar } from "@/lib/lunar-utils";
+import { SmartDateCalendarPopover } from "./SmartDateCalendarPopover";
+import { SmartDatePartInput } from "./SmartDatePartInput";
+import { DEFAULT_ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "@/lib/anniversary";
+import { useSmartDateInput } from "./useSmartDateInput";
 
 type SmartDateInputProps = {
     name: string;
     type?: "date" | "datetime-local";
-    dateType?: "solar" | "lunar";
+    dateType?: AnniversaryDateType;
     defaultValue?: string;
     required?: boolean;
-    className?: string; // Applied to container
+    className?: string; // 作用于外层容器
 };
 
 export function SmartDateInput({
     name,
     type = "date",
-    dateType = "solar",
+    dateType = DEFAULT_ANNIVERSARY_DATE_TYPE,
     defaultValue,
     required,
     className = "",
 }: SmartDateInputProps) {
-    // Parse default value (YYYY-MM-DD or YYYY-MM-DDTHH:mm)
-    const parseValue = (val: string | undefined) => {
-        if (!val) return { y: "", m: "", d: "", h: "", min: "" };
-        const datePart = val.split("T")[0];
-        const timePart = val.split("T")[1] || "";
-        const [y, m, d] = datePart.split("-");
-        const [h, min] = timePart.split(":");
-        return {
-            y: y || "",
-            m: m || "",
-            d: d || "",
-            h: h || "",
-            min: min || "",
-        };
-    };
-
-    const [parts, setParts] = useState(parseValue(defaultValue));
-    const [showCalendar, setShowCalendar] = useState(false);
-
-    // Use a visually hidden native input to handle the actual form submission AND the native picker
-    const nativeInputRef = useRef<HTMLInputElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [popoverDirection, setPopoverDirection] = useState<"up" | "down">("down");
-    const [calendarPosition, setCalendarPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-
-    // Refs for inputs to manage focus
-    const yearRef = useRef<HTMLInputElement>(null);
-    const monthRef = useRef<HTMLInputElement>(null);
-    const dayRef = useRef<HTMLInputElement>(null);
-    const hourRef = useRef<HTMLInputElement>(null);
-    const minRef = useRef<HTMLInputElement>(null);
-
-    const isDateTime = type === "datetime-local";
-    const isLunar = dateType === "lunar";
-
-    // 农历日期信息（仅当选择了有效日期时计算）
-    const lunarInfo = useMemo(() => {
-        if (!isLunar || !parts.y || !parts.m || !parts.d) return null;
-        const year = parseInt(parts.y);
-        const month = parseInt(parts.m);
-        const day = parseInt(parts.d);
-        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-        return solarToLunar(year, month, day);
-    }, [isLunar, parts.y, parts.m, parts.d]);
-
-    // Reconstruct string value from parts
-    const constructValue = useCallback((p: typeof parts) => {
-        const { y, m, d, h, min } = p;
-        if (!y || !m || !d) return "";
-
-        const formattedDate = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-
-        if (isDateTime) {
-            const formattedTime = `${(h || "00").padStart(2, "0")}:${(min || "00").padStart(2, "0")}`;
-            return `${formattedDate}T${formattedTime}`;
-        }
-        return formattedDate;
-    }, [isDateTime]);
-
-    // Update native input value whenever parts change
-    useEffect(() => {
-        if (!nativeInputRef.current) return;
-        const newVal = constructValue(parts);
-        if (nativeInputRef.current.value !== newVal) {
-            nativeInputRef.current.value = newVal;
-        }
-    }, [parts, constructValue]);
-
-    // Handle selection from the native picker
-    const handleNativeChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setParts(parseValue(e.target.value));
-    };
-
-    const showPicker = () => {
-        try {
-            nativeInputRef.current?.showPicker();
-        } catch (err) {
-            // Fallback for older browsers or if showPicker not supported
-            console.warn("Browser does not support showPicker or blocked it", err);
-            nativeInputRef.current?.click();
-        }
-    };
-
-    const handleChange = (part: keyof typeof parts, maxLen: number, value: string, nextRef?: React.RefObject<HTMLInputElement | null>) => {
-        // Only allow numbers
-        if (!/^\d*$/.test(value)) return;
-
-        setParts(prev => ({ ...prev, [part]: value }));
-
-        if (value.length === maxLen && nextRef) {
-            nextRef.current?.focus();
-        }
-    };
-
-    const handleKeyDown = (
-        e: KeyboardEvent<HTMLInputElement>,
-        part: keyof typeof parts,
-        prevRef?: React.RefObject<HTMLInputElement | null>
-    ) => {
-        if (e.key === "Backspace" && parts[part] === "" && prevRef) {
-            prevRef.current?.focus();
-        }
-    };
-
-    const toggleCalendar = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!showCalendar) {
-            // Position calendar around the mouse cursor
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            const calendarWidth = 320;
-            const calendarHeight = 420;
-
-            // Calculate position to center horizontally around mouse, with bounds checking
-            let left = mouseX - calendarWidth / 2;
-            left = Math.max(8, Math.min(left, window.innerWidth - calendarWidth - 8));
-
-            // Calculate vertical position - prefer below mouse, flip if not enough space
-            const spaceBelow = window.innerHeight - mouseY;
-            let top: number;
-            let direction: "up" | "down";
-
-            if (spaceBelow < calendarHeight + 20 && mouseY > calendarHeight + 20) {
-                direction = "up";
-                top = mouseY - calendarHeight - 10;
-            } else {
-                direction = "down";
-                top = mouseY + 10;
-            }
-
-            setPopoverDirection(direction);
-            setCalendarPosition({ top, left });
-        }
-        setShowCalendar(!showCalendar);
-    };
+    const {
+        parts,
+        isDateTime,
+        isLunar,
+        lunarInfo,
+        showCalendar,
+        toggleCalendar,
+        closeCalendar,
+        popoverDirection,
+        calendarPosition,
+        calendarValue,
+        handleCalendarChange,
+        nativeInputRef,
+        handleNativeChange,
+        yearRef,
+        monthRef,
+        dayRef,
+        hourRef,
+        minRef,
+        handleChange,
+        handleKeyDown,
+    } = useSmartDateInput({
+        type,
+        dateType,
+        defaultValue,
+    });
 
     const inputBaseClass = "bg-transparent text-center outline-none placeholder:text-muted/30 focus:bg-brand-primary/10 rounded px-0.5 transition-colors";
 
     return (
         <div
-            ref={containerRef}
             className={`flex items-center gap-1 rounded-lg border border-default bg-surface px-3 py-2 text-base text-primary focus-within:ring-2 focus-within:ring-brand-primary/20 md:text-sm cursor-pointer group/container ${className}`}
             onClick={toggleCalendar}
         >
-            {/* Visually hidden but functional native input */}
+            {/* 不可见但可用的原生 input（用于表单提交） */}
             <input
                 ref={nativeInputRef}
                 type={type}
@@ -186,79 +76,82 @@ export function SmartDateInput({
                 </>
             )}
 
-            {/* Year */}
-            <input
-                ref={yearRef}
-                className={`${inputBaseClass} w-12`}
-                placeholder="YYYY"
-                maxLength={4}
+            {/* 年 */}
+            <SmartDatePartInput
+                inputRef={yearRef}
+                part="y"
                 value={parts.y}
-                onChange={(e) => handleChange("y", 4, e.target.value, monthRef)}
-                onKeyDown={(e) => handleKeyDown(e, "y")}
-                onClick={(e) => e.stopPropagation()}
-                inputMode="numeric"
+                placeholder="YYYY"
+                maxLen={4}
+                className={`${inputBaseClass} w-12`}
+                nextRef={monthRef}
+                onChangePart={handleChange}
+                onKeyDownPart={handleKeyDown}
             />
             <span className="text-muted">-</span>
 
-            {/* Month */}
-            <input
-                ref={monthRef}
-                className={`${inputBaseClass} w-8`}
-                placeholder="MM"
-                maxLength={2}
+            {/* 月 */}
+            <SmartDatePartInput
+                inputRef={monthRef}
+                part="m"
                 value={parts.m}
-                onChange={(e) => handleChange("m", 2, e.target.value, dayRef)}
-                onKeyDown={(e) => handleKeyDown(e, "m", yearRef)}
-                onClick={(e) => e.stopPropagation()}
-                inputMode="numeric"
+                placeholder="MM"
+                maxLen={2}
+                className={`${inputBaseClass} w-8`}
+                nextRef={dayRef}
+                prevRef={yearRef}
+                onChangePart={handleChange}
+                onKeyDownPart={handleKeyDown}
             />
             <span className="text-muted">-</span>
 
-            {/* Day */}
-            <input
-                ref={dayRef}
-                className={`${inputBaseClass} w-8`}
-                placeholder="DD"
-                maxLength={2}
+            {/* 日 */}
+            <SmartDatePartInput
+                inputRef={dayRef}
+                part="d"
                 value={parts.d}
-                onChange={(e) => handleChange("d", 2, e.target.value, isDateTime ? hourRef : undefined)}
-                onKeyDown={(e) => handleKeyDown(e, "d", monthRef)}
-                onClick={(e) => e.stopPropagation()}
-                inputMode="numeric"
+                placeholder="DD"
+                maxLen={2}
+                className={`${inputBaseClass} w-8`}
+                nextRef={isDateTime ? hourRef : undefined}
+                prevRef={monthRef}
+                onChangePart={handleChange}
+                onKeyDownPart={handleKeyDown}
             />
 
             {isDateTime && (
                 <>
                     <span className="mx-1 text-muted"> </span>
-                    {/* Hour */}
-                    <input
-                        ref={hourRef}
-                        className={`${inputBaseClass} w-8`}
-                        placeholder="HH"
-                        maxLength={2}
+                    {/* 时 */}
+                    <SmartDatePartInput
+                        inputRef={hourRef}
+                        part="h"
                         value={parts.h}
-                        onChange={(e) => handleChange("h", 2, e.target.value, minRef)}
-                        onKeyDown={(e) => handleKeyDown(e, "h", dayRef)}
-                        onClick={(e) => e.stopPropagation()}
-                        inputMode="numeric"
+                        placeholder="HH"
+                        maxLen={2}
+                        className={`${inputBaseClass} w-8`}
+                        nextRef={minRef}
+                        prevRef={dayRef}
+                        onChangePart={handleChange}
+                        onKeyDownPart={handleKeyDown}
                     />
                     <span className="text-muted">:</span>
-                    {/* Minute */}
-                    <input
-                        ref={minRef}
-                        className={`${inputBaseClass} w-8`}
-                        placeholder="mm"
-                        maxLength={2}
+                    {/* 分 */}
+                    <SmartDatePartInput
+                        inputRef={minRef}
+                        part="min"
                         value={parts.min}
-                        onChange={(e) => handleChange("min", 2, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, "min", hourRef)}
-                        onClick={(e) => e.stopPropagation()}
-                        inputMode="numeric"
+                        placeholder="mm"
+                        maxLen={2}
+                        className={`${inputBaseClass} w-8`}
+                        prevRef={hourRef}
+                        onChangePart={handleChange}
+                        onKeyDownPart={handleKeyDown}
                     />
                 </>
             )}
 
-            {/* Calendar Icon Trigger */}
+            {/* 日历按钮 */}
             <div className="relative ml-auto">
                 <button
                     type="button"
@@ -285,57 +178,16 @@ export function SmartDateInput({
                     </svg>
                 </button>
 
-                {/* Modern Calendar Popover */}
-                {showCalendar && createPortal(
-                    <>
-                        <div
-                            className="fixed inset-0 z-[9998]"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowCalendar(false);
-                            }}
-                        />
-                        <div
-                            className="fixed z-[9999] animate-zoom-in"
-                            style={{
-                                top: calendarPosition.top,
-                                left: calendarPosition.left,
-                                transformOrigin: popoverDirection === 'up' ? 'bottom right' : 'top right'
-                            }}
-                        >
-                            <ModernCalendar
-                                value={
-                                    parts.y && parts.m && parts.d
-                                        ? (() => {
-                                            const d = new Date(parseInt(parts.y), parseInt(parts.m) - 1, parseInt(parts.d));
-                                            if (type === "datetime-local") {
-                                                d.setHours(parseInt(parts.h || "0"));
-                                                d.setMinutes(parseInt(parts.min || "0"));
-                                            }
-                                            return d;
-                                        })()
-                                        : undefined
-                                }
-                                showTime={type === "datetime-local"}
-                                showLunar={isLunar}
-                                onChange={(date) => {
-                                    if (!date) {
-                                        setParts({ y: "", m: "", d: "", h: "", min: "" });
-                                    } else {
-                                        const y = date.getFullYear().toString();
-                                        const m = (date.getMonth() + 1).toString();
-                                        const d = date.getDate().toString();
-                                        const h = date.getHours().toString().padStart(2, '0');
-                                        const min = date.getMinutes().toString().padStart(2, '0');
-                                        setParts(prev => ({ ...prev, y, m, d, h: type === "datetime-local" ? h : "", min: type === "datetime-local" ? min : "" }));
-                                    }
-                                    // Don't auto-close - user clicks outside to close
-                                }}
-                            />
-                        </div>
-                    </>,
-                    document.body
-                )}
+                <SmartDateCalendarPopover
+                    open={showCalendar}
+                    position={calendarPosition}
+                    direction={popoverDirection}
+                    value={calendarValue}
+                    showTime={type === "datetime-local"}
+                    showLunar={isLunar}
+                    onChange={handleCalendarChange}
+                    onClose={closeCalendar}
+                />
             </div>
         </div>
     );

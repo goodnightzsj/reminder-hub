@@ -1,6 +1,7 @@
 import { Icons } from "./Icons";
 import { ThemeToggle } from "./ThemeToggle";
 import { MainNav } from "./MainNav";
+import { ROUTES } from "@/lib/routes";
 
 type AppHeaderProps = {
     title: string;
@@ -27,7 +28,7 @@ export function AppHeader({ title, description, children }: AppHeaderProps) {
                 <div className="flex items-center gap-2 md:hidden">
                     <ThemeToggle />
                     <a
-                        href="/settings"
+                        href={ROUTES.settings}
                         className="flex h-9 w-9 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-interactive-hover hover:text-primary active-press"
                         aria-label="Settings"
                     >

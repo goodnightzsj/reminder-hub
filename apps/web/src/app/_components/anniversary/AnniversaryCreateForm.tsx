@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/app/_components/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
 import { createAnniversary } from "@/app/_actions/anniversaries";
 import { Icons } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/Toast";
-
-const reminderOptionsDays = [
-    { days: 0, label: "当天" },
-    { days: 1, label: "提前 1 天" },
-    { days: 3, label: "提前 3 天" },
-    { days: 7, label: "提前 7 天" },
-    { days: 30, label: "提前 30 天" },
-] as const;
+import { useTimeouts } from "@/app/_components/useTimeouts";
+import { useCreateModal } from "@/app/_components/useCreateModal";
+import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
+import { anniversaryReminderOptionsDays } from "@/lib/reminder-options";
+import {
+    ANNIVERSARY_DATE_TYPE,
+    DEFAULT_ANNIVERSARY_DATE_TYPE,
+    anniversaryCategoryOptions,
+    isAnniversaryDateType,
+    type AnniversaryDateType,
+} from "@/lib/anniversary";
 
 type AnniversaryCreateFormProps = {
     dateReminderTime: string;
@@ -28,40 +30,32 @@ export function AnniversaryCreateForm({
     timeZone,
     className = "",
 }: AnniversaryCreateFormProps) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const [dateType, setDateType] = useState<"solar" | "lunar">("solar");
+    const { closeIfOpen } = useCreateModal();
+    const [dateType, setDateType] = useState<AnniversaryDateType>(DEFAULT_ANNIVERSARY_DATE_TYPE);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formKey, setFormKey] = useState(0);
     const formRef = useRef<HTMLFormElement>(null);
-    const { success } = useToast();
+    const { success, error: toastError } = useToast();
+    const { scheduleTimeout } = useTimeouts();
 
     async function handleSubmit(formData: FormData) {
         setIsLoading(true);
         try {
             await createAnniversary(formData);
 
-            setIsSuccess(true);
-            success("创建成功");
-            setFormKey(prev => prev + 1);
-            formRef.current?.reset();
-            // Reset local state if not part of formKey reset (dateType IS controlled, so we need to reset it manually or let key remount)
-            // Since dateType is outside the key'd div (or we can key the content), we should reset it.
-            // Better to wrap content in key or just reset state.
-            setDateType("solar");
-
-            setTimeout(() => {
-                setIsSuccess(false);
-                if (searchParams.get("modal") === "create") {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.delete("modal");
-                    router.replace(`${pathname}?${params.toString()}`);
-                }
-            }, 1000);
+            runCreateFormSuccess({
+                setIsSuccess,
+                toastSuccess: success,
+                setFormKey,
+                formRef,
+                scheduleTimeout,
+                closeCreateModalIfOpen: closeIfOpen,
+                afterReset: () => setDateType(DEFAULT_ANNIVERSARY_DATE_TYPE),
+            });
         } catch (error) {
             console.error(error);
+            toastError(DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE);
         } finally {
             setIsLoading(false);
         }
@@ -84,9 +78,11 @@ export function AnniversaryCreateForm({
                     <div className="w-full sm:w-32">
                         <label className="mb-1.5 block text-xs font-medium text-secondary">类型</label>
                         <Select name="category" defaultValue="纪念日" allowCustom className="h-12 bg-base/50">
-                            <option value="生日">生日</option>
-                            <option value="纪念日">纪念日</option>
-                            <option value="节日">节日</option>
+                            {anniversaryCategoryOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
                         </Select>
                     </div>
                 </div>
@@ -97,25 +93,28 @@ export function AnniversaryCreateForm({
                         <Select
                             name="dateType"
                             value={dateType}
-                            onChange={(e) => setDateType(e.target.value as "solar" | "lunar")}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (isAnniversaryDateType(value)) setDateType(value);
+                            }}
                             className="h-12 bg-surface"
                         >
-                            <option value="solar">公历</option>
-                            <option value="lunar">农历</option>
+                            <option value={ANNIVERSARY_DATE_TYPE.SOLAR}>公历</option>
+                            <option value={ANNIVERSARY_DATE_TYPE.LUNAR}>农历</option>
                         </Select>
                     </div>
 
-                    {dateType === "solar" && (
+                    {dateType === ANNIVERSARY_DATE_TYPE.SOLAR && (
                         <div className="sm:col-span-3">
                             <label className="mb-1.5 block text-xs font-medium text-secondary">日期（公历）</label>
                             <SmartDateInput type="date" name="solarDate" required className="h-12 bg-base/50" />
                         </div>
                     )}
 
-                    {dateType === "lunar" && (
+                    {dateType === ANNIVERSARY_DATE_TYPE.LUNAR && (
                         <div className="sm:col-span-3">
                             <label className="mb-1.5 block text-xs font-medium text-secondary">日期（选择公历日期，自动转换农历）</label>
-                            <SmartDateInput type="date" name="solarDate" dateType="lunar" required className="h-12 bg-base/50" />
+                            <SmartDateInput type="date" name="solarDate" dateType={ANNIVERSARY_DATE_TYPE.LUNAR} required className="h-12 bg-base/50" />
                         </div>
                     )}
                 </div>
@@ -125,7 +124,7 @@ export function AnniversaryCreateForm({
                         提醒设置 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
                     </legend>
                     <div className="flex flex-wrap gap-4 pt-2">
-                        {reminderOptionsDays.map((opt) => (
+                        {anniversaryReminderOptionsDays.map((opt) => (
                             <label
                                 key={opt.days}
                                 className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
@@ -162,6 +161,6 @@ export function AnniversaryCreateForm({
                     )}
                 </button>
             </div>
-        </form >
+        </form>
     );
 }

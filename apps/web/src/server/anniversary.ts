@@ -1,13 +1,19 @@
+import "server-only";
+
+import { createRequire } from "node:module";
+
 import { daysInMonth, formatDateString, parseDateString } from "./date";
 
 export type LeapDayStrategy = "feb28" | "mar1";
 
-type MonthDay = {
+export type MonthDay = {
   month: number;
   day: number;
 };
 
-function parseMonthDayString(value: string): MonthDay | null {
+const require = createRequire(import.meta.url);
+
+export function parseMonthDayString(value: string): MonthDay | null {
   const match = value.trim().match(/^(\d{1,2})-(\d{1,2})$/);
   if (!match) return null;
 
@@ -81,7 +87,6 @@ export function getNextLunarOccurrenceDateString(
 
   // lunar-javascript is a CommonJS package without TypeScript types.
   // Use require() so TS doesn't need .d.ts files.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Lunar } = require("lunar-javascript") as {
     Lunar: {
       fromYmd: (year: number, month: number, day: number) => {

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
 
 type TimePickerProps = {
     value?: Date | string; // Date object or "HH:mm" string
@@ -10,7 +9,7 @@ type TimePickerProps = {
     className?: string;
 };
 
-export function TimePicker({ value, onChange, format = "24", className = "" }: TimePickerProps) {
+export function TimePicker({ value, onChange, className = "" }: TimePickerProps) {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const minutes = Array.from({ length: 60 }, (_, i) => i);
 
@@ -51,11 +50,6 @@ export function TimePicker({ value, onChange, format = "24", className = "" }: T
     // Actually, we probably only want to snap on mount or when popover opens. 
     // For now, let's keep it simple.
 
-    const handleScroll = (type: "h" | "m", e: React.UIEvent<HTMLDivElement>) => {
-        // Implementation of scroll snapping or selection logic could go here
-        // For now, click-to-select is more robust for mouse users
-    };
-
     const updateTime = (type: "h" | "m", val: number) => {
         const newDate = new Date(dateValue);
         if (type === "h") newDate.setHours(val);
@@ -75,7 +69,6 @@ export function TimePicker({ value, onChange, format = "24", className = "" }: T
                     <div
                         ref={hourRef}
                         className="absolute inset-0 overflow-y-auto hide-scrollbar snap-y snap-mandatory z-10"
-                        onScroll={(e) => handleScroll("h", e)}
                     >
                         <div className="py-[calc(50%-20px)]">
                             <div className="h-[calc(50%-20px)]" />
@@ -111,7 +104,6 @@ export function TimePicker({ value, onChange, format = "24", className = "" }: T
                     <div
                         ref={minuteRef}
                         className="absolute inset-0 overflow-y-auto hide-scrollbar snap-y snap-mandatory z-10"
-                        onScroll={(e) => handleScroll("m", e)}
                     >
                         <div className="h-[calc(50%-20px)]" />
                         {minutes.map((m) => (

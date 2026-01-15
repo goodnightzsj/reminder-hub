@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useTransition, useState } from "react";
+import { useTransition } from "react";
 import { useConfetti } from "../ConfettiProvider";
 import { Tooltip } from "../Tooltip";
 import { Icons } from "../Icons";
@@ -19,13 +19,8 @@ export function TodoCompleteButton({
 }: TodoCompleteButtonProps) {
     const [isPending, startTransition] = useTransition();
     const { triggerConfetti, triggerMicroConfetti } = useConfetti();
-    const [isAnimating, setIsAnimating] = useState(false);
 
     const handleClick = (e: React.MouseEvent) => {
-        setIsAnimating(true);
-        // Reset animation state after duration
-        setTimeout(() => setIsAnimating(false), 500);
-
         const x = e.clientX;
         const y = e.clientY;
 

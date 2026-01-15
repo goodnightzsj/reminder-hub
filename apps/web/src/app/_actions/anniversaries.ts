@@ -6,64 +6,51 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { parseMonthDayString } from "@/server/anniversary";
 import { formatDateString, parseDateString } from "@/server/date";
 import { db } from "@/server/db";
 import {
-  anniversaries,
-  anniversaryCategoryValues,
+  ANNIVERSARY_DATE_TYPE,
+  DEFAULT_ANNIVERSARY_CATEGORY,
+  DEFAULT_ANNIVERSARY_DATE_TYPE,
   anniversaryDateTypeValues,
+  canonicalizeAnniversaryCategory,
   type AnniversaryCategory,
   type AnniversaryDateType,
-} from "@/server/db/schema";
+} from "@/lib/anniversary";
+import { anniversaries } from "@/server/db/schema";
+import { ROUTES } from "@/lib/routes";
+import type { FlashAction } from "@/lib/flash";
+
+import {
+  parseBooleanField,
+  parseEnumField,
+  parseNumberListField,
+  parseRedirectToField,
+  parseStringField,
+} from "./form-data";
+import { withAction } from "./redirect-url";
+
+const ANNIVERSARIES_PATH = ROUTES.anniversaries;
+
+function redirectWithAnniversaryAction(path: string, action: FlashAction): never {
+  redirect(withAction(path, action));
+}
 
 function pad2(n: number): string {
   return String(n).padStart(2, "0");
 }
 
-function parseStringField(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function parseBooleanField(formData: FormData, key: string): boolean | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  if (value === "1" || value === "true") return true;
-  if (value === "0" || value === "false") return false;
-  return null;
-}
-
-function parseNumberListField(formData: FormData, key: string): number[] {
-  const values = formData.getAll(key);
-  const parsed = new Set<number>();
-
-  for (const value of values) {
-    if (typeof value !== "string") continue;
-    const n = Number.parseInt(value, 10);
-    if (!Number.isFinite(n)) continue;
-    if (n < 0) continue;
-    parsed.add(n);
-  }
-
-  return Array.from(parsed).sort((a, b) => a - b);
-}
-
 function parseCategoryField(formData: FormData, key: string): AnniversaryCategory {
   const value = parseStringField(formData, key);
   if (value) {
-    return value as AnniversaryCategory;
+    return canonicalizeAnniversaryCategory(value);
   }
-  return "纪念日";
+  return DEFAULT_ANNIVERSARY_CATEGORY;
 }
 
 function parseDateTypeField(formData: FormData, key: string): AnniversaryDateType {
-  const value = parseStringField(formData, key);
-  if (value && anniversaryDateTypeValues.includes(value as AnniversaryDateType)) {
-    return value as AnniversaryDateType;
-  }
-  return "solar";
+  return parseEnumField(formData, key, anniversaryDateTypeValues, DEFAULT_ANNIVERSARY_DATE_TYPE);
 }
 
 function parseSolarDateField(formData: FormData, key: string): string | null {
@@ -79,82 +66,97 @@ function parseLunarMonthDayFields(formData: FormData): string | null {
   const dayRaw = parseStringField(formData, "lunarDay");
   if (!monthRaw || !dayRaw) return null;
 
-  const month = Number.parseInt(monthRaw, 10);
-  const day = Number.parseInt(dayRaw, 10);
-  if (!Number.isFinite(month) || !Number.isFinite(day)) return null;
-  if (month < 1 || month > 12) return null;
-  if (day < 1 || day > 30) return null;
+  const parsed = parseMonthDayString(`${monthRaw}-${dayRaw}`);
+  if (!parsed) return null;
 
-  return `${pad2(month)}-${pad2(day)}`;
+  return `${pad2(parsed.month)}-${pad2(parsed.day)}`;
 }
 
-function parseRedirectToField(formData: FormData, key: string): string | null {
-  const value = parseStringField(formData, key);
-  if (!value) return null;
-  if (!value.startsWith("/")) return null;
-  if (value.startsWith("//")) return null;
-  return value;
+function revalidateAnniversaryDetailAndList(id: string) {
+  revalidatePath(ANNIVERSARIES_PATH);
+  revalidatePath(`${ANNIVERSARIES_PATH}/${id}`);
 }
 
-export async function createAnniversary(formData: FormData) {
+type ParsedAnniversaryUpsertFields = {
+  title: string;
+  category: AnniversaryCategory;
+  dateType: AnniversaryDateType;
+  isLeapMonth: boolean;
+  date: string;
+  remindOffsetsDays: number[];
+};
+
+function parseAnniversaryUpsertFields(
+  formData: FormData,
+): ParsedAnniversaryUpsertFields | null {
   const title = parseStringField(formData, "title");
-  if (!title) return;
+  if (!title) return null;
 
   const category = parseCategoryField(formData, "category");
   const dateType = parseDateTypeField(formData, "dateType");
   const isLeapMonth = parseBooleanField(formData, "isLeapMonth") ?? false;
   const date =
-    dateType === "lunar"
+    dateType === ANNIVERSARY_DATE_TYPE.LUNAR
       ? parseLunarMonthDayFields(formData)
       : parseSolarDateField(formData, "solarDate");
-  if (!date) return;
+  if (!date) return null;
+
   const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
 
-  await db.insert(anniversaries).values({
-    id: randomUUID(),
+  return {
     title,
     category,
     dateType,
-    isLeapMonth: dateType === "lunar" ? isLeapMonth : false,
+    isLeapMonth: dateType === ANNIVERSARY_DATE_TYPE.LUNAR ? isLeapMonth : false,
     date,
-    remindOffsetsDays: JSON.stringify(remindOffsetsDays),
-    updatedAt: new Date(),
+    remindOffsetsDays,
+  };
+}
+
+export async function createAnniversary(formData: FormData) {
+  const parsed = parseAnniversaryUpsertFields(formData);
+  if (!parsed) return;
+
+  const now = new Date();
+
+  await db.insert(anniversaries).values({
+    id: randomUUID(),
+    title: parsed.title,
+    category: parsed.category,
+    dateType: parsed.dateType,
+    isLeapMonth: parsed.isLeapMonth,
+    date: parsed.date,
+    remindOffsetsDays: JSON.stringify(parsed.remindOffsetsDays),
+    updatedAt: now,
   });
 
-  revalidatePath("/anniversaries");
+  revalidatePath(ANNIVERSARIES_PATH);
 }
 
 export async function updateAnniversary(formData: FormData) {
   const id = parseStringField(formData, "id");
-  const title = parseStringField(formData, "title");
-  if (!id || !title) return;
+  if (!id) return;
 
-  const category = parseCategoryField(formData, "category");
-  const dateType = parseDateTypeField(formData, "dateType");
-  const isLeapMonth = parseBooleanField(formData, "isLeapMonth") ?? false;
-  const date =
-    dateType === "lunar"
-      ? parseLunarMonthDayFields(formData)
-      : parseSolarDateField(formData, "solarDate");
-  if (!date) return;
-  const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
+  const parsed = parseAnniversaryUpsertFields(formData);
+  if (!parsed) return;
+
+  const now = new Date();
 
   await db
     .update(anniversaries)
     .set({
-      title,
-      category,
-      dateType,
-      isLeapMonth: dateType === "lunar" ? isLeapMonth : false,
-      date,
-      remindOffsetsDays: JSON.stringify(remindOffsetsDays),
-      updatedAt: new Date(),
+      title: parsed.title,
+      category: parsed.category,
+      dateType: parsed.dateType,
+      isLeapMonth: parsed.isLeapMonth,
+      date: parsed.date,
+      remindOffsetsDays: JSON.stringify(parsed.remindOffsetsDays),
+      updatedAt: now,
     })
     .where(eq(anniversaries.id, id));
 
-  revalidatePath("/anniversaries");
-  revalidatePath(`/anniversaries/${id}`);
-  redirect("/anniversaries?action=updated");
+  revalidateAnniversaryDetailAndList(id);
+  redirectWithAnniversaryAction(ANNIVERSARIES_PATH, "updated");
 }
 
 export async function setAnniversaryArchived(formData: FormData) {
@@ -162,19 +164,18 @@ export async function setAnniversaryArchived(formData: FormData) {
   const isArchived = parseBooleanField(formData, "isArchived");
   if (!id || isArchived === null) return;
 
+  const now = new Date();
   await db
     .update(anniversaries)
     .set({
       isArchived,
-      archivedAt: isArchived ? new Date() : null,
-      updatedAt: new Date(),
+      archivedAt: isArchived ? now : null,
+      updatedAt: now,
     })
     .where(eq(anniversaries.id, id));
 
-  revalidatePath("/anniversaries");
-  revalidatePath(`/anniversaries/${id}`);
+  revalidateAnniversaryDetailAndList(id);
 }
-
 
 export async function deleteAnniversary(formData: FormData) {
   const id = parseStringField(formData, "id");
@@ -182,40 +183,39 @@ export async function deleteAnniversary(formData: FormData) {
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  const existing = await db.select({ deletedAt: anniversaries.deletedAt }).from(anniversaries).where(eq(anniversaries.id, id)).get();
+  const existing = await db
+    .select({ deletedAt: anniversaries.deletedAt })
+    .from(anniversaries)
+    .where(eq(anniversaries.id, id))
+    .get();
   if (!existing) return;
 
+  const now = new Date();
   if (existing.deletedAt) {
-      await db.delete(anniversaries).where(eq(anniversaries.id, id));
+    await db.delete(anniversaries).where(eq(anniversaries.id, id));
   } else {
-      await db.update(anniversaries).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(anniversaries.id, id));
+    await db
+      .update(anniversaries)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(eq(anniversaries.id, id));
   }
 
-  revalidatePath("/anniversaries");
-  revalidatePath(`/anniversaries/${id}`);
-  
-  // Use & if param exists, else ? (Naive check, assuming redirectTo is a simple path usually)
-  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
-  
-  if (redirectTo && existing.deletedAt) {
-    redirect(`${redirectTo}${sep}action=deleted`);
-  } else if (existing.deletedAt === null) {
-      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
-  }
+  revalidateAnniversaryDetailAndList(id);
+  if (redirectTo) redirectWithAnniversaryAction(redirectTo, "deleted");
 }
 
 export async function restoreAnniversary(formData: FormData) {
-    const id = parseStringField(formData, "id");
-    if (!id) return;
-    const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const id = parseStringField(formData, "id");
+  if (!id) return;
+  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const now = new Date();
 
-    await db.update(anniversaries).set({ deletedAt: null, updatedAt: new Date() }).where(eq(anniversaries.id, id));
+  await db
+    .update(anniversaries)
+    .set({ deletedAt: null, updatedAt: now })
+    .where(eq(anniversaries.id, id));
 
-    revalidatePath("/anniversaries");
-    revalidatePath(`/anniversaries/${id}`);
-    
-    // Naive separator check
-    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
-    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
+  revalidateAnniversaryDetailAndList(id);
+
+  if (redirectTo) redirectWithAnniversaryAction(redirectTo, "restored");
 }
-

@@ -148,7 +148,7 @@ export function CustomSelect({
                         })}
                         {allowCustom && value && !options.some((opt) => opt.value === value) && (
                             <div className="px-3 py-2 text-xs text-muted border-t border-black/5 dark:border-white/5 mt-1">
-                                使用自定义值: "{value}"
+                                使用自定义值：&quot;{value}&quot;
                             </div>
                         )}
                     </motion.div>
@@ -157,4 +157,3 @@ export function CustomSelect({
         </div>
     );
 }
-

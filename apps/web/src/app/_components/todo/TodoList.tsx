@@ -2,18 +2,17 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { TodoItem } from "./TodoItem";
+import type { TodoItemData } from "./TodoItem.types";
 import { EmptyState } from "../EmptyState";
 
 type TodoListProps = {
-    items: any[]; // Using any[] for simplicity with the complex inferred type, usually better to infer from schema but acceptable for UI component
-    settings: {
-        timeZone: string;
-    };
+    items: TodoItemData[];
+    timeZone: string;
     emptyTitle: string;
     emptyDescription: string;
 };
 
-export function TodoList({ items, settings, emptyTitle, emptyDescription }: TodoListProps) {
+export function TodoList({ items, timeZone, emptyTitle, emptyDescription }: TodoListProps) {
     if (items.length === 0) {
         return (
             <div className="p-8">
@@ -40,7 +39,7 @@ export function TodoList({ items, settings, emptyTitle, emptyDescription }: Todo
                         <TodoItem
                             key={item.id}
                             item={item}
-                            settings={settings}
+                            timeZone={timeZone}
                         />
                     ))}
                 </AnimatePresence>

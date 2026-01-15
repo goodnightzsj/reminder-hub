@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { buildCreateModalHref } from "@/lib/url";
+import { ROUTES } from "@/lib/routes";
 
 type KeyboardShortcutsProps = {
     onOpenSearch?: () => void;
@@ -34,14 +36,14 @@ export function KeyboardShortcuts({ onOpenSearch }: KeyboardShortcutsProps) {
             // Cmd/Ctrl + N: New Todo
             if (isMod && e.key === "n") {
                 e.preventDefault();
-                router.push("/todo?modal=create");
+                router.push(buildCreateModalHref(ROUTES.todo));
                 return;
             }
 
             // Cmd/Ctrl + /: Go to Settings
             if (isMod && e.key === "/") {
                 e.preventDefault();
-                router.push("/settings");
+                router.push(ROUTES.settings);
                 return;
             }
 

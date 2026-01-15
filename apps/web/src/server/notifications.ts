@@ -1,20 +1,40 @@
+import "server-only";
+
 import { and, eq, isNotNull, isNull } from "drizzle-orm";
 
 import {
   addDaysToDateString,
-  formatDateString,
-  getDatePartsInTimeZone,
+  formatDateInTimeZone,
 } from "@/server/date";
 import { dateTimeLocalToUtcDate } from "@/server/datetime";
+import { parseNumberArrayJson } from "@/lib/json";
+import { formatDateTime } from "@/lib/format";
+import { ROUTES } from "@/lib/routes";
+import { ANNIVERSARY_DATE_TYPE } from "@/lib/anniversary";
+import { DEFAULT_DATE_REMINDER_TIME } from "@/server/db/app-settings.constants";
 import {
   getNextLunarOccurrenceDateString,
   getNextSolarOccurrenceDateString,
 } from "@/server/anniversary";
 import { db } from "@/server/db";
 import { anniversaries, subscriptions, todos } from "@/server/db/schema";
+import {
+  NOTIFICATION_CHANNEL,
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_ITEM_TYPE,
+  isNotificationChannel,
+  type NotificationChannel,
+  type NotificationItemType,
+} from "@/lib/notifications";
+import {
+  NOTIFICATION_ITEM_TYPE_LABEL,
+  formatOffsetDaysLabel,
+  formatOffsetMinutesLabel,
+  isWithinLookbackWindow,
+} from "@/server/notifications.utils";
 
-export type NotificationChannel = "telegram" | "webhook" | "wecom" | "email";
-export type NotificationItemType = "todo" | "anniversary" | "subscription";
+export { NOTIFICATION_CHANNELS, isNotificationChannel };
+export type { NotificationChannel, NotificationItemType };
 
 export type NotificationCandidate = {
   itemType: NotificationItemType;
@@ -35,40 +55,6 @@ type CollectDueCandidatesArgs = {
   lookbackHours?: number;
 };
 
-function parseNumberArrayJson(value: string): number[] {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
-      .filter((v) => v >= 0)
-      .sort((a, b) => a - b);
-  } catch {
-    return [];
-  }
-}
-
-function formatOffsetMinutesLabel(offsetMinutes: number): string {
-  if (offsetMinutes === 0) return "到期时";
-  if (offsetMinutes === 1) return "提前 1 分钟";
-  return `提前 ${offsetMinutes} 分钟`;
-}
-
-function formatOffsetDaysLabel(offsetDays: number): string {
-  if (offsetDays === 0) return "当天";
-  if (offsetDays === 1) return "提前 1 天";
-  return `提前 ${offsetDays} 天`;
-}
-
-function formatDateTime(d: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(d);
-}
-
 export function buildNotificationDeliveryId(
   channel: NotificationChannel,
   candidate: Pick<NotificationCandidate, "itemType" | "itemId" | "scheduledAt">,
@@ -79,70 +65,93 @@ export function buildNotificationDeliveryId(
 export async function collectDueNotificationCandidates({
   now,
   timeZone,
-  dateReminderTime = "09:00",
+  dateReminderTime = DEFAULT_DATE_REMINDER_TIME,
   lookbackHours = 24,
 }: CollectDueCandidatesArgs): Promise<NotificationCandidate[]> {
   const lookbackStart = new Date(now.getTime() - lookbackHours * 60 * 60 * 1000);
-  const baseDateString = formatDateString(getDatePartsInTimeZone(lookbackStart, timeZone));
+  const nowMs = now.getTime();
+  const lookbackStartMs = lookbackStart.getTime();
+  const baseDateString = formatDateInTimeZone(lookbackStart, timeZone);
   const candidates: NotificationCandidate[] = [];
 
-  const activeTodos = await db
-    .select({
-      id: todos.id,
-      title: todos.title,
-      dueAt: todos.dueAt,
-      reminderOffsetsMinutes: todos.reminderOffsetsMinutes,
-    })
-    .from(todos)
-    .where(
-      and(
-        eq(todos.isDone, false),
-        eq(todos.isArchived, false),
-        isNull(todos.deletedAt), // Exclude deleted
-        isNotNull(todos.dueAt)
-      )
-    );
+  const [activeTodos, activeAnniversaries, activeSubscriptions] = await Promise.all([
+    db
+      .select({
+        id: todos.id,
+        title: todos.title,
+        dueAt: todos.dueAt,
+        reminderOffsetsMinutes: todos.reminderOffsetsMinutes,
+      })
+      .from(todos)
+      .where(
+        and(
+          eq(todos.isDone, false),
+          eq(todos.isArchived, false),
+          isNull(todos.deletedAt), // 排除已删除
+          isNotNull(todos.dueAt),
+        ),
+      ),
+    db
+      .select({
+        id: anniversaries.id,
+        title: anniversaries.title,
+        date: anniversaries.date,
+        dateType: anniversaries.dateType,
+        isLeapMonth: anniversaries.isLeapMonth,
+        remindOffsetsDays: anniversaries.remindOffsetsDays,
+      })
+      .from(anniversaries)
+      .where(
+        and(
+          eq(anniversaries.isArchived, false),
+          isNull(anniversaries.deletedAt), // 排除已删除
+        ),
+      ),
+    db
+      .select({
+        id: subscriptions.id,
+        name: subscriptions.name,
+        nextRenewDate: subscriptions.nextRenewDate,
+        remindOffsetsDays: subscriptions.remindOffsetsDays,
+      })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.isArchived, false),
+          isNull(subscriptions.deletedAt), // 排除已删除
+        ),
+      ),
+  ]);
 
   for (const todo of activeTodos) {
     if (!todo.dueAt) continue;
-    const offsets = parseNumberArrayJson(todo.reminderOffsetsMinutes);
+    const offsets = parseNumberArrayJson(todo.reminderOffsetsMinutes, { min: 0 });
     if (offsets.length === 0) continue;
 
     for (const minutes of offsets) {
       const scheduledAt = new Date(todo.dueAt.getTime() - minutes * 60 * 1000);
-      if (scheduledAt.getTime() > now.getTime()) continue;
-      if (scheduledAt.getTime() < lookbackStart.getTime()) continue;
+      if (!isWithinLookbackWindow(scheduledAt.getTime(), lookbackStartMs, nowMs)) continue;
 
-      candidates.push({
-        itemType: "todo",
-        itemId: todo.id,
-        itemTitle: todo.title,
+        candidates.push({
+          itemType: NOTIFICATION_ITEM_TYPE.TODO,
+          itemId: todo.id,
+          itemTitle: todo.title,
         scheduledAt,
         offsetLabel: formatOffsetMinutesLabel(minutes),
-        eventLabel: "截止",
-        eventValue: todo.dueAt.toISOString(),
-        eventAt: todo.dueAt,
-        path: `/todo/${todo.id}`,
-      });
+          eventLabel: "截止",
+          eventValue: todo.dueAt.toISOString(),
+          eventAt: todo.dueAt,
+          path: `${ROUTES.todo}/${todo.id}`,
+        });
     }
   }
 
-  const activeAnniversaries = await db
-    .select()
-    .from(anniversaries)
-    .where(
-      and(
-        eq(anniversaries.isArchived, false),
-        isNull(anniversaries.deletedAt) // Exclude deleted
-      )
-    );
-
   for (const ann of activeAnniversaries) {
-    const offsets = parseNumberArrayJson(ann.remindOffsetsDays);
+    const offsets = parseNumberArrayJson(ann.remindOffsetsDays, { min: 0 });
     if (offsets.length === 0) continue;
 
     const nextDate =
-      ann.dateType === "solar"
+      ann.dateType === ANNIVERSARY_DATE_TYPE.SOLAR
         ? getNextSolarOccurrenceDateString(ann.date, baseDateString)
         : getNextLunarOccurrenceDateString(ann.date, baseDateString, {
             isLeapMonth: ann.isLeapMonth,
@@ -158,35 +167,24 @@ export async function collectDueNotificationCandidates({
 
       const scheduledAt = dateTimeLocalToUtcDate(`${remindDate}T${dateReminderTime}`, timeZone);
       if (!scheduledAt) continue;
-      if (scheduledAt.getTime() > now.getTime()) continue;
-      if (scheduledAt.getTime() < lookbackStart.getTime()) continue;
+      if (!isWithinLookbackWindow(scheduledAt.getTime(), lookbackStartMs, nowMs)) continue;
 
-      candidates.push({
-        itemType: "anniversary",
-        itemId: ann.id,
-        itemTitle: ann.title,
+        candidates.push({
+          itemType: NOTIFICATION_ITEM_TYPE.ANNIVERSARY,
+          itemId: ann.id,
+          itemTitle: ann.title,
         scheduledAt,
         offsetLabel: formatOffsetDaysLabel(days),
-        eventLabel: "日期",
-        eventValue: nextDate,
-        eventAt,
-        path: `/anniversaries/${ann.id}`,
-      });
+          eventLabel: "日期",
+          eventValue: nextDate,
+          eventAt,
+          path: `${ROUTES.anniversaries}/${ann.id}`,
+        });
     }
   }
 
-  const activeSubscriptions = await db
-    .select()
-    .from(subscriptions)
-    .where(
-      and(
-        eq(subscriptions.isArchived, false),
-        isNull(subscriptions.deletedAt) // Exclude deleted
-      )
-    );
-
   for (const sub of activeSubscriptions) {
-    const offsets = parseNumberArrayJson(sub.remindOffsetsDays);
+    const offsets = parseNumberArrayJson(sub.remindOffsetsDays, { min: 0 });
     if (offsets.length === 0) continue;
 
     const eventAt = dateTimeLocalToUtcDate(`${sub.nextRenewDate}T${dateReminderTime}`, timeZone);
@@ -198,20 +196,19 @@ export async function collectDueNotificationCandidates({
 
       const scheduledAt = dateTimeLocalToUtcDate(`${remindDate}T${dateReminderTime}`, timeZone);
       if (!scheduledAt) continue;
-      if (scheduledAt.getTime() > now.getTime()) continue;
-      if (scheduledAt.getTime() < lookbackStart.getTime()) continue;
+      if (!isWithinLookbackWindow(scheduledAt.getTime(), lookbackStartMs, nowMs)) continue;
 
-      candidates.push({
-        itemType: "subscription",
-        itemId: sub.id,
-        itemTitle: sub.name,
+        candidates.push({
+          itemType: NOTIFICATION_ITEM_TYPE.SUBSCRIPTION,
+          itemId: sub.id,
+          itemTitle: sub.name,
         scheduledAt,
         offsetLabel: formatOffsetDaysLabel(days),
-        eventLabel: "到期",
-        eventValue: sub.nextRenewDate,
-        eventAt,
-        path: `/subscriptions/${sub.id}`,
-      });
+          eventLabel: "到期",
+          eventValue: sub.nextRenewDate,
+          eventAt,
+          path: `${ROUTES.subscriptions}/${sub.id}`,
+        });
     }
   }
 
@@ -223,12 +220,7 @@ export function formatNotificationText(
   candidate: NotificationCandidate,
   timeZone: string,
 ): string {
-  const prefix =
-    candidate.itemType === "todo"
-      ? "Todo"
-      : candidate.itemType === "anniversary"
-        ? "纪念日"
-        : "订阅";
+  const prefix = NOTIFICATION_ITEM_TYPE_LABEL[candidate.itemType];
 
   return [
     `[${prefix}] ${candidate.itemTitle}`,
@@ -239,19 +231,14 @@ export function formatNotificationText(
 }
 
 export function buildEmailSubject(candidate: NotificationCandidate): string {
-  const prefix =
-    candidate.itemType === "todo"
-      ? "Todo"
-      : candidate.itemType === "anniversary"
-        ? "纪念日"
-        : "订阅";
+  const prefix = NOTIFICATION_ITEM_TYPE_LABEL[candidate.itemType];
   return `提醒：${prefix} · ${candidate.itemTitle}`;
 }
 
 export function buildWebhookPayload(candidate: NotificationCandidate, timeZone: string) {
   return {
     source: "todo-list",
-    channel: "webhook",
+    channel: NOTIFICATION_CHANNEL.WEBHOOK,
     itemType: candidate.itemType,
     itemId: candidate.itemId,
     title: candidate.itemTitle,

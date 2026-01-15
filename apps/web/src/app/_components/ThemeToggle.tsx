@@ -6,6 +6,14 @@ import { flushSync } from "react-dom";
 import { Magnetic } from "./Magnetic";
 import { Tooltip } from "./Tooltip";
 
+type ViewTransition = {
+    ready: Promise<void>;
+};
+
+type DocumentWithViewTransition = Document & {
+    startViewTransition?: (callback: () => void) => ViewTransition;
+};
+
 export function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -29,12 +37,13 @@ export function ThemeToggle() {
         };
 
         // Fallback or Skip if no change (basic check, refined logic below)
-        if (!(document as any).startViewTransition) {
+        const doc = document as DocumentWithViewTransition;
+        if (!doc.startViewTransition) {
             mutateTheme();
             return;
         }
 
-        const transition = (document as any).startViewTransition(() => {
+        const transition = doc.startViewTransition(() => {
             flushSync(() => {
                 mutateTheme();
             });

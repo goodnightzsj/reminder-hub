@@ -1,5 +1,4 @@
-import { Icon } from '@iconify/react';
-import { findServiceIcon } from "./IconService";
+import { Icon } from "@iconify/react";
 
 type ServiceIconBadgeProps = {
     serviceName: string;
@@ -21,6 +20,8 @@ const iconSizes = {
     lg: 22,
 };
 
+const DEFAULT_SERVICE_COLOR = "#64748b"; // slate-500
+
 export function ServiceIconBadge({
     serviceName,
     size = "md",
@@ -28,12 +29,9 @@ export function ServiceIconBadge({
     overrideIcon,
     overrideColor,
 }: ServiceIconBadgeProps) {
-    const { icon: serviceIcon, color: serviceColor, title: serviceTitle } = findServiceIcon(serviceName);
-
-    // Priority: Override -> Service Default
-    const icon = overrideIcon || serviceIcon;
-    const color = overrideColor || serviceColor;
-    const title = serviceTitle;
+    const icon = overrideIcon || null;
+    const color = overrideColor || DEFAULT_SERVICE_COLOR;
+    const title = serviceName;
 
     return (
         <div

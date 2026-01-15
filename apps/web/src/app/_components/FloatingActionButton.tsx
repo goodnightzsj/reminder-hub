@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Icons } from "./Icons";
 import { Magnetic } from "./Magnetic";
+import { buildCreateModalHref } from "@/lib/url";
+import { ROUTES } from "@/lib/routes";
 
 export function FloatingActionButton() {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,22 +13,14 @@ export function FloatingActionButton() {
     const pathname = usePathname();
 
     const actions = [
-        { label: "Todo", href: "/todo?modal=create", icon: Icons.Todo },
-        { label: "纪念日", href: "/anniversaries?modal=create", icon: Icons.Calendar },
-        { label: "订阅", href: "/subscriptions?modal=create", icon: Icons.CreditCard },
-        { label: "物品", href: "/items?modal=create", icon: Icons.Box },
+        { label: "Todo", pathPrefix: ROUTES.todo, href: buildCreateModalHref(ROUTES.todo), icon: Icons.Todo },
+        { label: "纪念日", pathPrefix: ROUTES.anniversaries, href: buildCreateModalHref(ROUTES.anniversaries), icon: Icons.Calendar },
+        { label: "订阅", pathPrefix: ROUTES.subscriptions, href: buildCreateModalHref(ROUTES.subscriptions), icon: Icons.CreditCard },
+        { label: "物品", pathPrefix: ROUTES.items, href: buildCreateModalHref(ROUTES.items), icon: Icons.Box },
     ];
 
     // Determine default action based on current path
-    const getCurrentAction = () => {
-        if (pathname.startsWith("/todo")) return { href: "/todo?modal=create" };
-        if (pathname.startsWith("/anniversaries")) return { href: "/anniversaries?modal=create" };
-        if (pathname.startsWith("/subscriptions")) return { href: "/subscriptions?modal=create" };
-        if (pathname.startsWith("/items")) return { href: "/items?modal=create" };
-        return null; // Dashboard or other pages -> Show menu
-    };
-
-    const currentAction = getCurrentAction();
+    const currentAction = actions.find((action) => pathname.startsWith(action.pathPrefix)) ?? null;
 
     const handleClick = () => {
         if (currentAction) {
@@ -35,6 +29,12 @@ export function FloatingActionButton() {
             setIsOpen(!isOpen);
         }
     };
+
+    const ariaLabel = (() => {
+        if (currentAction) return "新建";
+        if (isOpen) return "关闭";
+        return "添加";
+    })();
 
     return (
         <div className="fixed right-6 bottom-24 md:bottom-10 z-50 flex flex-col items-end gap-3 pointer-events-none md:hidden">
@@ -76,7 +76,7 @@ export function FloatingActionButton() {
                         !isOpen && "animate-pulse-subtle", // Add subtle pulse when closed
                         isOpen ? "rotate-45" : "",
                     ].join(" ")}
-                    aria-label={currentAction ? "新建" : (isOpen ? "关闭" : "添加")}
+                    aria-label={ariaLabel}
                 >
                     {/* Ripple/Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 transition-opacity hover:opacity-100" />

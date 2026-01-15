@@ -5,37 +5,24 @@ import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteAnniversary, restoreAnniversary } from "@/app/_actions/anniversaries";
 import { Icons } from "../Icons";
-import { Badge } from "../Badge";
 import { SmartCategoryBadge } from "../SmartCategoryBadge";
 import { Tooltip } from "../Tooltip";
+import { ANNIVERSARY_DATE_TYPE, getAnniversaryCategoryLabel, type AnniversaryDateType } from "@/lib/anniversary";
 
-type AnniversaryCardProps = {
-    item: {
-        id: string;
-        title: string;
-        category: string;
-        date: string;
-        dateType: string;
-        isLeapMonth: boolean;
-        deletedAt?: Date | null;
-    };
-    daysLeft: number | null;
-    nextDate: string | null;
-    preview: {
-        days: number;
-        label: string;
-        at: Date;
-    }[];
+export type AnniversaryCardItemData = {
+    id: string;
+    title: string;
+    category: string;
+    dateType: AnniversaryDateType;
+    isLeapMonth: boolean;
+    isArchived: boolean;
+    deletedAt?: Date | null;
 };
 
-const categoryLabels: Record<string, string> = {
-    "生日": "生日",
-    "纪念日": "纪念日",
-    "节日": "节日",
-    birthday: "生日",
-    anniversary: "纪念日",
-    festival: "节日",
-    custom: "自定义",
+type AnniversaryCardProps = {
+    item: AnniversaryCardItemData;
+    daysLeft: number | null;
+    nextDate: string | null;
 };
 
 const itemVariants = {
@@ -43,7 +30,7 @@ const itemVariants = {
     visible: { opacity: 1, y: 0, scale: 1 },
 };
 
-export function AnniversaryCard({ item, daysLeft, nextDate, preview }: AnniversaryCardProps) {
+export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardProps) {
     const isToday = daysLeft === 0;
     const isUrgent = daysLeft !== null && daysLeft <= 3 && daysLeft > 0;
     const isNear = daysLeft !== null && daysLeft <= 7 && daysLeft > 3;
@@ -80,23 +67,23 @@ export function AnniversaryCard({ item, daysLeft, nextDate, preview }: Anniversa
                         </SmartCategoryBadge>
                     )}
 
-                    {!item.deletedAt && (item as any).isArchived && (
+                    {!item.deletedAt && item.isArchived && (
                         <SmartCategoryBadge overrideColor="slate" variant="solid">
                             已归档
                         </SmartCategoryBadge>
                     )}
 
-                    {!item.deletedAt && !(item as any).isArchived && (
+                    {!item.deletedAt && !item.isArchived && (
                         <SmartCategoryBadge overrideColor="sky" variant="solid">
                             进行中
                         </SmartCategoryBadge>
                     )}
 
-                    <SmartCategoryBadge overrideColor={item.dateType === "lunar" ? "purple" : "blue"} variant="solid">
-                        {item.dateType === "lunar" ? "农历" : "公历"}
+                    <SmartCategoryBadge overrideColor={item.dateType === ANNIVERSARY_DATE_TYPE.LUNAR ? "purple" : "blue"} variant="solid">
+                        {item.dateType === ANNIVERSARY_DATE_TYPE.LUNAR ? "农历" : "公历"}
                     </SmartCategoryBadge>
                     <SmartCategoryBadge>
-                        {categoryLabels[item.category] || item.category}
+                        {getAnniversaryCategoryLabel(item.category)}
                     </SmartCategoryBadge>
                 </div>
             </div>
@@ -135,12 +122,12 @@ export function AnniversaryCard({ item, daysLeft, nextDate, preview }: Anniversa
                 </Link>
                 <div className="text-[11px] text-muted flex items-center justify-center gap-2">
                     <Icons.Calendar className="h-3 w-3 opacity-70" />
-                    <span>
-                        {nextDate || "未知日期"}
-                        {item.dateType === "lunar" && item.isLeapMonth ? " (闰)" : ""}
-                    </span>
+                        <span>
+                            {nextDate || "未知日期"}
+                            {item.dateType === ANNIVERSARY_DATE_TYPE.LUNAR && item.isLeapMonth ? " (闰)" : ""}
+                        </span>
+                    </div>
                 </div>
-            </div>
 
             {/* Hover Actions Overlay */}
             <div className="absolute inset-0 z-10 flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm p-4">

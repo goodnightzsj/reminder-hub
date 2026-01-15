@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { Icon } from "@iconify/react";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { AppHeader } from "@/app/_components/AppHeader";
-import { ToastListener } from "@/app/_components/ToastListener";
 import { getAppSettings } from "@/server/db/settings";
 import { NotificationSettingsSection } from "@/app/_components/settings/NotificationSettingsSection";
+import type { AppSettings as NotificationSettings } from "@/app/_components/settings/NotificationChannelForms";
 
 import { importBackupMerge, importBackupOverwrite } from "../_actions/backup";
 import { clearAllData } from "../_actions/settings";
@@ -16,6 +15,23 @@ export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
   const settings = await getAppSettings();
+  const notificationSettings: NotificationSettings = {
+    telegramEnabled: settings.telegramEnabled,
+    telegramChatId: settings.telegramChatId,
+    telegramHasBotToken: !!settings.telegramBotToken,
+    webhookEnabled: settings.webhookEnabled,
+    webhookUrl: settings.webhookUrl,
+    wecomEnabled: settings.wecomEnabled,
+    wecomWebhookUrl: settings.wecomWebhookUrl,
+    emailEnabled: settings.emailEnabled,
+    smtpHost: settings.smtpHost,
+    smtpPort: settings.smtpPort,
+    smtpSecure: settings.smtpSecure ?? false,
+    smtpUser: settings.smtpUser,
+    smtpHasPass: !!settings.smtpPass,
+    smtpFrom: settings.smtpFrom,
+    smtpTo: settings.smtpTo,
+  };
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary pb-20">
@@ -24,8 +40,6 @@ export default async function SettingsPage() {
           title="设置"
           description="管理应用外观、通知渠道、数据备份及其他偏好设置。"
         />
-
-        <ToastListener />
 
         <div className="mt-8 grid gap-6 grid-cols-1 lg:grid-cols-2">
 
@@ -60,7 +74,7 @@ export default async function SettingsPage() {
               <Icon icon="ri:notification-3-line" className="text-brand-primary h-5 w-5" />
               <span className="text-sm font-bold">通知渠道</span>
             </div>
-            <NotificationSettingsSection settings={settings} />
+            <NotificationSettingsSection settings={notificationSettings} />
           </div>
 
           {/* 4. 备份与恢复 (占满两列) */}

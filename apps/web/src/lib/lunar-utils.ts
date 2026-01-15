@@ -35,15 +35,6 @@ interface SolarStatic {
 let Solar: SolarStatic | null = null;
 let Lunar: LunarStatic | null = null;
 
-async function ensureLunarLoaded() {
-  if (!Solar || !Lunar) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const lunarJs = require("lunar-javascript");
-    Solar = lunarJs.Solar;
-    Lunar = lunarJs.Lunar;
-  }
-}
-
 // 同步版本（需要确保已加载）
 function getSolarSync(): SolarStatic {
   if (!Solar) {

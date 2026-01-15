@@ -1,17 +1,44 @@
+import "server-only";
+
 import { relations, sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  DEFAULT_NOTIFICATION_CHANNEL,
+  NOTIFICATION_DELIVERY_STATUS,
+  notificationChannelValues,
+  notificationDeliveryStatusValues,
+  notificationItemTypeValues,
+  type NotificationChannel,
+  type NotificationDeliveryStatus,
+  type NotificationItemType,
+} from "@/lib/notifications";
+import { DEFAULT_ANNIVERSARY_DATE_TYPE, anniversaryDateTypeValues, type AnniversaryDateType } from "@/lib/anniversary";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
+import {
+  DEFAULT_SUBSCRIPTION_CATEGORY,
+  DEFAULT_SUBSCRIPTION_CYCLE_UNIT,
+  subscriptionCycleUnitValues,
+  type SubscriptionCycleUnit,
+} from "@/lib/subscriptions";
+import { DEFAULT_TODO_TASK_TYPE, TODO_PRIORITY, todoPriorityValues, type TodoPriority } from "@/lib/todo";
+import { DEFAULT_DATE_REMINDER_TIME, DEFAULT_TIME_ZONE } from "./app-settings.constants";
 
-export const todoPriorityValues = ["low", "medium", "high"] as const;
-export type TodoPriority = (typeof todoPriorityValues)[number];
+export { notificationChannelValues, notificationDeliveryStatusValues, notificationItemTypeValues };
+export type { NotificationChannel, NotificationDeliveryStatus, NotificationItemType };
+export { anniversaryDateTypeValues };
+export type { AnniversaryDateType };
+export { itemStatusValues, subscriptionCycleUnitValues, todoPriorityValues };
+export type { ItemStatus, SubscriptionCycleUnit, TodoPriority };
 
 export const todos = sqliteTable("todos", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  taskType: text("task_type").notNull().default("个人"),
+  taskType: text("task_type").notNull().default(DEFAULT_TODO_TASK_TYPE),
   priority: text("priority", { enum: todoPriorityValues })
     .notNull()
-    .default("low"),
+    .default(TODO_PRIORITY.LOW),
   tags: text("tags").notNull().default("[]"),
   dueAt: integer("due_at", { mode: "timestamp_ms" }),
   reminderOffsetsMinutes: text("reminder_offsets_minutes")
@@ -63,8 +90,8 @@ export const todoSubtasksRelations = relations(todoSubtasks, ({ one }) => ({
 
 export const appSettings = sqliteTable("app_settings", {
   id: text("id").primaryKey(),
-  timeZone: text("time_zone").notNull().default("Asia/Shanghai"),
-  dateReminderTime: text("date_reminder_time").notNull().default("09:00"),
+  timeZone: text("time_zone").notNull().default(DEFAULT_TIME_ZONE),
+  dateReminderTime: text("date_reminder_time").notNull().default(DEFAULT_DATE_REMINDER_TIME),
   telegramEnabled: integer("telegram_enabled", { mode: "boolean" })
     .notNull()
     .default(false),
@@ -96,19 +123,16 @@ export const appSettings = sqliteTable("app_settings", {
     .default(sql`(unixepoch()*1000)`),
 });
 
-export const subscriptionCycleUnitValues = ["month", "year"] as const;
-export type SubscriptionCycleUnit = (typeof subscriptionCycleUnitValues)[number];
-
 export const subscriptions = sqliteTable("subscriptions", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
   priceCents: integer("price_cents"),
-  category: text("category").notNull().default("其他"),
-  currency: text("currency").notNull().default("CNY"),
+  category: text("category").notNull().default(DEFAULT_SUBSCRIPTION_CATEGORY),
+  currency: text("currency").notNull().default(DEFAULT_CURRENCY),
   cycleUnit: text("cycle_unit", { enum: subscriptionCycleUnitValues })
     .notNull()
-    .default("month"),
+    .default(DEFAULT_SUBSCRIPTION_CYCLE_UNIT),
   cycleInterval: integer("cycle_interval").notNull().default(1),
   nextRenewDate: text("next_renew_date").notNull(),
   autoRenew: integer("auto_renew", { mode: "boolean" }).notNull().default(true),
@@ -128,17 +152,14 @@ export const subscriptions = sqliteTable("subscriptions", {
     .default(sql`(unixepoch()*1000)`),
 });
 
-export const itemStatusValues = ["using", "idle", "retired"] as const;
-export type ItemStatus = (typeof itemStatusValues)[number];
-
 export const items = sqliteTable("items", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   priceCents: integer("price_cents"),
-  currency: text("currency").notNull().default("CNY"),
+  currency: text("currency").notNull().default(DEFAULT_CURRENCY),
   purchasedDate: text("purchased_date"),
   category: text("category"),
-  status: text("status", { enum: itemStatusValues }).notNull().default("using"),
+  status: text("status", { enum: itemStatusValues }).notNull().default(DEFAULT_ITEM_STATUS),
   usageCount: integer("usage_count").notNull().default(0),
   targetDailyCostCents: integer("target_daily_cost_cents"),
   deletedAt: integer("deleted_at", { mode: "timestamp_ms" }),
@@ -150,24 +171,13 @@ export const items = sqliteTable("items", {
     .default(sql`(unixepoch()*1000)`),
 });
 
-export const anniversaryCategoryValues = [
-  "birthday",
-  "anniversary",
-  "festival",
-  "custom",
-] as const;
-export type AnniversaryCategory = string;
-
-export const anniversaryDateTypeValues = ["solar", "lunar"] as const;
-export type AnniversaryDateType = (typeof anniversaryDateTypeValues)[number];
-
 export const anniversaries = sqliteTable("anniversaries", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   category: text("category").notNull().default("anniversary"),
   dateType: text("date_type", { enum: anniversaryDateTypeValues })
     .notNull()
-    .default("solar"),
+    .default(DEFAULT_ANNIVERSARY_DATE_TYPE),
   isLeapMonth: integer("is_leap_month", { mode: "boolean" })
     .notNull()
     .default(false),
@@ -186,26 +196,6 @@ export const anniversaries = sqliteTable("anniversaries", {
     .default(sql`(unixepoch()*1000)`),
 });
 
-export const notificationChannelValues = [
-  "telegram",
-  "webhook",
-  "wecom",
-  "email",
-] as const;
-export type NotificationChannel = (typeof notificationChannelValues)[number];
-
-export const notificationItemTypeValues = [
-  "todo",
-  "anniversary",
-  "subscription",
-] as const;
-export type NotificationItemType = (typeof notificationItemTypeValues)[number];
-
-export const notificationDeliveryStatusValues = ["sending", "sent", "failed"] as const;
-export type NotificationDeliveryStatus =
-  (typeof notificationDeliveryStatusValues)[number];
-
-
 export const serviceIcons = sqliteTable("service_icons", {
   name: text("name").primaryKey(), // Service name 
   icon: text("icon"), // Iconify ID
@@ -223,14 +213,14 @@ export const notificationDeliveries = sqliteTable("notification_deliveries", {
   id: text("id").primaryKey(),
   channel: text("channel", { enum: notificationChannelValues })
     .notNull()
-    .default("webhook"),
+    .default(DEFAULT_NOTIFICATION_CHANNEL),
   itemType: text("item_type", { enum: notificationItemTypeValues }).notNull(),
   itemId: text("item_id").notNull(),
   itemTitle: text("item_title").notNull(),
   scheduledAt: integer("scheduled_at", { mode: "timestamp_ms" }).notNull(),
   status: text("status", { enum: notificationDeliveryStatusValues })
     .notNull()
-    .default("sending"),
+    .default(NOTIFICATION_DELIVERY_STATUS.SENDING),
   sentAt: integer("sent_at", { mode: "timestamp_ms" }),
   error: text("error"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })

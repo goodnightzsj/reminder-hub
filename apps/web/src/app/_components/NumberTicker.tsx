@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMotionValue, useSpring, useTransform, motion, useInView } from "framer-motion";
+import { useTimeouts } from "./useTimeouts";
 
 type NumberTickerProps = {
     value: number;
@@ -18,6 +19,7 @@ export function NumberTicker({
 }: NumberTickerProps) {
     const ref = useRef<HTMLSpanElement>(null);
     const isInView = useInView(ref, { once: true, margin: "0px" });
+    const { scheduleTimeout, cancelTimeout } = useTimeouts();
 
     const motionValue = useMotionValue(direction === "down" ? value : 0);
     const springValue = useSpring(motionValue, {
@@ -30,12 +32,14 @@ export function NumberTicker({
     );
 
     useEffect(() => {
-        if (isInView) {
-            setTimeout(() => {
-                motionValue.set(value);
-            }, delay * 1000);
-        }
-    }, [motionValue, isInView, delay, value]);
+        if (!isInView) return;
+
+        const timer = scheduleTimeout(() => {
+            motionValue.set(value);
+        }, delay * 1000);
+
+        return () => cancelTimeout(timer);
+    }, [motionValue, isInView, delay, value, scheduleTimeout, cancelTimeout]);
 
     return (
         <motion.span

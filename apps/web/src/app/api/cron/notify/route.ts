@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { NotificationConfigError, runNotificationsForChannel } from "@/server/notification-runner";
-import type { NotificationChannel } from "@/server/notifications";
+import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@/server/notifications";
 
 export const dynamic = "force-dynamic";
 
-const CHANNEL_ORDER: readonly NotificationChannel[] = [
-  "telegram",
-  "webhook",
-  "wecom",
-  "email",
-];
+const CHANNEL_ORDER: readonly NotificationChannel[] = NOTIFICATION_CHANNELS;
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.NOTIFY_CRON_SECRET;
@@ -82,4 +77,3 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   return POST(request);
 }
-

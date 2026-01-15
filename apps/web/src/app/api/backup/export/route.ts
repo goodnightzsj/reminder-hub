@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
+import type { BackupV1 } from "@/app/_actions/backup-parser";
 import { db } from "@/server/db";
-import { getAppSettings } from "@/server/db/settings";
+import { getAppTimeSettings } from "@/server/db/settings";
 import {
   anniversaries,
   items,
@@ -13,30 +14,13 @@ import {
 
 export const dynamic = "force-dynamic";
 
-type BackupV1 = {
-  schemaVersion: 1;
-  exportedAt: string;
-  app: {
-    timeZone: string;
-    dateReminderTime: string;
-  };
-  data: {
-    todos: Array<Record<string, unknown>>;
-    todoSubtasks: Array<Record<string, unknown>>;
-    anniversaries: Array<Record<string, unknown>>;
-    subscriptions: Array<Record<string, unknown>>;
-    items: Array<Record<string, unknown>>;
-    notificationDeliveries: Array<Record<string, unknown>>;
-  };
-};
-
 function toMs(value: unknown): number | null {
   if (value instanceof Date) return value.getTime();
   return null;
 }
 
 export async function GET() {
-  const settings = await getAppSettings();
+  const { timeZone, dateReminderTime } = await getAppTimeSettings();
 
   const [
     todosRows,
@@ -59,8 +43,8 @@ export async function GET() {
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     app: {
-      timeZone: settings.timeZone,
-      dateReminderTime: settings.dateReminderTime,
+      timeZone,
+      dateReminderTime,
     },
     data: {
       todos: todosRows.map((r) => ({

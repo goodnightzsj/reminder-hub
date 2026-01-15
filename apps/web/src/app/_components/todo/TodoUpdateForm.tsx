@@ -1,57 +1,33 @@
 "use client";
 
+import { useState } from "react";
+
 import { Input } from "../Input";
 import { SmartDateInput } from "../SmartDateInput";
-import { Button } from "../Button";
 import { Select } from "../Select";
 import { CustomSelect } from "../CustomSelect";
 import { Textarea } from "../Textarea";
 import { updateTodo } from "../../_actions/todos";
-import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { deleteTodo } from "../../_actions/todos";
 import { Icons } from "../Icons";
+import { TodoUpdateRecurrenceField } from "./TodoUpdateRecurrenceField";
+import { TodoUpdateRemindersField } from "./TodoUpdateRemindersField";
+import { TodoUpdateDangerZone } from "./TodoUpdateDangerZone";
+import type { TodoRecurrence, TodoRecurrenceUnit } from "./TodoRecurrence.types";
+import { type TodoUpdateFormTodo } from "./TodoUpdateForm.types";
+import {
+    todoPriorityOptions,
+    todoReminderOptionsMinutes,
+    todoTaskTypeOptions,
+} from "@/lib/todo";
 
 type TodoUpdateFormProps = {
-    todo: {
-        id: string;
-        title: string;
-        description: string | null;
-        taskType: string;
-        priority: "low" | "medium" | "high";
-        dueAt: Date | null;
-    };
+    todo: TodoUpdateFormTodo;
     tags: string[];
-    recurrence: { unit: string; interval: number } | null;
+    recurrence: TodoRecurrence | null;
     reminders: number[];
     dueAtLocalValue: string;
-    nextDueAtPreview: Date | null;
-    settings: {
-        timeZone: string;
-    };
+    createdAtLabel: string;
 };
-
-const reminderOptions = [
-    { minutes: 0, label: "到期时" },
-    { minutes: 10, label: "提前 10 分钟" },
-    { minutes: 60, label: "提前 1 小时" },
-    { minutes: 1440, label: "提前 1 天" },
-    { minutes: 4320, label: "提前 3 天" },
-] as const;
-
-function formatDueAt(dueAt: Date, timeZone: string) {
-    return new Intl.DateTimeFormat("zh-CN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone,
-    }).format(dueAt);
-}
-
-function getReminderLabel(offsetMinutes: number): string {
-    const fromPreset = reminderOptions.find((o) => o.minutes === offsetMinutes);
-    if (fromPreset) return fromPreset.label;
-    if (offsetMinutes === 1) return "提前 1 分钟";
-    return `提前 ${offsetMinutes} 分钟`;
-}
 
 export function TodoUpdateForm({
     todo,
@@ -59,10 +35,11 @@ export function TodoUpdateForm({
     recurrence,
     reminders,
     dueAtLocalValue,
-    nextDueAtPreview,
-    settings,
+    createdAtLabel,
 }: TodoUpdateFormProps) {
-    const now = new Date();
+    const [recurrenceUnit, setRecurrenceUnit] = useState<TodoRecurrenceUnit | "">(
+        recurrence?.unit ?? "",
+    );
 
     return (
         <div className="space-y-8">
@@ -104,69 +81,29 @@ export function TodoUpdateForm({
                     </div>
 
                     {/* Recurrence */}
-                    <div className="space-y-2 rounded-xl border border-default bg-surface/30 p-4 transition-colors hover:border-emphasis hover:bg-surface/50">
-                        <label className="flex items-center gap-2 text-xs font-medium text-secondary">
-                            <Icons.Refresh className="h-4 w-4" />
-                            重复设置
-                        </label>
-                        <div className="flex gap-2">
-                            <Select
-                                name="recurrenceUnit"
-                                defaultValue={recurrence?.unit ?? ""}
-                                className="bg-transparent shadow-none focus:ring-0"
-                            >
-                                <option value="">不重复</option>
-                                <option value="day">每天</option>
-                                <option value="week">每周</option>
-                                <option value="month">每月</option>
-                                <option value="year">每年</option>
-                            </Select>
-                            {(recurrence?.unit || "") !== "" && (
-                                <Input
-                                    type="number"
-                                    name="recurrenceInterval"
-                                    defaultValue={recurrence?.interval ?? 1}
-                                    min={1}
-                                    className="w-20 bg-transparent shadow-none focus:ring-0"
-                                />
-                            )}
-                        </div>
-                    </div>
+                    <TodoUpdateRecurrenceField
+                        recurrence={recurrence}
+                        recurrenceUnit={recurrenceUnit}
+                        onRecurrenceUnitChange={setRecurrenceUnit}
+                    />
                 </div>
 
                 {/* Section 3: Reminders (Grid Layout) */}
-                <div className="space-y-3">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                        提醒设置
-                    </label>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                        {reminderOptions.map((opt) => (
-                            <label
-                                key={opt.minutes}
-                                className="relative flex h-14 cursor-pointer flex-col items-center justify-center rounded-xl border border-default bg-surface/50 p-2 text-center transition-all hover:bg-interactive-hover active:scale-95 has-[:checked]:border-brand-primary has-[:checked]:bg-brand-primary/5 has-[:checked]:text-brand-primary"
-                            >
-                                <input
-                                    type="checkbox"
-                                    name="reminderOffsetsMinutes"
-                                    value={opt.minutes}
-                                    defaultChecked={reminders.includes(opt.minutes)}
-                                    className="peer sr-only"
-                                />
-                                <span className="text-sm font-medium leading-none">{opt.label}</span>
-                                <div className="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-transparent transition-colors peer-checked:bg-brand-primary" />
-                            </label>
-                        ))}
-                    </div>
-                </div>
+                <TodoUpdateRemindersField
+                    reminderOptions={todoReminderOptionsMinutes}
+                    reminders={reminders}
+                />
 
                 {/* Section 4: Metadata (Priority, Type, Tags) */}
                 <div className="grid gap-6 sm:grid-cols-3">
                     <div className="space-y-2">
                         <label className="text-xs font-medium text-secondary">优先级</label>
                         <Select name="priority" defaultValue={todo.priority}>
-                            <option value="low">低</option>
-                            <option value="medium">中</option>
-                            <option value="high">高</option>
+                            {todoPriorityOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
                         </Select>
                     </div>
 
@@ -175,11 +112,7 @@ export function TodoUpdateForm({
                         <CustomSelect
                             name="taskType"
                             defaultValue={todo.taskType}
-                            options={[
-                                { value: "个人", label: "个人" },
-                                { value: "公司", label: "公司" },
-                                { value: "生活", label: "生活" },
-                            ]}
+                            options={todoTaskTypeOptions}
                             placeholder="选择或输入分类..."
                         />
                     </div>
@@ -203,22 +136,11 @@ export function TodoUpdateForm({
                 </div>
             </form>
 
-            <div className="flex items-center justify-between border-t border-divider pt-6">
-                <span className="text-xs text-muted">
-                    创建于 {new Date().toLocaleDateString()}
-                </span>
-                <form action={deleteTodo}>
-                    <input type="hidden" name="id" value={todo.id} />
-                    <input type="hidden" name="redirectTo" value="/" />
-                    <ConfirmSubmitButton
-                        confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
-                        className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
-                    >
-                        <Icons.Trash className="h-3.5 w-3.5" />
-                        删除任务
-                    </ConfirmSubmitButton>
-                </form>
-            </div>
+            <TodoUpdateDangerZone
+                todoId={todo.id}
+                createdAtLabel={createdAtLabel}
+                redirectTo="/"
+            />
         </div>
     );
 }

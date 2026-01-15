@@ -1,4 +1,3 @@
-import { desc, like, eq } from "drizzle-orm";
 import Link from "next/link";
 
 import { AppHeader } from "@/app/_components/AppHeader";
@@ -7,108 +6,31 @@ import { Button } from "@/app/_components/Button";
 import { Icons } from "@/app/_components/Icons";
 import { Input } from "@/app/_components/Input";
 import { ServiceIconBadge } from "@/app/_components/ServiceIconBadge";
-import { db } from "@/server/db";
-import { getAppSettings } from "@/server/db/settings";
-import { serviceIcons, anniversaries, items, subscriptions, todos } from "@/server/db/schema";
+import { getAppTimeSettings } from "@/server/db/settings";
+import { formatDateTime } from "@/lib/format";
+import { ANNIVERSARY_DATE_TYPE } from "@/lib/anniversary";
+import { ROUTES } from "@/lib/routes";
+import { getSearchParamString, type SearchParams } from "@/lib/search-params";
+import { getItemStatusLabel } from "@/lib/items";
+import { SEARCH_QUERY_KEY } from "@/lib/url";
+
+import { parseSearchQuery, querySearchRows } from "./_lib/search-results";
+import { getItemStatusBadgeVariant, todoPriorityBadgeConfig } from "./_lib/search-ui";
 
 export const dynamic = "force-dynamic";
 
 type SearchPageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<SearchParams>;
 };
-
-function getParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string | null {
-  const value = params[key];
-  if (typeof value === "string") return value;
-  return null;
-}
-
-function formatDateTime(d: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(d);
-}
-
-const itemStatusLabel = {
-  using: "使用中",
-  idle: "闲置",
-  retired: "淘汰",
-} as const;
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = (await searchParams) ?? {};
-  const raw = getParam(params, "q") ?? "";
-  const q = raw.trim().slice(0, 100);
+  const q = parseSearchQuery(getSearchParamString(params, SEARCH_QUERY_KEY));
 
-  const settings = await getAppSettings();
-  const timeZone = settings.timeZone;
-
-  const pattern = `%${q}%`;
+  const { timeZone } = await getAppTimeSettings();
 
   const [todoRows, anniversaryRows, subscriptionRows, itemRows] =
-    q.length > 0
-      ? await Promise.all([
-        db
-          .select({
-            id: todos.id,
-            title: todos.title,
-            dueAt: todos.dueAt,
-            isDone: todos.isDone,
-            isArchived: todos.isArchived,
-            createdAt: todos.createdAt,
-            priority: todos.priority,
-          })
-          .from(todos)
-          .where(like(todos.title, pattern))
-          .orderBy(desc(todos.createdAt))
-          .limit(20),
-        db
-          .select({
-            id: anniversaries.id,
-            title: anniversaries.title,
-            date: anniversaries.date,
-            dateType: anniversaries.dateType,
-            isArchived: anniversaries.isArchived,
-            createdAt: anniversaries.createdAt,
-          })
-          .from(anniversaries)
-          .where(like(anniversaries.title, pattern))
-          .orderBy(desc(anniversaries.createdAt))
-          .limit(20),
-        db
-          .select({
-            id: subscriptions.id,
-            name: subscriptions.name,
-            nextRenewDate: subscriptions.nextRenewDate,
-            isArchived: subscriptions.isArchived,
-            createdAt: subscriptions.createdAt,
-            icon: serviceIcons.icon,
-            color: serviceIcons.color,
-          })
-          .from(subscriptions)
-          .leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name))
-          .where(like(subscriptions.name, pattern))
-          .orderBy(desc(subscriptions.createdAt))
-          .limit(20),
-        db
-          .select({
-            id: items.id,
-            name: items.name,
-            status: items.status,
-            purchasedDate: items.purchasedDate,
-            createdAt: items.createdAt,
-          })
-          .from(items)
-          .where(like(items.name, pattern))
-          .orderBy(desc(items.createdAt))
-          .limit(20),
-      ])
-      : [[], [], [], []];
+    await querySearchRows(q);
 
   const total =
     todoRows.length + anniversaryRows.length + subscriptionRows.length + itemRows.length;
@@ -121,14 +43,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         />
 
         <section className="mb-8 rounded-xl border border-default bg-elevated p-4 shadow-sm">
-          <form action="/search" method="GET" className="flex flex-col gap-3">
+          <form action={ROUTES.search} method="GET" className="flex flex-col gap-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
                   <Icons.Search className="h-5 w-5" />
                 </div>
                 <Input
-                  name="q"
+                  name={SEARCH_QUERY_KEY}
                   defaultValue={q}
                   placeholder="搜索标题…"
                   className="pl-10 h-11 text-base flex-1 w-full"
@@ -177,13 +99,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <Link href={`/todo/${t.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                          <Link href={`${ROUTES.todo}/${t.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
                             {t.title}
                           </Link>
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
-                            {t.priority === 'high' && <Badge variant="danger" className="px-1.5 py-0 text-[10px]">高优先级</Badge>}
-                            {t.priority === 'medium' && <Badge variant="warning" className="px-1.5 py-0 text-[10px]">中优先级</Badge>}
-                            {t.priority === 'low' && <Badge variant="success" className="px-1.5 py-0 text-[10px]">低优先级</Badge>}
+                            <Badge
+                              variant={todoPriorityBadgeConfig[t.priority].variant}
+                              className="px-1.5 py-0 text-[10px]"
+                            >
+                              {todoPriorityBadgeConfig[t.priority].label}
+                            </Badge>
 
                             {t.isDone ? (
                               <span className="text-success flex items-center gap-1"><Icons.Check className="h-3 w-3" /> 已完成</span>
@@ -195,7 +120,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </div>
                         </div>
                         <Link
-                          href={`/todo/${t.id}`}
+                          href={`${ROUTES.todo}/${t.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
                           <Icons.ChevronRight className="h-4 w-4" />
@@ -222,17 +147,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <Link href={`/anniversaries/${a.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                          <Link href={`${ROUTES.anniversaries}/${a.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
                             {a.title}
                           </Link>
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
-                            <Badge variant={a.dateType === "solar" ? "blue" : "purple"} className="px-1.5 py-0 text-[10px]">{a.dateType === "solar" ? "公历" : "农历"}</Badge>
+                            <Badge variant={a.dateType === ANNIVERSARY_DATE_TYPE.SOLAR ? "blue" : "purple"} className="px-1.5 py-0 text-[10px]">{a.dateType === ANNIVERSARY_DATE_TYPE.SOLAR ? "公历" : "农历"}</Badge>
                             <span>{a.date}</span>
                             {a.isArchived && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] border border-divider">归档</span>}
                           </div>
                         </div>
                         <Link
-                          href={`/anniversaries/${a.id}`}
+                          href={`${ROUTES.anniversaries}/${a.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
                           <Icons.ChevronRight className="h-4 w-4" />
@@ -267,7 +192,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             className="mt-0.5"
                           />
                           <div className="min-w-0 flex-1">
-                            <Link href={`/subscriptions/${s.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                            <Link href={`${ROUTES.subscriptions}/${s.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
                               {s.name}
                             </Link>
                             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
@@ -277,7 +202,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           </div>
                         </div>
                         <Link
-                          href={`/subscriptions/${s.id}`}
+                          href={`${ROUTES.subscriptions}/${s.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
                           <Icons.ChevronRight className="h-4 w-4" />
@@ -304,16 +229,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <Link href={`/items/${it.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
+                          <Link href={`${ROUTES.items}/${it.id}`} className="block truncate font-medium text-primary hover:text-brand-primary">
                             {it.name}
                           </Link>
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-secondary">
-                            <Badge variant={it.status === 'using' ? 'success' : it.status === 'idle' ? 'warning' : 'danger'} className="px-1.5 py-0 text-[10px]">{itemStatusLabel[it.status]}</Badge>
+                            <Badge variant={getItemStatusBadgeVariant(it.status)} className="px-1.5 py-0 text-[10px]">
+                              {getItemStatusLabel(it.status)}
+                            </Badge>
                             {it.purchasedDate && <span className="text-secondary">购入 {it.purchasedDate}</span>}
                           </div>
                         </div>
                         <Link
-                          href={`/items/${it.id}`}
+                          href={`${ROUTES.items}/${it.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
                           <Icons.ChevronRight className="h-4 w-4" />

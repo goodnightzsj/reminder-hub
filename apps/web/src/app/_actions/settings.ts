@@ -1,9 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-
-import { isValidTimeZone } from "@/server/datetime";
+import { isValidTimeOfDay, isValidTimeZone } from "@/server/datetime";
 import { db } from "@/server/db";
 import { setAppDateReminderTime, setAppTimeZone } from "@/server/db/settings";
 import {
@@ -14,48 +11,52 @@ import {
   todoSubtasks,
   todos,
 } from "@/server/db/schema";
+import { ROUTES } from "@/lib/routes";
 
-function parseStringField(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { parseStringField } from "./form-data";
+import {
+  SETTINGS_PATH,
+  redirectSettingsDataCleared,
+  redirectSettingsError,
+  redirectSettingsSaved,
+} from "./settings.redirect";
+import { revalidatePaths } from "./revalidate";
 
-function isValidTimeOfDay(value: string): boolean {
-  const match = value.match(/^(\d{2}):(\d{2})$/);
-  if (!match) return false;
-  const hour = Number(match[1]);
-  const minute = Number(match[2]);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false;
-  if (hour < 0 || hour > 23) return false;
-  if (minute < 0 || minute > 59) return false;
-  return true;
-}
+const SETTINGS_PATHS = [ROUTES.home, SETTINGS_PATH] as const;
+const DATE_REMINDER_PATHS = [
+  ROUTES.home,
+  ROUTES.anniversaries,
+  ROUTES.subscriptions,
+  ROUTES.dashboard,
+  SETTINGS_PATH,
+] as const;
+const CLEAR_ALL_DATA_PATHS = [
+  ROUTES.home,
+  ROUTES.anniversaries,
+  ROUTES.subscriptions,
+  ROUTES.items,
+  ROUTES.dashboard,
+  SETTINGS_PATH,
+] as const;
 
 export async function updateTimeZone(formData: FormData) {
   const timeZone = parseStringField(formData, "timeZone");
-  if (!timeZone) redirect("/settings?error=missing-timezone");
-  if (!isValidTimeZone(timeZone)) redirect("/settings?error=invalid-timezone");
+  if (!timeZone) redirectSettingsError("missing-timezone");
+  if (!isValidTimeZone(timeZone)) redirectSettingsError("invalid-timezone");
 
   await setAppTimeZone(timeZone);
-  revalidatePath("/");
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  revalidatePaths(SETTINGS_PATHS);
+  redirectSettingsSaved();
 }
 
 export async function updateDateReminderTime(formData: FormData) {
   const dateReminderTime = parseStringField(formData, "dateReminderTime");
-  if (!dateReminderTime) redirect("/settings?error=missing-date-reminder-time");
-  if (!isValidTimeOfDay(dateReminderTime)) redirect("/settings?error=invalid-date-reminder-time");
+  if (!dateReminderTime) redirectSettingsError("missing-date-reminder-time");
+  if (!isValidTimeOfDay(dateReminderTime)) redirectSettingsError("invalid-date-reminder-time");
 
   await setAppDateReminderTime(dateReminderTime);
-  revalidatePath("/");
-  revalidatePath("/anniversaries");
-  revalidatePath("/subscriptions");
-  revalidatePath("/dashboard");
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  revalidatePaths(DATE_REMINDER_PATHS);
+  redirectSettingsSaved();
 }
 
 export async function clearAllData() {
@@ -68,11 +69,6 @@ export async function clearAllData() {
     tx.delete(items).run();
   });
 
-  revalidatePath("/");
-  revalidatePath("/anniversaries");
-  revalidatePath("/subscriptions");
-  revalidatePath("/items");
-  revalidatePath("/dashboard");
-  revalidatePath("/settings");
-  redirect("/settings?dataCleared=1");
+  revalidatePaths(CLEAR_ALL_DATA_PATHS);
+  redirectSettingsDataCleared();
 }

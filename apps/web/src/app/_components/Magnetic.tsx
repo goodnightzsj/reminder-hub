@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { type ReactNode, useRef, useState } from "react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+import { type ReactNode, useRef } from "react";
 
 type MagneticProps = {
     children: ReactNode;
@@ -11,7 +11,6 @@ type MagneticProps = {
 
 export function Magnetic({ children, strength = 0.5, className = "" }: MagneticProps) {
     const ref = useRef<HTMLDivElement>(null);
-    const [isHovered, setIsHovered] = useState(false);
 
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -36,7 +35,6 @@ export function Magnetic({ children, strength = 0.5, className = "" }: MagneticP
     };
 
     const handleMouseLeave = () => {
-        setIsHovered(false);
         x.set(0);
         y.set(0);
     };
@@ -45,7 +43,6 @@ export function Magnetic({ children, strength = 0.5, className = "" }: MagneticP
         <motion.div
             ref={ref}
             onMouseMove={handleMouseMove}
-            onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={handleMouseLeave}
             style={{ x: springX, y: springY }}
             className={`inline-block ${className}`}

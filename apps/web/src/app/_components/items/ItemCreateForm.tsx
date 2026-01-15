@@ -1,9 +1,6 @@
 "use client";
 
-"use client";
-
 import { useState, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/app/_components/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
@@ -11,41 +8,41 @@ import { CustomSelect } from "@/app/_components/CustomSelect";
 import { createItem } from "@/app/_actions/items";
 import { Icons } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/Toast";
+import { useTimeouts } from "@/app/_components/useTimeouts";
+import { useCreateModal } from "@/app/_components/useCreateModal";
+import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
+import { DEFAULT_ITEM_STATUS, itemCategoryOptions, itemCurrencyOptions, itemStatusOptions } from "@/lib/items";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 type ItemCreateFormProps = {
     className?: string; // Allow overriding styles
 };
 
 export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const { closeIfOpen } = useCreateModal();
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formKey, setFormKey] = useState(0);
     const formRef = useRef<HTMLFormElement>(null);
-    const { success } = useToast();
+    const { success, error: toastError } = useToast();
+    const { scheduleTimeout } = useTimeouts();
 
     async function handleSubmit(formData: FormData) {
         setIsLoading(true);
         try {
             await createItem(formData);
 
-            setIsSuccess(true);
-            success("创建成功");
-            setFormKey(prev => prev + 1);
-            formRef.current?.reset();
-
-            setTimeout(() => {
-                setIsSuccess(false);
-                if (searchParams.get("modal") === "create") {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.delete("modal");
-                    router.replace(`${pathname}?${params.toString()}`);
-                }
-            }, 1000);
+            runCreateFormSuccess({
+                setIsSuccess,
+                toastSuccess: success,
+                setFormKey,
+                formRef,
+                scheduleTimeout,
+                closeCreateModalIfOpen: closeIfOpen,
+            });
         } catch (error) {
             console.error(error);
+            toastError(DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE);
         } finally {
             setIsLoading(false);
         }
@@ -67,10 +64,16 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                     </div>
                     <div className="w-full sm:w-40">
                         <label className="mb-1.5 block text-xs font-medium text-secondary">状态</label>
-                        <Select name="status" defaultValue="using" className="h-12 bg-base/50">
-                            <option value="using">使用中</option>
-                            <option value="idle">闲置</option>
-                            <option value="retired">淘汰</option>
+                        <Select
+                            name="status"
+                            defaultValue={DEFAULT_ITEM_STATUS}
+                            className="h-12 bg-base/50"
+                        >
+                            {itemStatusOptions.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
                         </Select>
                     </div>
                 </div>
@@ -87,13 +90,7 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                             name="category"
                             placeholder="输入自定义类别..."
                             className="h-12 bg-surface"
-                            options={[
-                                { value: "数码", label: "数码" },
-                                { value: "家居", label: "家居" },
-                                { value: "衣物", label: "衣物" },
-                                { value: "虚拟", label: "虚拟" },
-                                { value: "运动", label: "运动" },
-                            ]}
+                            options={itemCategoryOptions}
                         />
                     </div>
 
@@ -114,22 +111,13 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                         <label className="mb-1.5 block text-xs font-medium text-secondary">币种</label>
                         <CustomSelect
                             name="currency"
-                            defaultValue="CNY"
+                            defaultValue={DEFAULT_CURRENCY}
                             className="h-12 bg-surface"
-                            options={[
-                                { value: "CNY", label: "CNY (人民币)" },
-                                { value: "USD", label: "USD (美元)" },
-                                { value: "JPY", label: "JPY (日元)" },
-                                { value: "EUR", label: "EUR (欧元)" },
-                                { value: "GBP", label: "GBP (英镑)" },
-                                { value: "HKD", label: "HKD (港币)" },
-                            ]}
+                            options={itemCurrencyOptions}
                             placeholder="输入其他..."
                         />
                     </div>
                 </div>
-
-
             </div>
 
             <div className="flex justify-end pt-2">
@@ -151,6 +139,6 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                     )}
                 </button>
             </div>
-        </form >
+        </form>
     );
 }

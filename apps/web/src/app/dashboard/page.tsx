@@ -1,393 +1,28 @@
-import { and, asc, desc, eq, gte, isNotNull, isNull, lt, ne, sql } from "drizzle-orm";
-import Link from "next/link";
-
-import { renewSubscription } from "@/app/_actions/subscriptions";
-import { toggleTodo } from "@/app/_actions/todos";
-import {
-  getNextLunarOccurrenceDateString,
-  getNextSolarOccurrenceDateString,
-} from "@/server/anniversary";
 import { AppHeader } from "../_components/AppHeader";
 import { BentoCard } from "../_components/BentoCard";
-import { Button } from "../_components/Button";
 import { Icons } from "../_components/Icons";
-import { SpendBarChart } from "./_components/SpendBarChart";
-import { Tooltip } from "../_components/Tooltip";
-import { NumberTicker } from "../_components/NumberTicker";
 import { TiltCard } from "../_components/TiltCard";
+import { DashboardStatCard } from "../_components/dashboard/DashboardStatCard";
 import { UpcomingList } from "../_components/dashboard/UpcomingList";
-import {
-  addDaysToDateString,
-  diffDays,
-  formatDateString,
-  getDatePartsInTimeZone,
-} from "@/server/date";
-import { dateTimeLocalToUtcDate } from "@/server/datetime";
-import { db } from "@/server/db";
-import { getAppSettings } from "@/server/db/settings";
-import { anniversaries, items, subscriptions, todos } from "@/server/db/schema";
+import { InsightsCard } from "./_components/InsightsCard";
+import { TodayFocusCard } from "./_components/TodayFocusCard";
+import { getDashboardPageData } from "./_lib/dashboard-page-data";
 
 export const dynamic = "force-dynamic";
 
-function formatDateTime(d: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(d);
-}
-
-function formatDateOnly(dateString: string): string {
-  return dateString;
-}
-
-function formatCurrencyAmount(value: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat("zh-CN", {
-      style: "currency",
-      currency,
-      currencyDisplay: "narrowSymbol",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(value);
-  } catch {
-    return `${value.toFixed(2)} ${currency}`;
-  }
-}
-
-function computeDaysUsed(purchasedDate: string | null, today: string): number | null {
-  if (!purchasedDate) return null;
-  const diff = diffDays(purchasedDate, today);
-  if (diff === null) return null;
-  if (diff < 0) return null;
-  return diff + 1;
-}
-
-type UpcomingItem =
-  | {
-    kind: "todo";
-    at: Date;
-    id: string;
-    title: string;
-  }
-  | {
-    kind: "anniversary";
-    at: Date;
-    id: string;
-    title: string;
-    dateType: "solar" | "lunar";
-  }
-  | {
-    kind: "subscription";
-    at: Date;
-    id: string;
-    name: string;
-  };
-
-// Helper for dynamic greeting
-function getTimeOfDay(hour: number) {
-  if (hour < 5) return "night";
-  if (hour < 12) return "morning";
-  if (hour < 18) return "afternoon";
-  return "evening";
-}
-
-function getGreeting(timeZone: string) {
-  const hour = parseInt(new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    hour12: false,
-    timeZone,
-  }).format(new Date()), 10);
-
-  const timeOfDay = getTimeOfDay(hour);
-
-  switch (timeOfDay) {
-    case "morning": return "早上好";
-    case "afternoon": return "下午好";
-    case "evening": return "晚上好";
-    case "night": return "夜深了";
-    default: return "你好";
-  }
-}
-
 export default async function DashboardPage() {
-  const settings = await getAppSettings();
-  const timeZone = settings.timeZone;
-  const dateReminderTime = settings.dateReminderTime;
-
-  const greeting = getGreeting(timeZone);
-
-  const now = new Date();
-  const today = formatDateString(getDatePartsInTimeZone(now, timeZone));
-  const tomorrow = addDaysToDateString(today, 1);
-  const upcomingEnd = addDaysToDateString(today, 7);
-  const upcomingEndExclusive = addDaysToDateString(today, 8);
-
-  if (!tomorrow || !upcomingEnd || !upcomingEndExclusive) {
-    throw new Error("Failed to compute dashboard date range");
-  }
-
-  const startUtc = dateTimeLocalToUtcDate(`${today}T00:00`, timeZone);
-  const endUtc = dateTimeLocalToUtcDate(`${tomorrow}T00:00`, timeZone);
-  const upcomingEndExclusiveUtc = dateTimeLocalToUtcDate(
-    `${upcomingEndExclusive}T00:00`,
+  const {
+    greeting,
     timeZone,
-  );
-
-  if (!startUtc || !endUtc || !upcomingEndExclusiveUtc) {
-    throw new Error("Failed to compute dashboard UTC range");
-  }
-
-  const baseActiveTodoWhere = and(
-    eq(todos.isDone, false),
-    eq(todos.isArchived, false),
-    isNull(todos.deletedAt)
-  );
-  const baseTodoWhere = and(
-    eq(todos.isDone, false),
-    eq(todos.isArchived, false),
-    isNull(todos.deletedAt),
-    isNotNull(todos.dueAt),
-  );
-
-  const [{ count: activeTodoCount }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(baseActiveTodoWhere);
-
-  const [{ count: activeTodoNoDueAtCount }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(and(baseActiveTodoWhere, isNull(todos.dueAt)));
-
-  const [{ count: doneTodoCountToday }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(
-      and(
-        eq(todos.isDone, true),
-        isNotNull(todos.completedAt),
-        gte(todos.completedAt, startUtc),
-        lt(todos.completedAt, endUtc),
-      ),
-    );
-
-  const [{ count: overdueTodoCount }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(and(baseTodoWhere, lt(todos.dueAt, startUtc)));
-
-  const overdueTodos = await db
-    .select({ id: todos.id, title: todos.title, dueAt: todos.dueAt })
-    .from(todos)
-    .where(and(baseTodoWhere, lt(todos.dueAt, startUtc)))
-    .orderBy(asc(todos.dueAt))
-    .limit(12);
-
-  const [{ count: todayTodoCount }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(and(baseTodoWhere, gte(todos.dueAt, startUtc), lt(todos.dueAt, endUtc)));
-
-  const todayTodos = await db
-    .select({ id: todos.id, title: todos.title, dueAt: todos.dueAt })
-    .from(todos)
-    .where(and(baseTodoWhere, gte(todos.dueAt, startUtc), lt(todos.dueAt, endUtc)))
-    .orderBy(asc(todos.dueAt))
-    .limit(12);
-
-  const [{ count: upcomingTodoCount }] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(todos)
-    .where(and(baseTodoWhere, gte(todos.dueAt, endUtc), lt(todos.dueAt, upcomingEndExclusiveUtc)));
-
-  const upcomingTodos = await db
-    .select({ id: todos.id, title: todos.title, dueAt: todos.dueAt })
-    .from(todos)
-    .where(
-      and(
-        baseTodoWhere,
-        gte(todos.dueAt, endUtc),
-        lt(todos.dueAt, upcomingEndExclusiveUtc),
-      ),
-    )
-    .orderBy(asc(todos.dueAt))
-    .limit(24);
-
-  const activeAnniversaries = await db
-    .select()
-    .from(anniversaries)
-    .where(
-      and(
-        eq(anniversaries.isArchived, false),
-        isNull(anniversaries.deletedAt)
-      )
-    )
-    .orderBy(desc(anniversaries.createdAt));
-
-  const anniversariesWithNext = activeAnniversaries
-    .map((a) => {
-      const nextDate =
-        a.dateType === "solar"
-          ? getNextSolarOccurrenceDateString(a.date, today)
-          : getNextLunarOccurrenceDateString(a.date, today, {
-            isLeapMonth: a.isLeapMonth,
-          });
-
-      if (!nextDate) return null;
-      const daysLeft = diffDays(today, nextDate);
-      if (daysLeft === null) return null;
-      const at = dateTimeLocalToUtcDate(`${nextDate}T${dateReminderTime}`, timeZone);
-      if (!at) return null;
-      return { ...a, nextDate, daysLeft, at };
-    })
-    .filter((v): v is NonNullable<typeof v> => v !== null);
-
-  const todayAnniversaries = anniversariesWithNext.filter((a) => a.daysLeft === 0);
-  const upcomingAnniversaries = anniversariesWithNext.filter(
-    (a) => a.daysLeft >= 1 && a.daysLeft <= 7,
-  );
-
-  const activeSubscriptions = await db
-    .select()
-    .from(subscriptions)
-    .where(
-      and(
-        eq(subscriptions.isArchived, false),
-        isNull(subscriptions.deletedAt)
-      )
-    )
-    .orderBy(asc(subscriptions.nextRenewDate));
-
-  const todaySubscriptions = activeSubscriptions.filter(
-    (s) => s.nextRenewDate === today,
-  );
-  const upcomingSubscriptions = activeSubscriptions.filter(
-    (s) => s.nextRenewDate >= tomorrow && s.nextRenewDate <= upcomingEnd,
-  );
-
-  const activeItemsRows = await db
-    .select({
-      id: items.id,
-      name: items.name,
-      priceCents: items.priceCents,
-      currency: items.currency,
-      purchasedDate: items.purchasedDate,
-      status: items.status,
-      createdAt: items.createdAt,
-    })
-    .from(items)
-    .where(
-      and(
-        ne(items.status, "retired"),
-        isNull(items.deletedAt)
-      )
-    )
-    .orderBy(desc(items.createdAt))
-    .limit(500);
-
-  const itemsByDailyCost = activeItemsRows
-    .map((it) => {
-      if (typeof it.priceCents !== "number") return null;
-      const currency = (it.currency ?? "CNY").trim() || "CNY";
-      const daysUsed = computeDaysUsed(it.purchasedDate, today);
-      if (typeof daysUsed !== "number" || daysUsed < 1) return null;
-      const dailyCents = Math.round(it.priceCents / daysUsed);
-      return { ...it, currency, daysUsed, dailyCents };
-    })
-    .filter((v): v is NonNullable<typeof v> => v !== null)
-    .sort(
-      (a, b) =>
-        a.dailyCents - b.dailyCents || a.name.localeCompare(b.name, "zh-CN"),
-    );
-
-  const itemsByDailyCostByCurrency = new Map<
-    string,
-    Array<(typeof itemsByDailyCost)[number]>
-  >();
-  for (const it of itemsByDailyCost) {
-    const list = itemsByDailyCostByCurrency.get(it.currency) ?? [];
-    list.push(it);
-    itemsByDailyCostByCurrency.set(it.currency, list);
-  }
-
-  let primaryDailyCostCurrency: string | null = null;
-  let primaryDailyCostItems: Array<(typeof itemsByDailyCost)[number]> = [];
-
-  for (const [currency, list] of itemsByDailyCostByCurrency.entries()) {
-    list.sort(
-      (a, b) =>
-        a.dailyCents - b.dailyCents || a.name.localeCompare(b.name, "zh-CN"),
-    );
-
-    if (list.length > primaryDailyCostItems.length) {
-      primaryDailyCostCurrency = currency;
-      primaryDailyCostItems = list;
-    }
-  }
-
-  const lowestDailyCostItems = primaryDailyCostItems.slice(0, 3);
-
-  const monthlySpendByCurrency = new Map<string, number>();
-  for (const s of activeSubscriptions) {
-    if (s.priceCents === null) continue;
-    const currency = (s.currency ?? "CNY").trim() || "CNY";
-    const monthsPerCycle = s.cycleUnit === "year" ? s.cycleInterval * 12 : s.cycleInterval;
-    if (!Number.isFinite(monthsPerCycle) || monthsPerCycle < 1) continue;
-    const monthly = s.priceCents / 100 / monthsPerCycle;
-    if (!Number.isFinite(monthly)) continue;
-    monthlySpendByCurrency.set(currency, (monthlySpendByCurrency.get(currency) ?? 0) + monthly);
-  }
-
-  const monthlySpendRows = Array.from(monthlySpendByCurrency.entries())
-    .map(([currency, amount]) => ({ currency, amount }))
-    .sort((a, b) => b.amount - a.amount);
-
-  const upcoming: UpcomingItem[] = [];
-
-  for (const t of upcomingTodos) {
-    if (!t.dueAt) continue;
-    upcoming.push({ kind: "todo", at: t.dueAt, id: t.id, title: t.title });
-  }
-
-  for (const a of upcomingAnniversaries) {
-    upcoming.push({
-      kind: "anniversary",
-      at: a.at,
-      id: a.id,
-      title: a.title,
-      dateType: a.dateType,
-    });
-  }
-
-  for (const s of upcomingSubscriptions) {
-    const at = dateTimeLocalToUtcDate(`${s.nextRenewDate}T${dateReminderTime}`, timeZone);
-    if (!at) continue;
-    upcoming.push({ kind: "subscription", at, id: s.id, name: s.name });
-  }
-
-  upcoming.sort((a, b) => a.at.getTime() - b.at.getTime());
-
-  const upcomingTotalCount =
-    upcomingTodoCount + upcomingAnniversaries.length + upcomingSubscriptions.length;
-  const upcomingVisible = upcoming.slice(0, 30);
-  const upcomingIsTruncated = upcomingTotalCount > upcomingVisible.length;
-
-  const stats = {
-    activeTodos: activeTodoCount,
-    activeTodosNoDueAt: activeTodoNoDueAtCount,
-    doneTodosToday: doneTodoCountToday,
-    overdueTodos: overdueTodoCount,
-    todayTodos: todayTodoCount,
-    todayAnniversaries: todayAnniversaries.length,
-    todaySubscriptions: todaySubscriptions.length,
-    activeAnniversaries: activeAnniversaries.length,
-    activeSubscriptions: activeSubscriptions.length,
-    activeItems: activeItemsRows.length,
-    upcomingCount: upcomingTotalCount,
-  };
-
-  const maxMonthlySpend = Math.max(1, ...monthlySpendRows.map(r => r.amount));
+    stats,
+    overdueTodos,
+    todayTodos,
+    todayAnniversaries,
+    todaySubscriptions,
+    upcomingVisible,
+    monthlySpendRows,
+    lowestDailyCostItems,
+  } = await getDashboardPageData();
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary animate-fade-in pb-20 sm:pb-10">
@@ -399,207 +34,58 @@ export default async function DashboardPage() {
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-[auto_auto_auto]">
           {/* Hero: Today's Focus (2x2) */}
           <div className="sm:col-span-2 sm:row-span-2">
-            <BentoCard
-              title="今日聚焦"
-              className="h-full border-brand-primary/20"
-              glow={true}
-              delay={0.05}
-              icon={<Icons.Zap className="h-5 w-5 text-brand-primary" />}
-            >
-              <div className="flex bg-surface/50 rounded-lg p-3 mb-4 items-center justify-between text-xs text-secondary">
-                <span>逾期 {stats.overdueTodos}</span>
-                <span className="text-muted">|</span>
-                <span>待办 {stats.todayTodos}</span>
-                <span className="text-muted">|</span>
-                <span>纪念日 {stats.todayAnniversaries}</span>
-                <span className="text-muted">|</span>
-                <span>订阅 {stats.todaySubscriptions}</span>
-              </div>
-
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {/* Overdue */}
-                {overdueTodos.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-danger">
-                      <Icons.AlertTriangle className="h-3 w-3" />
-                      <span>逾期事项 ({overdueTodos.length})</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {overdueTodos.map((t) => (
-                        <li key={t.id} className="group flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
-                          <Link href={`/todo/${t.id}`} className="flex-1 truncate text-sm font-medium hover:underline">
-                            {t.title}
-                          </Link>
-                          <span className="text-xs text-danger font-mono ml-3">{formatDateTime(t.dueAt!, timeZone)}</span>
-                          <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <input type="hidden" name="id" value={t.id} />
-                            <input type="hidden" name="isDone" value="1" />
-                            <Tooltip content="标记为已完成" side="left">
-                              <Button type="submit" variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50">
-                                <Icons.Check active className="h-3 w-3" />
-                              </Button>
-                            </Tooltip>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Today */}
-                {todayTodos.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-brand-primary">
-                      <Icons.Calendar className="h-3 w-3" />
-                      <span>今日待办 ({todayTodos.length})</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {todayTodos.map((t) => (
-                        <li key={t.id} className="group flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/todo/${t.id}`} className="block truncate text-sm font-medium hover:underline">
-                              {t.title}
-                            </Link>
-                            <div className="text-[10px] text-muted mt-0.5">
-                              {formatDateTime(t.dueAt!, timeZone)}
-                            </div>
-                          </div>
-                          <form action={toggleTodo} className="ml-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <input type="hidden" name="id" value={t.id} />
-                            <input type="hidden" name="isDone" value="1" />
-                            <Tooltip content="标记为已完成" side="left">
-                              <Button type="submit" variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50">
-                                <Icons.Check active className="h-3.5 w-3.5" />
-                              </Button>
-                            </Tooltip>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Today Anniversaries */}
-                {todayAnniversaries.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-pink-500">
-                      <Icons.Gift className="h-3 w-3" />
-                      <span>今日纪念 ({todayAnniversaries.length})</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {todayAnniversaries.map((a) => (
-                        <li key={a.id} className="flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
-                          <Link href={`/anniversaries/${a.id}`} className="truncate text-sm font-medium hover:underline">
-                            {a.title}
-                          </Link>
-                          <span className="text-xs text-muted ml-3">
-                            {a.dateType === "solar" ? "公历" : "农历"}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Today Subscriptions */}
-                {todaySubscriptions.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-blue-500">
-                      <Icons.CreditCard className="h-3 w-3" />
-                      <span>今日续费 ({todaySubscriptions.length})</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {todaySubscriptions.map((s) => (
-                        <li key={s.id} className="flex items-center justify-between rounded-lg bg-surface p-3 transition-colors hover:bg-muted/50">
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/subscriptions/${s.id}`} className="block truncate text-sm font-medium hover:underline">
-                              {s.name}
-                            </Link>
-                          </div>
-                          <form action={renewSubscription} className="ml-3 shrink-0">
-                            <input type="hidden" name="id" value={s.id} />
-                            <input type="hidden" name="redirectTo" value={`/subscriptions/${s.id}`} />
-                            <Button type="submit" variant="primary" size="sm">
-                              续期
-                            </Button>
-                          </form>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Empty State */}
-                {overdueTodos.length === 0 && todayTodos.length === 0 && todayAnniversaries.length === 0 && todaySubscriptions.length === 0 && (
-                  <div className="flex h-40 flex-col items-center justify-center text-center text-muted">
-                    <Icons.Inbox className="h-10 w-10 opacity-20 mb-3" />
-                    <p className="text-sm">今天暂无特别事项</p>
-                    <p className="text-xs opacity-70">享受美好的一天！</p>
-                  </div>
-                )}
-              </div>
-            </BentoCard>
+            <TodayFocusCard
+              overdueTodoCount={stats.overdueTodos}
+              todayTodoCount={stats.todayTodos}
+              todayAnniversaryCount={stats.todayAnniversaries}
+              todaySubscriptionCount={stats.todaySubscriptions}
+              overdueTodos={overdueTodos}
+              todayTodos={todayTodos}
+              todayAnniversaries={todayAnniversaries}
+              todaySubscriptions={todaySubscriptions}
+              timeZone={timeZone}
+            />
           </div>
 
           {/* Stats 1: Todo */}
-          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
-            <BentoCard className="h-full" delay={0.1}>
-              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-2">
-                  <Icons.CheckSquare className="h-6 w-6" />
-                </div>
-                <div className="text-3xl font-bold text-primary leading-none">
-                  <NumberTicker value={stats.activeTodos} delay={0.2} />
-                </div>
-                <div className="text-xs text-muted font-medium mt-1">剩余待办</div>
-              </div>
-            </BentoCard>
-          </TiltCard>
+          <DashboardStatCard
+            icon={<Icons.CheckSquare className="h-6 w-6" />}
+            iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-2"
+            value={stats.activeTodos}
+            tickerDelay={0.2}
+            label="剩余待办"
+            cardDelay={0.1}
+          />
 
           {/* Stats 2: Done */}
-          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
-            <BentoCard className="h-full" delay={0.15}>
-              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 mb-2">
-                  <Icons.CheckCircle className="h-6 w-6" />
-                </div>
-                <div className="text-3xl font-bold text-primary leading-none">
-                  <NumberTicker value={stats.doneTodosToday} delay={0.3} />
-                </div>
-                <div className="text-xs text-muted font-medium mt-1">今日完成</div>
-              </div>
-            </BentoCard>
-          </TiltCard>
+          <DashboardStatCard
+            icon={<Icons.CheckCircle className="h-6 w-6" />}
+            iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 mb-2"
+            value={stats.doneTodosToday}
+            tickerDelay={0.3}
+            label="今日完成"
+            cardDelay={0.15}
+          />
 
           {/* Stats 3: Upcoming */}
-          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
-            <BentoCard className="h-full" delay={0.2}>
-              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 mb-2">
-                  <Icons.Calendar className="h-6 w-6" />
-                </div>
-                <div className="text-3xl font-bold text-primary leading-none">
-                  <NumberTicker value={stats.upcomingCount} delay={0.4} />
-                </div>
-                <div className="text-xs text-muted font-medium mt-1">一周待办</div>
-              </div>
-            </BentoCard>
-          </TiltCard>
+          <DashboardStatCard
+            icon={<Icons.Calendar className="h-6 w-6" />}
+            iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 mb-2"
+            value={stats.upcomingCount}
+            tickerDelay={0.4}
+            label="一周待办"
+            cardDelay={0.2}
+          />
 
           {/* Stats 4: Subscriptions */}
-          <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
-            <BentoCard className="h-full" delay={0.25}>
-              <div className="flex flex-col items-center justify-center gap-2 h-full p-4 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-2">
-                  <Icons.CreditCard className="h-6 w-6" />
-                </div>
-                <div className="text-3xl font-bold text-primary leading-none">
-                  <NumberTicker value={stats.activeSubscriptions} delay={0.5} />
-                </div>
-                <div className="text-xs text-muted font-medium mt-1">活跃订阅</div>
-              </div>
-            </BentoCard>
-          </TiltCard>
+          <DashboardStatCard
+            icon={<Icons.CreditCard className="h-6 w-6" />}
+            iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-2"
+            value={stats.activeSubscriptions}
+            tickerDelay={0.5}
+            label="活跃订阅"
+            cardDelay={0.25}
+          />
 
           {/* Upcoming: (2x2) */}
           <TiltCard className="sm:col-span-2 lg:col-span-2 lg:row-span-2" maxRotation={5}>
@@ -612,49 +98,13 @@ export default async function DashboardPage() {
 
           {/* Insights: (2x2) */}
           <div className="sm:col-span-2 sm:row-span-2">
-            <BentoCard title="财务与洞察" className="h-full" delay={0.35} icon={<Icons.LineChart className="h-5 w-5" />}>
-              <div className="grid grid-cols-1 gap-4">
-                {/* Subscription Spend - Bar Chart */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-secondary px-1">
-                    <Icons.CreditCard className="h-3.5 w-3.5 text-brand-primary" />
-                    <span>订阅支出 (月度归纳)</span>
-                  </div>
-                  <SpendBarChart
-                    monthlySpendRows={monthlySpendRows}
-                    maxMonthlySpend={maxMonthlySpend}
-                  />
-                </div>
-
-                <div className="rounded-xl bg-surface/50 p-4 border border-border/40">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-secondary mb-3">
-                    <Icons.Package className="h-3.5 w-3.5 text-amber-500" />
-                    <span>物品性价比 (日均成本 Top 3)</span>
-                  </div>
-                  {lowestDailyCostItems.length > 0 ? (
-                    <ul className="space-y-3">
-                      {lowestDailyCostItems.map((it) => (
-                        <li key={it.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
-                            <span className="truncate text-sm text-secondary">{it.name}</span>
-                          </div>
-                          <span className="text-sm font-mono text-muted tabular-nums">
-                            {formatCurrencyAmount(it.dailyCents / 100, it.currency)}/天
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <div className="text-sm text-muted">暂无物品数据</div>
-                  )}
-                </div>
-              </div>
-            </BentoCard>
+            <InsightsCard
+              monthlySpendRows={monthlySpendRows}
+              lowestDailyCostItems={lowestDailyCostItems}
+            />
           </div>
         </div>
-      </main >
-    </div >
+      </main>
+    </div>
   );
 }
-

@@ -6,68 +6,34 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { formatDateString, parseDateString } from "@/server/date";
 import { db } from "@/server/db";
-import { items, itemStatusValues, type ItemStatus } from "@/server/db/schema";
+import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
+import { items } from "@/server/db/schema";
+import { ROUTES } from "@/lib/routes";
+import type { FlashAction } from "@/lib/flash";
 
-function parseStringField(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import {
+  parseEnumField,
+  parseNonNegativeIntField,
+  parseRedirectToField,
+  parseStringField,
+} from "./form-data";
+import { parseCurrencyField, parseDateField, parsePriceCentsField } from "./form-fields";
+import { withAction } from "./redirect-url";
 
-function parseNonNegativeIntField(
-  formData: FormData,
-  key: string,
-  fallback: number,
-): number {
-  const raw = parseStringField(formData, key);
-  if (!raw) return fallback;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed)) return fallback;
-  if (parsed < 0) return fallback;
-  return parsed;
-}
+const ITEMS_PATH = ROUTES.items;
 
-function parsePriceCentsField(formData: FormData, key: string): number | null {
-  const raw = parseStringField(formData, key);
-  if (!raw) return null;
-
-  const parsed = Number.parseFloat(raw);
-  if (!Number.isFinite(parsed)) return null;
-  if (parsed < 0) return null;
-  if (parsed > 1_000_000_000) return null;
-
-  return Math.round(parsed * 100);
-}
-
-function parseCurrencyField(formData: FormData, key: string): string {
-  return parseStringField(formData, key) ?? "CNY";
-}
-
-function parseDateField(formData: FormData, key: string): string | null {
-  const value = parseStringField(formData, key);
-  if (!value) return null;
-  const parsed = parseDateString(value);
-  if (!parsed) return null;
-  return formatDateString(parsed);
+function redirectWithItemAction(path: string, action: FlashAction): never {
+  redirect(withAction(path, action));
 }
 
 function parseItemStatusField(formData: FormData, key: string): ItemStatus {
-  const value = parseStringField(formData, key);
-  if (value && itemStatusValues.includes(value as ItemStatus)) {
-    return value as ItemStatus;
-  }
-  return "using";
+  return parseEnumField(formData, key, itemStatusValues, DEFAULT_ITEM_STATUS);
 }
 
-function parseRedirectToField(formData: FormData, key: string): string | null {
-  const value = parseStringField(formData, key);
-  if (!value) return null;
-  if (!value.startsWith("/")) return null;
-  if (value.startsWith("//")) return null;
-  return value;
+function revalidateItemDetailAndList(id: string) {
+  revalidatePath(ITEMS_PATH);
+  revalidatePath(`${ITEMS_PATH}/${id}`);
 }
 
 export async function createItem(formData: FormData) {
@@ -81,6 +47,7 @@ export async function createItem(formData: FormData) {
   const status = parseItemStatusField(formData, "status");
   const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
   const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");
+  const now = new Date();
 
   await db.insert(items).values({
     id: randomUUID(),
@@ -92,10 +59,10 @@ export async function createItem(formData: FormData) {
     status,
     usageCount,
     targetDailyCostCents,
-    updatedAt: new Date(),
+    updatedAt: now,
   });
 
-  revalidatePath("/items");
+  revalidatePath(ITEMS_PATH);
 }
 
 export async function updateItem(formData: FormData) {
@@ -110,6 +77,7 @@ export async function updateItem(formData: FormData) {
   const status = parseItemStatusField(formData, "status");
   const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
   const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");
+  const now = new Date();
 
   await db
     .update(items)
@@ -122,13 +90,12 @@ export async function updateItem(formData: FormData) {
       status,
       usageCount,
       targetDailyCostCents,
-      updatedAt: new Date(),
+      updatedAt: now,
     })
     .where(eq(items.id, id));
 
-  revalidatePath("/items");
-  revalidatePath(`/items/${id}`);
-  redirect("/items?action=updated");
+  revalidateItemDetailAndList(id);
+  redirectWithItemAction(ITEMS_PATH, "updated");
 }
 
 export async function setItemStatus(formData: FormData) {
@@ -137,17 +104,16 @@ export async function setItemStatus(formData: FormData) {
   if (!id) return;
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const now = new Date();
 
   await db
     .update(items)
-    .set({ status, updatedAt: new Date() })
+    .set({ status, updatedAt: now })
     .where(eq(items.id, id));
 
-  revalidatePath("/items");
-  revalidatePath(`/items/${id}`);
+  revalidateItemDetailAndList(id);
   if (redirectTo) redirect(redirectTo);
 }
-
 
 export async function deleteItem(formData: FormData) {
   const id = parseStringField(formData, "id");
@@ -155,41 +121,40 @@ export async function deleteItem(formData: FormData) {
 
   const redirectTo = parseRedirectToField(formData, "redirectTo");
 
-  const existing = await db.select({ deletedAt: items.deletedAt }).from(items).where(eq(items.id, id)).get();
+  const existing = await db
+    .select({ deletedAt: items.deletedAt })
+    .from(items)
+    .where(eq(items.id, id))
+    .get();
   if (!existing) return;
 
+  const now = new Date();
   if (existing.deletedAt) {
     await db.delete(items).where(eq(items.id, id));
   } else {
-    await db.update(items).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(items.id, id));
+    await db
+      .update(items)
+      .set({ deletedAt: now, updatedAt: now })
+      .where(eq(items.id, id));
   }
 
-  revalidatePath("/items");
-  revalidatePath(`/items/${id}`);
+  revalidateItemDetailAndList(id);
 
-  // Naive separator check
-  const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
-
-  if (redirectTo && existing.deletedAt) {
-      redirect(`${redirectTo}${sep}action=deleted`);
-  } else if (existing.deletedAt === null) {
-      if (redirectTo) redirect(`${redirectTo}${sep}action=deleted`);
-  }
+  if (redirectTo) redirectWithItemAction(redirectTo, "deleted");
 }
 
 export async function restoreItem(formData: FormData) {
-    const id = parseStringField(formData, "id");
-    if (!id) return;
-    const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const id = parseStringField(formData, "id");
+  if (!id) return;
+  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const now = new Date();
 
-    await db.update(items).set({ deletedAt: null, updatedAt: new Date() }).where(eq(items.id, id));
+  await db
+    .update(items)
+    .set({ deletedAt: null, updatedAt: now })
+    .where(eq(items.id, id));
 
-    revalidatePath("/items");
-    revalidatePath(`/items/${id}`);
-    
-    // Naive separator check
-    const sep = redirectTo && redirectTo.includes("?") ? "&" : "?";
-    if (redirectTo) redirect(`${redirectTo}${sep}action=restored`);
+  revalidateItemDetailAndList(id);
+
+  if (redirectTo) redirectWithItemAction(redirectTo, "restored");
 }
-
-

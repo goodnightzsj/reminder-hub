@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/app/_components/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/Select";
@@ -10,14 +9,12 @@ import { createSubscription } from "@/app/_actions/subscriptions";
 import { Icons } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/Toast";
 import { useConfetti } from "@/app/_components/ConfettiProvider";
-
-const reminderOptionsDays = [
-    { days: 0, label: "到期日" },
-    { days: 1, label: "提前 1 天" },
-    { days: 3, label: "提前 3 天" },
-    { days: 7, label: "提前 7 天" },
-    { days: 30, label: "提前 30 天" },
-] as const;
+import { useTimeouts } from "@/app/_components/useTimeouts";
+import { useCreateModal } from "@/app/_components/useCreateModal";
+import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
+import { subscriptionReminderOptionsDays } from "@/lib/reminder-options";
+import { DEFAULT_SUBSCRIPTION_CYCLE_UNIT, subscriptionCategoryOptions, subscriptionCycleUnitOptions } from "@/lib/subscriptions";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 type SubscriptionCreateFormProps = {
     dateReminderTime: string;
@@ -30,9 +27,7 @@ export function SubscriptionCreateForm({
     timeZone,
     className = "",
 }: SubscriptionCreateFormProps) {
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
+    const { closeIfOpen } = useCreateModal();
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
@@ -41,6 +36,7 @@ export function SubscriptionCreateForm({
     const submitButtonRef = useRef<HTMLButtonElement>(null);
     const { success, error: toastError } = useToast();
     const { triggerMicroConfetti } = useConfetti();
+    const { scheduleTimeout } = useTimeouts();
 
     async function handleSubmit(formData: FormData) {
         setIsLoading(true);
@@ -48,30 +44,25 @@ export function SubscriptionCreateForm({
         try {
             await createSubscription(formData);
 
-            setIsSuccess(true);
-            success("创建成功");
-            setFormKey(prev => prev + 1);
-            formRef.current?.reset();
+            runCreateFormSuccess({
+                setIsSuccess,
+                toastSuccess: success,
+                setFormKey,
+                formRef,
+                scheduleTimeout,
+                closeCreateModalIfOpen: closeIfOpen,
+            });
 
             // Trigger confetti at submit button position
             if (submitButtonRef.current) {
                 const rect = submitButtonRef.current.getBoundingClientRect();
                 triggerMicroConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
             }
-
-            setTimeout(() => {
-                setIsSuccess(false);
-                if (searchParams.get("modal") === "create") {
-                    const params = new URLSearchParams(searchParams.toString());
-                    params.delete("modal");
-                    router.replace(`${pathname}?${params.toString()}`);
-                }
-            }, 1000);
         } catch (err) {
             console.error(err);
-            toastError("创建失败，请重试");
+            toastError(DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE);
             setIsError(true);
-            setTimeout(() => setIsError(false), 500);
+            scheduleTimeout(() => setIsError(false), 500);
         } finally {
             setIsLoading(false);
         }
@@ -98,12 +89,7 @@ export function SubscriptionCreateForm({
                                 name="category"
                                 placeholder="输入自定义..."
                                 className="h-12 bg-surface"
-                                options={[
-                                    { value: "娱乐", label: "娱乐" },
-                                    { value: "工具", label: "工具" },
-                                    { value: "学习", label: "学习" },
-                                    { value: "办公", label: "办公" },
-                                ]}
+                                options={subscriptionCategoryOptions}
                             />
                         </div>
                     </div>
@@ -117,9 +103,16 @@ export function SubscriptionCreateForm({
                         </div>
                         <div className="w-32">
                             <label className="mb-1.5 block text-xs font-medium text-secondary">周期单位</label>
-                            <Select name="cycleUnit" defaultValue="month" className="h-12 bg-base/50">
-                                <option value="month">月</option>
-                                <option value="year">年</option>
+                            <Select
+                                name="cycleUnit"
+                                defaultValue={DEFAULT_SUBSCRIPTION_CYCLE_UNIT}
+                                className="h-12 bg-base/50"
+                            >
+                                {subscriptionCycleUnitOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
                             </Select>
                         </div>
                     </div>
@@ -150,7 +143,7 @@ export function SubscriptionCreateForm({
                         提醒设置 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
                     </legend>
                     <div className="flex flex-wrap gap-4 pt-2">
-                        {reminderOptionsDays.map((opt) => (
+                        {subscriptionReminderOptionsDays.map((opt) => (
                             <label
                                 key={opt.days}
                                 className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
@@ -182,8 +175,12 @@ export function SubscriptionCreateForm({
 
                     <div>
                         <label className="mb-1.5 block text-xs font-medium text-secondary">币种</label>
-                        <Select name="currency" defaultValue="CNY" className="h-12 bg-base/50">
-                            <option value="CNY">CNY ¥</option>
+                        <Select
+                            name="currency"
+                            defaultValue={DEFAULT_CURRENCY}
+                            className="h-12 bg-base/50"
+                        >
+                            <option value={DEFAULT_CURRENCY}>CNY ¥</option>
                             <option value="USD">USD $</option>
                             <option value="EUR">EUR €</option>
                             <option value="GBP">GBP £</option>

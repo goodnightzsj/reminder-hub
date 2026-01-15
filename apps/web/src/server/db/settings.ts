@@ -1,34 +1,81 @@
+import "server-only";
+
 import { eq } from "drizzle-orm";
 
 import { db } from "./index";
 import { appSettings } from "./schema";
 
-export const DEFAULT_TIME_ZONE = "Asia/Shanghai";
-export const DEFAULT_DATE_REMINDER_TIME = "09:00";
-const SETTINGS_ID = "singleton";
+import {
+  DEFAULT_DATE_REMINDER_TIME,
+  DEFAULT_TIME_ZONE,
+  SETTINGS_ID,
+} from "./app-settings.constants";
+
+export { DEFAULT_DATE_REMINDER_TIME, DEFAULT_TIME_ZONE, SETTINGS_ID } from "./app-settings.constants";
+
+async function ensureAppSettingsRow() {
+  await db
+    .insert(appSettings)
+    .values({
+      id: SETTINGS_ID,
+      timeZone: DEFAULT_TIME_ZONE,
+      dateReminderTime: DEFAULT_DATE_REMINDER_TIME,
+      updatedAt: new Date(),
+    })
+    .onConflictDoNothing();
+}
 
 export async function getAppSettings() {
   const existing = await db
     .select()
     .from(appSettings)
     .where(eq(appSettings.id, SETTINGS_ID))
-    .limit(1);
+    .get();
 
-  if (existing.length > 0) return existing[0];
+  if (existing) return existing;
 
-  await db.insert(appSettings).values({
-    id: SETTINGS_ID,
-    timeZone: DEFAULT_TIME_ZONE,
-    updatedAt: new Date(),
-  });
+  await ensureAppSettingsRow();
 
   const created = await db
     .select()
     .from(appSettings)
     .where(eq(appSettings.id, SETTINGS_ID))
-    .limit(1);
+    .get();
 
-  if (created.length > 0) return created[0];
+  if (created) return created;
+
+  throw new Error("Failed to create default app settings");
+}
+
+export type AppTimeSettings = {
+  timeZone: string;
+  dateReminderTime: string;
+};
+
+export async function getAppTimeSettings(): Promise<AppTimeSettings> {
+  const existing = await db
+    .select({
+      timeZone: appSettings.timeZone,
+      dateReminderTime: appSettings.dateReminderTime,
+    })
+    .from(appSettings)
+    .where(eq(appSettings.id, SETTINGS_ID))
+    .get();
+
+  if (existing) return existing;
+
+  await ensureAppSettingsRow();
+
+  const created = await db
+    .select({
+      timeZone: appSettings.timeZone,
+      dateReminderTime: appSettings.dateReminderTime,
+    })
+    .from(appSettings)
+    .where(eq(appSettings.id, SETTINGS_ID))
+    .get();
+
+  if (created) return created;
 
   throw new Error("Failed to create default app settings");
 }
@@ -39,6 +86,7 @@ export async function setAppTimeZone(timeZone: string) {
     .values({
       id: SETTINGS_ID,
       timeZone,
+      dateReminderTime: DEFAULT_DATE_REMINDER_TIME,
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -48,7 +96,7 @@ export async function setAppTimeZone(timeZone: string) {
 }
 
 export async function setAppDateReminderTime(dateReminderTime: string) {
-  const existing = await getAppSettings();
+  const existing = await getAppTimeSettings();
 
   await db
     .insert(appSettings)

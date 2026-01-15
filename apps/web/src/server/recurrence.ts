@@ -1,16 +1,15 @@
-import { dateTimeLocalToUtcDate, formatDateTimeLocal } from "./datetime";
+import "server-only";
 
-export const recurrenceUnits = ["day", "week", "month"] as const;
-export type RecurrenceUnit = (typeof recurrenceUnits)[number];
+import { dateTimeLocalToUtcDate, formatDateTimeLocal } from "./datetime";
+import { isRecurrenceUnit, recurrenceUnits, type RecurrenceUnit } from "@/lib/recurrence";
+
+export { recurrenceUnits };
+export type { RecurrenceUnit };
 
 export type RecurrenceRule = {
   unit: RecurrenceUnit;
   interval: number;
 };
-
-function isRecurrenceUnit(value: string): value is RecurrenceUnit {
-  return (recurrenceUnits as readonly string[]).includes(value);
-}
 
 function normalizeInterval(value: number): number {
   if (!Number.isFinite(value)) return 1;
@@ -48,16 +47,31 @@ export function serializeRecurrenceRule(rule: RecurrenceRule | null): string | n
 export function formatRecurrenceRuleZh(rule: RecurrenceRule): string {
   const interval = normalizeInterval(rule.interval);
 
-  const unitLabel =
-    rule.unit === "day" ? "天" : rule.unit === "week" ? "周" : "月";
-
   if (interval === 1) {
-    return rule.unit === "day"
-      ? "每天"
-      : rule.unit === "week"
-        ? "每周"
-        : "每月";
+    switch (rule.unit) {
+      case "day":
+        return "每天";
+      case "week":
+        return "每周";
+      case "month":
+        return "每月";
+      case "year":
+        return "每年";
+    }
   }
+
+  const unitLabel = (() => {
+    switch (rule.unit) {
+      case "day":
+        return "天";
+      case "week":
+        return "周";
+      case "month":
+        return "月";
+      case "year":
+        return "年";
+    }
+  })();
 
   return `每 ${interval} ${unitLabel}`;
 }
@@ -134,25 +148,30 @@ export function computeNextDueAtUtc(
 
   const interval = normalizeInterval(rule.interval);
 
-  const nextParts =
-    rule.unit === "month"
-      ? addMonthsClamped(parts, interval)
-      : (() => {
-          const daysToAdd = interval * (rule.unit === "day" ? 1 : 7);
-          const naiveUtc = new Date(
-            Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute),
-          );
-          naiveUtc.setUTCDate(naiveUtc.getUTCDate() + daysToAdd);
+  const nextParts = (() => {
+    switch (rule.unit) {
+      case "month":
+        return addMonthsClamped(parts, interval);
+      case "year":
+        return addMonthsClamped(parts, interval * 12);
+      case "day":
+      case "week": {
+        const daysToAdd = interval * (rule.unit === "day" ? 1 : 7);
+        const naiveUtc = new Date(
+          Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute),
+        );
+        naiveUtc.setUTCDate(naiveUtc.getUTCDate() + daysToAdd);
 
-          return {
-            year: naiveUtc.getUTCFullYear(),
-            month: naiveUtc.getUTCMonth() + 1,
-            day: naiveUtc.getUTCDate(),
-            hour: naiveUtc.getUTCHours(),
-            minute: naiveUtc.getUTCMinutes(),
-          };
-        })();
+        return {
+          year: naiveUtc.getUTCFullYear(),
+          month: naiveUtc.getUTCMonth() + 1,
+          day: naiveUtc.getUTCDate(),
+          hour: naiveUtc.getUTCHours(),
+          minute: naiveUtc.getUTCMinutes(),
+        };
+      }
+    }
+  })();
 
   return dateTimeLocalToUtcDate(toDateTimeLocalString(nextParts), timeZone);
 }
-

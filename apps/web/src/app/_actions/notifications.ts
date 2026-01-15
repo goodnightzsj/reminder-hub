@@ -1,11 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
-import { appSettings } from "@/server/db/schema";
 import {
   NotificationConfigError,
   clearFailedDeliveries as clearFailedDeliveriesForChannel,
@@ -13,71 +10,46 @@ import {
   runNotificationsForChannel,
   sendTestNotification,
 } from "@/server/notification-runner";
-import type { NotificationChannel } from "@/server/notifications";
+import { isNotificationChannel, NOTIFICATION_CHANNELS, type NotificationChannel } from "@/server/notifications";
+import { NOTIFICATION_CHANNEL } from "@/lib/notifications";
+import { FLASH_FLAG_VALUE_FALSE, FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY } from "@/lib/flash";
 
-const SETTINGS_ID = "singleton";
-
-function parseStringField(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function parseBooleanField(formData: FormData, key: string): boolean | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  if (value === "1" || value === "true") return true;
-  if (value === "0" || value === "false") return false;
-  return null;
-}
-
-function normalizeUrl(value: string): string | null {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
-
-function parsePortFieldStrict(formData: FormData, key: string): number | null {
-  const raw = parseStringField(formData, key);
-  if (!raw) return null;
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed)) return null;
-  if (parsed < 1 || parsed > 65535) return null;
-  return parsed;
-}
+import { parseBooleanField, parseStringField } from "./form-data";
+import { withSearchParams } from "./redirect-url";
+import {
+  SETTINGS_PATH,
+  normalizeUrl,
+  parsePortStringStrict,
+  revalidateSettings,
+  redirectSettingsError,
+  redirectSettingsSavedAfterRevalidate,
+  upsertAppSettings,
+  type AppSettingsUpdate,
+} from "./notifications.utils";
 
 export async function updateTelegramSettings(formData: FormData) {
   const enabled = parseBooleanField(formData, "telegramEnabled") ?? false;
-  const tokenRaw = parseStringField(formData, "telegramBotToken");
-  const chatIdRaw = parseStringField(formData, "telegramChatId");
+  const token = parseStringField(formData, "telegramBotToken");
+  const chatId = parseStringField(formData, "telegramChatId");
 
   const existing = await getAppSettings();
 
-  const token = tokenRaw ? tokenRaw.trim() : null;
-  const chatId = chatIdRaw ? chatIdRaw.trim() : null;
+  if (enabled && !token && !existing.telegramBotToken) {
+    redirectSettingsError("missing-telegram-token");
+  }
+  if (enabled && !chatId && !existing.telegramChatId) {
+    redirectSettingsError("missing-telegram-chat-id");
+  }
 
-  if (enabled && !token && !existing.telegramBotToken) redirect("/settings?error=missing-telegram-token");
-  if (enabled && !chatId && !existing.telegramChatId) redirect("/settings?error=missing-telegram-chat-id");
-
-  const set: Partial<typeof appSettings.$inferInsert> = {
+  const set: AppSettingsUpdate = {
     telegramEnabled: enabled,
-    updatedAt: new Date(),
   };
   if (token) set.telegramBotToken = token;
   if (chatId) set.telegramChatId = chatId;
 
-  await db
-    .insert(appSettings)
-    .values({ id: SETTINGS_ID, timeZone: existing.timeZone, updatedAt: new Date() })
-    .onConflictDoUpdate({ target: appSettings.id, set });
+  await upsertAppSettings(existing, set);
 
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  redirectSettingsSavedAfterRevalidate();
 }
 
 export async function updateWebhookSettings(formData: FormData) {
@@ -85,24 +57,19 @@ export async function updateWebhookSettings(formData: FormData) {
   const rawUrl = parseStringField(formData, "webhookUrl");
   const webhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
 
-  if (enabled && !webhookUrl) redirect("/settings?error=missing-webhook-url");
-  if (rawUrl && !webhookUrl) redirect("/settings?error=invalid-webhook-url");
-
   const existing = await getAppSettings();
 
-  const set: Partial<typeof appSettings.$inferInsert> = {
+  if (enabled && !webhookUrl) redirectSettingsError("missing-webhook-url");
+  if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
+
+  const set: AppSettingsUpdate = {
     webhookEnabled: enabled,
-    updatedAt: new Date(),
   };
   if (webhookUrl) set.webhookUrl = webhookUrl;
 
-  await db
-    .insert(appSettings)
-    .values({ id: SETTINGS_ID, timeZone: existing.timeZone, updatedAt: new Date() })
-    .onConflictDoUpdate({ target: appSettings.id, set });
+  await upsertAppSettings(existing, set);
 
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  redirectSettingsSavedAfterRevalidate();
 }
 
 export async function updateWecomSettings(formData: FormData) {
@@ -110,24 +77,19 @@ export async function updateWecomSettings(formData: FormData) {
   const rawUrl = parseStringField(formData, "wecomWebhookUrl");
   const wecomWebhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
 
-  if (enabled && !wecomWebhookUrl) redirect("/settings?error=missing-wecom-webhook-url");
-  if (rawUrl && !wecomWebhookUrl) redirect("/settings?error=invalid-wecom-webhook-url");
-
   const existing = await getAppSettings();
 
-  const set: Partial<typeof appSettings.$inferInsert> = {
+  if (enabled && !wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
+  if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
+
+  const set: AppSettingsUpdate = {
     wecomEnabled: enabled,
-    updatedAt: new Date(),
   };
   if (wecomWebhookUrl) set.wecomWebhookUrl = wecomWebhookUrl;
 
-  await db
-    .insert(appSettings)
-    .values({ id: SETTINGS_ID, timeZone: existing.timeZone, updatedAt: new Date() })
-    .onConflictDoUpdate({ target: appSettings.id, set });
+  await upsertAppSettings(existing, set);
 
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  redirectSettingsSavedAfterRevalidate();
 }
 
 export async function updateEmailSettings(formData: FormData) {
@@ -140,178 +102,148 @@ export async function updateEmailSettings(formData: FormData) {
   const smtpTo = parseStringField(formData, "smtpTo");
   const smtpUser = parseStringField(formData, "smtpUser");
   const smtpPass = parseStringField(formData, "smtpPass");
-  const smtpPortRaw = parsePortFieldStrict(formData, "smtpPort");
+  const smtpPortText = parseStringField(formData, "smtpPort");
+  const smtpPort = smtpPortText ? parsePortStringStrict(smtpPortText) : null;
   const smtpSecure = parseBooleanField(formData, "smtpSecure") ?? false;
 
-  if (enabled && !smtpHost && !existing.smtpHost) redirect("/settings?error=missing-smtp-host");
-  if (enabled && !smtpFrom && !existing.smtpFrom) redirect("/settings?error=missing-smtp-from");
-  if (enabled && !smtpTo && !existing.smtpTo) redirect("/settings?error=missing-smtp-to");
-  if (parseStringField(formData, "smtpPort") && smtpPortRaw === null) {
-    redirect("/settings?error=invalid-smtp-port");
+  if (enabled && !smtpHost && !existing.smtpHost) {
+    redirectSettingsError("missing-smtp-host");
+  }
+  if (enabled && !smtpFrom && !existing.smtpFrom) {
+    redirectSettingsError("missing-smtp-from");
+  }
+  if (enabled && !smtpTo && !existing.smtpTo) {
+    redirectSettingsError("missing-smtp-to");
+  }
+  if (smtpPortText && smtpPort === null) {
+    redirectSettingsError("invalid-smtp-port");
   }
 
   if (
     (smtpUser && !smtpPass && !existing.smtpPass) ||
     (!smtpUser && smtpPass && !existing.smtpUser)
   ) {
-    redirect("/settings?error=missing-smtp-auth");
+    redirectSettingsError("missing-smtp-auth");
   }
 
-  const set: Partial<typeof appSettings.$inferInsert> = {
+  const set: AppSettingsUpdate = {
     emailEnabled: enabled,
-    updatedAt: new Date(),
   };
 
   if (smtpHost !== null) set.smtpHost = smtpHost;
   if (smtpFrom !== null) set.smtpFrom = smtpFrom;
   if (smtpTo !== null) set.smtpTo = smtpTo;
-  if (smtpPortRaw !== null) set.smtpPort = smtpPortRaw;
+  if (smtpPort !== null) set.smtpPort = smtpPort;
   set.smtpSecure = smtpSecure;
   if (smtpUser !== null) set.smtpUser = smtpUser;
   if (smtpPass !== null) set.smtpPass = smtpPass;
 
-  await db
-    .insert(appSettings)
-    .values({ id: SETTINGS_ID, timeZone: existing.timeZone, updatedAt: new Date() })
-    .onConflictDoUpdate({ target: appSettings.id, set });
+  await upsertAppSettings(existing, set);
 
-  revalidatePath("/settings");
-  redirect("/settings?saved=1");
+  redirectSettingsSavedAfterRevalidate();
+}
+
+async function sendTestForChannel(channel: NotificationChannel) {
+  try {
+    await sendTestNotification(channel);
+  } catch (err) {
+    if (err instanceof NotificationConfigError) {
+      redirectSettingsError(err.code);
+    }
+    const message = err instanceof Error ? err.message : "Unknown error";
+    redirect(
+      withSearchParams(SETTINGS_PATH, {
+        [FLASH_TOAST_QUERY_KEY.TEST_CHANNEL]: channel,
+        [FLASH_TOAST_QUERY_KEY.TEST]: FLASH_FLAG_VALUE_FALSE,
+        [FLASH_TOAST_QUERY_KEY.MESSAGE]: message,
+      }),
+    );
+  }
+
+  redirect(
+    withSearchParams(SETTINGS_PATH, {
+      [FLASH_TOAST_QUERY_KEY.TEST_CHANNEL]: channel,
+      [FLASH_TOAST_QUERY_KEY.TEST]: FLASH_FLAG_VALUE_TRUE,
+    }),
+  );
 }
 
 export async function sendTestTelegram() {
-  try {
-    await sendTestNotification("telegram");
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    redirect(
-      `/settings?testChannel=telegram&test=failed&message=${encodeURIComponent(message)}`,
-    );
-  }
-
-  redirect("/settings?testChannel=telegram&test=1");
+  await sendTestForChannel(NOTIFICATION_CHANNEL.TELEGRAM);
 }
 
 export async function sendTestWebhook() {
-  try {
-    await sendTestNotification("webhook");
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    redirect(
-      `/settings?testChannel=webhook&test=failed&message=${encodeURIComponent(message)}`,
-    );
-  }
-
-  redirect("/settings?testChannel=webhook&test=1");
+  await sendTestForChannel(NOTIFICATION_CHANNEL.WEBHOOK);
 }
 
 export async function sendTestWecom() {
-  try {
-    await sendTestNotification("wecom");
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    redirect(
-      `/settings?testChannel=wecom&test=failed&message=${encodeURIComponent(message)}`,
-    );
-  }
-
-  redirect("/settings?testChannel=wecom&test=1");
+  await sendTestForChannel(NOTIFICATION_CHANNEL.WECOM);
 }
 
 export async function sendTestEmail() {
-  try {
-    await sendTestNotification("email");
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    redirect(
-      `/settings?testChannel=email&test=failed&message=${encodeURIComponent(message)}`,
-    );
-  }
+  await sendTestForChannel(NOTIFICATION_CHANNEL.EMAIL);
+}
 
-  redirect("/settings?testChannel=email&test=1");
+async function runNotificationsForChannelAndRedirect(channel: NotificationChannel) {
+  try {
+    const { sent, failed, skipped } = await runNotificationsForChannel(channel);
+    revalidateSettings();
+    redirect(
+      withSearchParams(SETTINGS_PATH, {
+        [FLASH_TOAST_QUERY_KEY.NOTIFY_CHANNEL]: channel,
+        [FLASH_TOAST_QUERY_KEY.NOTIFY_SENT]: sent,
+        [FLASH_TOAST_QUERY_KEY.NOTIFY_FAILED]: failed,
+        [FLASH_TOAST_QUERY_KEY.NOTIFY_SKIPPED]: skipped,
+      }),
+    );
+  } catch (err) {
+    if (err instanceof NotificationConfigError) {
+      redirectSettingsError(err.code);
+    }
+    throw err;
+  }
 }
 
 export async function runTelegramNotifications() {
-  try {
-    const { sent, failed, skipped } = await runNotificationsForChannel("telegram");
-    revalidatePath("/settings");
-    redirect(
-      `/settings?notifyChannel=telegram&notifySent=${sent}&notifyFailed=${failed}&notifySkipped=${skipped}`,
-    );
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    throw err;
-  }
+  await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.TELEGRAM);
 }
 
 export async function runWebhookNotifications() {
-  try {
-    const { sent, failed, skipped } = await runNotificationsForChannel("webhook");
-    revalidatePath("/settings");
-    redirect(
-      `/settings?notifyChannel=webhook&notifySent=${sent}&notifyFailed=${failed}&notifySkipped=${skipped}`,
-    );
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    throw err;
-  }
+  await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.WEBHOOK);
 }
 
 export async function runWecomNotifications() {
-  try {
-    const { sent, failed, skipped } = await runNotificationsForChannel("wecom");
-    revalidatePath("/settings");
-    redirect(
-      `/settings?notifyChannel=wecom&notifySent=${sent}&notifyFailed=${failed}&notifySkipped=${skipped}`,
-    );
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    throw err;
-  }
+  await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.WECOM);
 }
 
 export async function runEmailNotifications() {
-  try {
-    const { sent, failed, skipped } = await runNotificationsForChannel("email");
-    revalidatePath("/settings");
-    redirect(
-      `/settings?notifyChannel=email&notifySent=${sent}&notifyFailed=${failed}&notifySkipped=${skipped}`,
-    );
-  } catch (err) {
-    if (err instanceof NotificationConfigError) redirect(`/settings?error=${err.code}`);
-    throw err;
-  }
+  await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.EMAIL);
 }
 
 export async function runAllNotifications() {
-  const order = ["telegram", "webhook", "wecom", "email"] as const;
-  const results = await runAllNotificationsInOrder(order);
+  const results = await runAllNotificationsInOrder(NOTIFICATION_CHANNELS);
 
   const summary = results
     .map((r) => `${r.channel}:${r.sent}/${r.failed}/${r.skipped}`)
     .join(",");
 
-  revalidatePath("/settings");
-  redirect(`/settings?notifyChannel=all&notifySummary=${encodeURIComponent(summary)}`);
+  revalidateSettings();
+  redirect(withSearchParams(SETTINGS_PATH, {
+    [FLASH_TOAST_QUERY_KEY.NOTIFY_CHANNEL]: "all",
+    [FLASH_TOAST_QUERY_KEY.NOTIFY_SUMMARY]: summary,
+  }));
 }
 
 export async function clearFailedDeliveries(formData: FormData) {
   const channelRaw = parseStringField(formData, "channel");
-  const channel =
-    channelRaw === "telegram" ||
-    channelRaw === "webhook" ||
-    channelRaw === "wecom" ||
-    channelRaw === "email"
-      ? (channelRaw as NotificationChannel)
-      : null;
-  if (!channel) redirect("/settings");
+  const channel = channelRaw && isNotificationChannel(channelRaw) ? channelRaw : null;
+  if (!channel) redirect(SETTINGS_PATH);
 
   await clearFailedDeliveriesForChannel(channel);
 
-  revalidatePath("/settings");
-  redirect(`/settings?notifyChannel=${channel}&notifyCleared=1`);
+  revalidateSettings();
+  redirect(withSearchParams(SETTINGS_PATH, {
+    [FLASH_TOAST_QUERY_KEY.NOTIFY_CHANNEL]: channel,
+    [FLASH_TOAST_QUERY_KEY.NOTIFY_CLEARED]: FLASH_FLAG_VALUE_TRUE,
+  }));
 }

@@ -65,6 +65,9 @@
 
 /* Base layout colors (shared by all themes in light mode) */
 :root {
+  --font-inter: "Inter";
+  --font-outfit: "Outfit";
+
   /* Modern Clean Light Mode */
   --background: 240 10% 98%;
   --foreground: 240 10% 4%;

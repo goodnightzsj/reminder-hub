@@ -1,169 +1,61 @@
-import { eq } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
 import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
 import { Button } from "@/app/_components/Button";
 import { Input } from "@/app/_components/Input";
-import { SmartDateInput } from "@/app/_components/SmartDateInput";
-import { Select } from "@/app/_components/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
-import { ExpandableSearch } from "@/app/_components/ExpandableSearch";
+import { PageBackgroundDecoration } from "@/app/_components/PageBackgroundDecoration";
 import { AnniversaryDateFields } from "@/app/_components/anniversary/AnniversaryDateFields";
 import {
   deleteAnniversary,
   setAnniversaryArchived,
   updateAnniversary,
 } from "@/app/_actions/anniversaries";
-import {
-  getNextLunarOccurrenceDateString,
-  getNextSolarOccurrenceDateString,
-} from "@/server/anniversary";
-import { dateTimeLocalToUtcDate } from "@/server/datetime";
-import {
-  addDaysToDateString,
-  diffDays,
-  formatDateString,
-  getDatePartsInTimeZone,
-} from "@/server/date";
-import { db } from "@/server/db";
-import { getAppSettings } from "@/server/db/settings";
-import { anniversaries } from "@/server/db/schema";
+import { anniversaryCategoryOptions, getAnniversaryCategoryLabel } from "@/lib/anniversary";
+import { ROUTES } from "@/lib/routes";
+import { anniversaryReminderOptionsDays } from "@/lib/reminder-options";
+
+import { getAnniversaryDetailPageData } from "./_lib/anniversary-detail";
 
 export const dynamic = "force-dynamic";
 
 type AnniversaryDetailPageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-const reminderOptionsDays = [
-  { days: 0, label: "当天" },
-  { days: 1, label: "提前 1 天" },
-  { days: 3, label: "提前 3 天" },
-  { days: 7, label: "提前 7 天" },
-  { days: 30, label: "提前 30 天" },
-] as const;
-
-const categoryLabels: Record<string, string> = {
-  "生日": "生日",
-  "纪念日": "纪念日",
-  "节日": "节日",
-  birthday: "生日",
-  anniversary: "纪念日",
-  festival: "节日",
-  custom: "自定义",
-};
-
-function parseMonthDayString(value: string): { month: number; day: number } | null {
-  const match = value.trim().match(/^(\d{1,2})-(\d{1,2})$/);
-  if (!match) return null;
-
-  const month = Number(match[1]);
-  const day = Number(match[2]);
-  if (!Number.isFinite(month) || !Number.isFinite(day)) return null;
-  if (month < 1 || month > 12) return null;
-  if (day < 1 || day > 30) return null;
-
-  return { month, day };
-}
-
-function parseNumberArrayJson(value: string): number[] {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
-      .filter((v) => v >= 0)
-      .sort((a, b) => a - b);
-  } catch {
-    return [];
-  }
-}
-
-function getParam(
-  params: Record<string, string | string[] | undefined>,
-  key: string,
-): string | null {
-  const value = params[key];
-  if (typeof value === "string") return value;
-  return null;
-}
-
-function formatDateTime(d: Date, timeZone: string) {
-  return new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  }).format(d);
-}
-
-
 
 export default async function AnniversaryDetailPage({
   params,
-  searchParams,
 }: AnniversaryDetailPageProps) {
   const { id } = await params;
-  const query = (await searchParams) ?? {};
-  const saved = getParam(query, "saved");
 
-  const settings = await getAppSettings();
-  const timeZone = settings.timeZone;
-  const dateReminderTime = settings.dateReminderTime;
-  const now = new Date();
-  const today = formatDateString(getDatePartsInTimeZone(now, timeZone));
+  const data = await getAnniversaryDetailPageData(id);
+  if (!data) notFound();
 
-  const rows = await db
-    .select()
-    .from(anniversaries)
-    .where(eq(anniversaries.id, id))
-    .limit(1);
-  const item = rows[0];
-  if (!item) notFound();
-
-  const offsets = parseNumberArrayJson(item.remindOffsetsDays);
-  const nextDate =
-    item.dateType === "solar"
-      ? getNextSolarOccurrenceDateString(item.date, today)
-      : getNextLunarOccurrenceDateString(item.date, today, {
-        isLeapMonth: item.isLeapMonth,
-      });
-  const daysLeft = nextDate ? diffDays(today, nextDate) : null;
-  const lunarMd = item.dateType === "lunar" ? parseMonthDayString(item.date) : null;
-
-  const preview =
-    nextDate
-      ? offsets
-        .map((days) => {
-          const date = addDaysToDateString(nextDate, -days);
-          if (!date) return null;
-          const at = dateTimeLocalToUtcDate(`${date}T${dateReminderTime}`, timeZone);
-          if (!at) return null;
-          return { days, label: days === 0 ? "当天" : `提前 ${days} 天`, at };
-        })
-        .filter((p): p is NonNullable<typeof p> => p !== null)
-        .sort((a, b) => a.at.getTime() - b.at.getTime())
-      : [];
+  const {
+    item,
+    offsets,
+    nextDate,
+    daysLeft,
+    lunarMd,
+    enteredDateLabel,
+    archiveToggle,
+    defaultSolarDate,
+  } = data;
 
   return (
     <div className="min-h-dvh bg-base font-sans text-primary">
       {/* 背景装饰 */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-primary/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brand-secondary/5 rounded-full blur-[120px]" />
-      </div>
+      <PageBackgroundDecoration />
 
       <main className="relative mx-auto max-w-4xl p-0 sm:p-0">
         {/* Sticky Header */}
         <div className="sticky top-0 z-20 flex items-center justify-between border-b border-divider bg-base/80 p-4 backdrop-blur-xl transition-all">
           <div className="flex items-center gap-4">
             <Link
-              href="/anniversaries"
+              href={ROUTES.anniversaries}
               className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
             >
               <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
@@ -171,7 +63,7 @@ export default async function AnniversaryDetailPage({
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
                 <h1 className="text-sm font-semibold text-primary">编辑纪念日</h1>
-                <SmartCategoryBadge>{categoryLabels[item.category] || item.category}</SmartCategoryBadge>
+                <SmartCategoryBadge>{getAnniversaryCategoryLabel(item.category)}</SmartCategoryBadge>
               </div>
               <span className="text-xs text-muted font-mono">ID: {item.id.slice(0, 8)}</span>
             </div>
@@ -188,22 +80,12 @@ export default async function AnniversaryDetailPage({
         </div>
 
         <div className="p-4 sm:p-8 space-y-8">
-          {saved ? (
-            <div className="rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success animate-slide-up">
-              ✓ 已保存修改
-            </div>
-          ) : null}
-
           {/* 状态概览 */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-slide-up stagger-1">
             <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
               <span className="text-xs text-muted">录入日期</span>
               <div className="text-lg font-semibold font-mono">
-                {item.dateType === "solar"
-                  ? item.date
-                  : lunarMd
-                    ? `农历${item.isLeapMonth ? "闰" : ""}${lunarMd.month}月${lunarMd.day}日`
-                    : `农历${item.date}`}
+                {enteredDateLabel}
               </div>
             </div>
 
@@ -227,16 +109,16 @@ export default async function AnniversaryDetailPage({
                 <div className="flex flex-wrap gap-2">
                   <form action={setAnniversaryArchived}>
                     <input type="hidden" name="id" value={item.id} />
-                    <input type="hidden" name="isArchived" value={item.isArchived ? "0" : "1"} />
+                    <input type="hidden" name="isArchived" value={archiveToggle.value} />
                     <Button type="submit" variant="outline" size="sm" className="h-8 text-xs">
-                      {item.isArchived ? "取消归档" : "归档"}
+                      {archiveToggle.label}
                     </Button>
                   </form>
                 </div>
               </div>
               <form action={deleteAnniversary}>
                 <input type="hidden" name="id" value={item.id} />
-                <input type="hidden" name="redirectTo" value="/anniversaries" />
+                <input type="hidden" name="redirectTo" value={ROUTES.anniversaries} />
                 <ConfirmSubmitButton
                   confirmMessage="确定删除这个纪念日吗？此操作不可撤销。"
                   className="h-8 rounded-lg border border-transparent px-3 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
@@ -264,21 +146,17 @@ export default async function AnniversaryDetailPage({
                   <label className="block text-xs font-medium text-secondary mb-1.5">类型</label>
                   <CustomSelect
                     name="category"
-                    defaultValue={item.category in categoryLabels ? (categoryLabels[item.category] !== item.category ? categoryLabels[item.category] : item.category) : item.category}
+                    defaultValue={getAnniversaryCategoryLabel(item.category)}
                     allowCustom={true}
-                    options={[
-                      { value: "生日", label: "生日" },
-                      { value: "纪念日", label: "纪念日" },
-                      { value: "节日", label: "节日" },
-                    ]}
+                    options={anniversaryCategoryOptions}
                     placeholder="输入自定义类型..."
                     className="h-10 bg-base/50"
                   />
                 </div>
 
                 <AnniversaryDateFields
-                  defaultDateType={item.dateType as "solar" | "lunar"}
-                  defaultSolarDate={item.dateType === "solar" ? item.date : undefined}
+                  defaultDateType={item.dateType}
+                  defaultSolarDate={defaultSolarDate}
                   defaultLunarMonth={lunarMd?.month}
                   defaultLunarDay={lunarMd?.day}
                   defaultIsLeapMonth={item.isLeapMonth}
@@ -293,7 +171,7 @@ export default async function AnniversaryDetailPage({
               </div>
               <div className="p-4">
                 <div className="flex flex-wrap gap-3">
-                  {reminderOptionsDays.map((opt) => (
+                  {anniversaryReminderOptionsDays.map((opt) => (
                     <label key={opt.days} className="flex items-center gap-2 rounded-lg border border-divider bg-surface/50 px-4 py-2 text-sm cursor-pointer hover:bg-interactive-hover transition-colors">
                       <input type="checkbox" name="remindOffsetsDays" value={opt.days} defaultChecked={offsets.includes(opt.days)} className="h-4 w-4 rounded border-emphasis text-brand-primary" />
                       {opt.label}

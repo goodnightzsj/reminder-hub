@@ -6,8 +6,8 @@ const COLORS = [
 ] as const;
 
 /*
-  Explicit style definitions to ensure Tailwind JIT picks them up.
-  Do NOT use dynamic string interpolation (e.g. `bg-${color}-500`) as it may be purged.
+  显式样式定义：确保 Tailwind JIT 能识别并生成对应类名。
+  不要使用动态字符串拼接（例如 `bg-${color}-500`），否则可能被裁剪（purge）。
 */
 const GLASS_STYLES: Record<string, string> = {
     rose: "text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-rose-500/5",
@@ -73,21 +73,21 @@ export function getColorClass(str: string, variant: "glass" | "solid" = "glass")
 type SmartCategoryBadgeProps = {
     children: React.ReactNode;
     className?: string;
-    overrideColor?: string; // Optional: Force a specific color (e.g., "red", "blue")
-    variant?: "glass" | "solid"; // Default: "solid"
+    overrideColor?: string; // 可选：强制指定颜色（例如 "red"、"blue"）
+    variant?: "glass" | "solid"; // 默认："solid"
 };
 
 export function SmartCategoryBadge({ children, className, overrideColor, variant = "solid" }: SmartCategoryBadgeProps) {
     if (!children) return null;
     const text = String(children);
 
-    // Determine color
-    let colorName = overrideColor || getColorName(text);
-    // Removed red->rose normalization
+    // 计算颜色
+    const colorName = overrideColor || getColorName(text);
+    // 不再将 red 归一化为 rose
 
-    // Get style class
+    // 获取样式类
     const styleMap = variant === "solid" ? SOLID_STYLES : GLASS_STYLES;
-    const colorClass = styleMap[colorName] || styleMap["blue"]; // Fallback
+    const colorClass = styleMap[colorName] || styleMap["blue"]; // 兜底
 
     return (
         <Badge

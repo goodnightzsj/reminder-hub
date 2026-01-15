@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "../Icons";
 import { getLunarDayText } from "@/lib/lunar-utils";
@@ -8,7 +8,7 @@ import { TimePicker } from "./TimePicker";
 
 type ModernCalendarProps = {
     value?: Date;
-    onChange: (date: Date) => void;
+    onChange: (date: Date | undefined) => void;
     showTime?: boolean;
     showLunar?: boolean;
     className?: string;
@@ -212,7 +212,7 @@ export function ModernCalendar({ value, onChange, showTime = false, showLunar = 
 
             <div className="p-4 border-t border-white/5 bg-white/5 flex justify-between items-center">
                 <button
-                    onClick={() => { onChange(undefined as any); }}
+                    onClick={() => onChange(undefined)}
                     className="text-xs text-muted hover:text-red-400 transition-colors"
                 >
                     清除

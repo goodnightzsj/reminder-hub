@@ -5,7 +5,7 @@ import { Icon } from "@iconify/react";
 
 type ChannelStatus = "bound" | "unbound" | "disabled";
 
-interface NotificationChannelCardProps {
+type NotificationChannelCardPropsBase = {
     /** 渠道名称 */
     name: string;
     /** Iconify 图标 ID */
@@ -18,26 +18,20 @@ interface NotificationChannelCardProps {
     statusText: string;
     /** 操作按钮文本 */
     actionLabel: string;
-    /** 操作按钮链接 */
-    actionHref: string;
-    /** 点击操作回调 */
-    onAction?: () => void;
-}
+};
+
+type NotificationChannelCardProps =
+    | (NotificationChannelCardPropsBase & { onAction: () => void; actionHref?: never })
+    | (NotificationChannelCardPropsBase & { onAction?: never; actionHref: string });
 
 /**
  * 通知渠道卡片组件
  * 参照用户提供的参考图设计：品牌图标 + 名称 + 状态 + 操作按钮
  */
 export function NotificationChannelCard({
-    name,
-    icon,
-    brandColor,
-    status,
-    statusText,
-    actionLabel,
-    actionHref,
-    onAction,
+    ...props
 }: NotificationChannelCardProps) {
+    const { name, icon, brandColor, status, statusText, actionLabel } = props;
     const isBound = status === "bound";
     const isDisabled = status === "disabled";
 
@@ -70,9 +64,9 @@ export function NotificationChannelCard({
 
             {/* 右侧：操作按钮 */}
             {/* 右侧：操作按钮 */}
-            {onAction ? (
+            {props.onAction ? (
                 <button
-                    onClick={onAction}
+                    onClick={props.onAction}
                     className={`shrink-0 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors cursor-pointer ${isBound
                             ? "bg-brand-primary text-white hover:bg-brand-secondary"
                             : isDisabled
@@ -84,7 +78,7 @@ export function NotificationChannelCard({
                 </button>
             ) : (
                 <Link
-                    href={actionHref}
+                    href={props.actionHref}
                     className={`shrink-0 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${isBound
                             ? "bg-brand-primary text-white hover:bg-brand-secondary"
                             : isDisabled

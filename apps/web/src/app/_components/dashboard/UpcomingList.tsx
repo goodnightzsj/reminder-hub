@@ -1,33 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Icons } from "../Icons";
 
-export type UpcomingItem =
-    | {
-        kind: "todo";
-        at: Date;
-        id: string;
-        title: string;
-    }
-    | {
-        kind: "anniversary";
-        at: Date;
-        id: string;
-        title: string;
-        dateType: "solar" | "lunar";
-    }
-    | {
-        kind: "subscription";
-        at: Date;
-        id: string;
-        name: string;
-    };
+import type { UpcomingItem } from "./UpcomingList.types";
+import { ROUTES } from "@/lib/routes";
+
+export type { UpcomingItem } from "./UpcomingList.types";
 
 type UpcomingListProps = {
     items: UpcomingItem[];
     timeZone: string;
 };
+
+const UPCOMING_KIND_META = {
+    todo: { hrefPrefix: ROUTES.todo, label: "任务", boxColor: "bg-brand-primary" },
+    anniversary: { hrefPrefix: ROUTES.anniversaries, label: "纪念日", boxColor: "bg-pink-500" },
+    subscription: { hrefPrefix: ROUTES.subscriptions, label: "订阅", boxColor: "bg-purple-500" },
+} as const;
 
 export function UpcomingList({ items, timeZone }: UpcomingListProps) {
     if (items.length === 0) {
@@ -41,7 +30,9 @@ export function UpcomingList({ items, timeZone }: UpcomingListProps) {
     return (
         <div className="space-y-4">
             {items.map((u) => {
-                const month = u.at.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                const month = u.at
+                    .toLocaleString("en-US", { month: "short" })
+                    .toUpperCase();
                 const day = u.at.getDate();
                 const time = new Intl.DateTimeFormat("zh-CN", {
                     hour: "2-digit",
@@ -50,36 +41,16 @@ export function UpcomingList({ items, timeZone }: UpcomingListProps) {
                     timeZone,
                 }).format(u.at);
 
-                const getLink = () => {
-                    switch (u.kind) {
-                        case "todo": return `/todo/${u.id}`;
-                        case "anniversary": return `/anniversaries/${u.id}`;
-                        case "subscription": return `/subscriptions/${u.id}`;
-                    }
-                };
-
-                const getLabel = () => {
-                    switch (u.kind) {
-                        case "todo": return "任务";
-                        case "anniversary": return "纪念日";
-                        case "subscription": return "订阅";
-                    }
-                };
-
-                const getBoxColor = () => {
-                    switch (u.kind) {
-                        case "todo": return "bg-brand-primary";
-                        case "anniversary": return "bg-pink-500";
-                        case "subscription": return "bg-purple-500";
-                    }
-                };
+                const meta = UPCOMING_KIND_META[u.kind];
+                const href = `${meta.hrefPrefix}/${u.id}`;
+                const title = u.kind === "subscription" ? u.name : u.title;
 
                 return (
                     <div key={`${u.kind}:${u.id}`} className="flex items-center gap-4 group">
                         {/* Date Box */}
                         <div className={`
                             h-14 w-14 shrink-0 rounded-2xl flex flex-col items-center justify-center text-white shadow-md transition-transform group-hover:scale-105
-                            ${getBoxColor()}
+                            ${meta.boxColor}
                         `}>
                             <div className="text-[10px] font-bold tracking-wider opacity-80 leading-none mb-0.5">{month}</div>
                             <div className="text-xl font-bold leading-none tracking-tight">{day}</div>
@@ -88,13 +59,13 @@ export function UpcomingList({ items, timeZone }: UpcomingListProps) {
                         {/* Content */}
                         <div className="min-w-0 flex-1 flex flex-col justify-center">
                             <Link
-                                href={getLink()}
+                                href={href}
                                 className="block truncate text-base font-semibold text-primary hover:text-brand-primary transition-colors mb-0.5"
                             >
-                                {u.kind === "subscription" ? (u as any).name : u.title}
+                                {title}
                             </Link>
                             <div className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                                <span className="opacity-80">{getLabel()}</span>
+                                <span className="opacity-80">{meta.label}</span>
                                 <span className="text-[10px] opacity-40">•</span>
                                 <span className="opacity-80 font-mono tracking-wide">{time}</span>
                             </div>

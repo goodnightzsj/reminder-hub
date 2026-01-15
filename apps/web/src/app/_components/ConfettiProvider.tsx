@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useRef, useState, ReactNode, useCallback } from "react";
 import { Confetti } from "./Confetti";
-import { MicroConfetti } from "./MicroConfetti";
+import { MicroConfetti, createMicroConfettiParticles, type MicroConfettiParticle } from "./MicroConfetti";
+import { useTimeouts } from "./useTimeouts";
 
 type ConfettiContextType = {
     triggerConfetti: () => void;
@@ -24,17 +25,19 @@ export function useConfetti() {
 
 export function ConfettiProvider({ children }: { children: ReactNode }) {
     const [trigger, setTrigger] = useState(false);
-    const [micro, setMicro] = useState({ trigger: false, x: 0, y: 0 });
+    const [microParticles, setMicroParticles] = useState<MicroConfettiParticle[]>([]);
+    const clearMicroTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const { scheduleTimeout, cancelTimeout } = useTimeouts();
 
     const triggerConfetti = useCallback(() => {
         setTrigger(true);
     }, []);
 
     const triggerMicroConfetti = useCallback((x: number, y: number) => {
-        setMicro({ trigger: true, x, y });
-        // Reset immediately to allow rapid triggers if needed (handled by the component's internal timer too)
-        setTimeout(() => setMicro(prev => ({ ...prev, trigger: false })), 50);
-    }, []);
+        setMicroParticles(createMicroConfettiParticles(x, y));
+        cancelTimeout(clearMicroTimerRef.current);
+        clearMicroTimerRef.current = scheduleTimeout(() => setMicroParticles([]), 1000);
+    }, [scheduleTimeout, cancelTimeout]);
 
     const handleComplete = useCallback(() => {
         setTrigger(false);
@@ -44,7 +47,7 @@ export function ConfettiProvider({ children }: { children: ReactNode }) {
         <ConfettiContext.Provider value={{ triggerConfetti, triggerMicroConfetti }}>
             {children}
             <Confetti trigger={trigger} onComplete={handleComplete} />
-            <MicroConfetti trigger={micro.trigger} x={micro.x} y={micro.y} />
+            <MicroConfetti particles={microParticles} />
         </ConfettiContext.Provider>
     );
 }
