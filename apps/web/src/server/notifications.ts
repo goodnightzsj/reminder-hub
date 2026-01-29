@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 
 import {
   addDaysToDateString,
@@ -17,6 +17,7 @@ import {
   getNextSolarOccurrenceDateString,
 } from "@/server/anniversary";
 import { db } from "@/server/db";
+import { whereActive } from "@/server/db/utils";
 import { anniversaries, subscriptions, todos } from "@/server/db/schema";
 import {
   NOTIFICATION_CHANNEL,
@@ -86,9 +87,8 @@ export async function collectDueNotificationCandidates({
       .where(
         and(
           eq(todos.isDone, false),
-          eq(todos.isArchived, false),
-          isNull(todos.deletedAt), // 排除已删除
           isNotNull(todos.dueAt),
+          whereActive(todos),
         ),
       ),
     db
@@ -101,12 +101,7 @@ export async function collectDueNotificationCandidates({
         remindOffsetsDays: anniversaries.remindOffsetsDays,
       })
       .from(anniversaries)
-      .where(
-        and(
-          eq(anniversaries.isArchived, false),
-          isNull(anniversaries.deletedAt), // 排除已删除
-        ),
-      ),
+      .where(whereActive(anniversaries)),
     db
       .select({
         id: subscriptions.id,
@@ -115,12 +110,7 @@ export async function collectDueNotificationCandidates({
         remindOffsetsDays: subscriptions.remindOffsetsDays,
       })
       .from(subscriptions)
-      .where(
-        and(
-          eq(subscriptions.isArchived, false),
-          isNull(subscriptions.deletedAt), // 排除已删除
-        ),
-      ),
+      .where(whereActive(subscriptions)),
   ]);
 
   for (const todo of activeTodos) {

@@ -1,47 +1,18 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+
 import { Icon } from "@iconify/react";
-import { MicroConfetti, createMicroConfettiParticles, MicroConfettiParticle } from "./MicroConfetti";
+import { MicroConfetti } from "./MicroConfetti";
 import { Magnetic } from "./shared/Magnetic";
-import { useTimeouts } from "./hooks/useTimeouts";
 import {
-    COLOR_THEME_STORAGE_KEY,
     COLOR_THEMES,
-    DEFAULT_COLOR_THEME_ID,
     type ColorThemeId,
-    isColorThemeId,
 } from "@/lib/color-theme";
+import { useColorTheme } from "./hooks/useColorTheme";
+import { useThemeConfetti } from "./hooks/useThemeConfetti";
 
 const themes = COLOR_THEMES;
-
-export function useColorTheme() {
-    const [theme, setThemeState] = useState<ColorThemeId>(DEFAULT_COLOR_THEME_ID);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        const raf = requestAnimationFrame(() => {
-            setMounted(true);
-            const stored = localStorage.getItem(COLOR_THEME_STORAGE_KEY);
-            if (isColorThemeId(stored)) {
-                setThemeState(stored);
-                document.documentElement.dataset.theme = stored;
-            } else {
-                document.documentElement.dataset.theme = DEFAULT_COLOR_THEME_ID;
-            }
-        });
-        return () => cancelAnimationFrame(raf);
-    }, []);
-
-    const setTheme = (newTheme: ColorThemeId) => {
-        setThemeState(newTheme);
-        localStorage.setItem(COLOR_THEME_STORAGE_KEY, newTheme);
-        document.documentElement.dataset.theme = newTheme;
-    };
-
-    return { theme, setTheme, mounted };
-}
 
 const container = {
     hidden: { opacity: 0 },
@@ -60,16 +31,7 @@ const item = {
 
 export function ThemeSwitcher() {
     const { theme, setTheme, mounted } = useColorTheme();
-    const [confetti, setConfetti] = useState<MicroConfettiParticle[]>([]);
-    const { scheduleTimeout, cancelTimeout } = useTimeouts();
-
-    // Cleanup old particles (garbage collection)
-    useEffect(() => {
-        if (confetti.length === 0) return;
-
-        const timer = scheduleTimeout(() => setConfetti([]), 2000); // 清理足够旧的粒子
-        return () => cancelTimeout(timer);
-    }, [confetti, scheduleTimeout, cancelTimeout]);
+    const { confetti, triggerConfetti } = useThemeConfetti();
 
     if (!mounted) {
         return (
@@ -89,10 +51,7 @@ export function ThemeSwitcher() {
         const rect = e.currentTarget.getBoundingClientRect();
         const x = rect.left + rect.width / 2;
         const y = rect.top + rect.height / 2;
-
-        const newParticles = createMicroConfettiParticles(x, y, color);
-        // Append new particles instead of replacing, allowing multiple bursts
-        setConfetti(prev => [...prev.slice(-50), ...newParticles]); // Keep last 50 to prevent overflow
+        triggerConfetti(x, y, color);
     };
 
     return (
