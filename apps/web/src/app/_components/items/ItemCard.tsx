@@ -8,7 +8,7 @@ import { formatCurrencyCents } from "@/lib/format";
 import { ITEM_STATUS, type ItemStatus } from "@/lib/items";
 import { ROUTES } from "@/lib/routes";
 import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
-import { Icons } from "../Icons";
+import { IconArchiveRestore, IconBox, IconCoffee, IconEdit, IconHistory, IconTrash, IconWallet } from "../Icons";
 import { Tooltip } from "../ui/Tooltip";
 import { ITEM_STATUS_ACTIONS, itemVariants } from "./ItemCard.constants";
 
@@ -40,7 +40,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-brand-primary border border-border/50">
-                        <Icons.Box className="h-5 w-5" />
+                        <IconBox className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
                         <Link
@@ -74,13 +74,13 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                         )}
                         {item.status === ITEM_STATUS.IDLE && (
                             <SmartCategoryBadge overrideColor="amber" variant="solid">
-                                <Icons.Coffee className="w-3 h-3 mr-0.5" />
+                                <IconCoffee className="w-3 h-3 mr-0.5" />
                                 闲置
                             </SmartCategoryBadge>
                         )}
                         {item.status === ITEM_STATUS.RETIRED && (
                             <SmartCategoryBadge overrideColor="slate">
-                                <Icons.History className="w-3 h-3 mr-0.5" />
+                                <IconHistory className="w-3 h-3 mr-0.5" />
                                 淘汰
                             </SmartCategoryBadge>
                         )}
@@ -123,7 +123,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
 
             {/* Total Price & Depreciation (Mini Bar) */}
             <div className="mt-4 flex items-center gap-3 text-xs text-secondary bg-surface/40 p-2 rounded-lg border border-border/30">
-                <Icons.Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                <IconWallet className="h-3.5 w-3.5 text-muted-foreground" />
                 <span>总投入: <span className="font-mono text-primary font-medium">{item.priceCents ? formatCurrencyCents(item.priceCents, item.currency) : '--'}</span></span>
             </div>
 
@@ -136,7 +136,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                                 href={`${ROUTES.items}/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
                         <form action={restoreItem}>
@@ -146,7 +146,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                                     type="submit"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-white shadow-lg shadow-success/20 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.ArchiveRestore className="h-5 w-5" />
+                                    <IconArchiveRestore className="h-5 w-5" />
                                 </button>
                             </Tooltip>
                         </form>
@@ -157,7 +157,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                                     confirmMessage="确定彻底删除这个物品吗？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>
@@ -170,7 +170,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                                 href={`${ROUTES.items}/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
 
@@ -194,7 +194,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                                     confirmMessage="将物品移至回收站？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-danger border border-divider shadow-md hover:bg-danger hover:text-white hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>

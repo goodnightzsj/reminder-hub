@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Icons } from "./Icons";
+import { IconCheck, IconClock } from "./Icons";
 import { TimePicker } from "./ui/TimePicker";
 import { Portal } from "./ui/Portal";
 
@@ -65,7 +65,7 @@ export function TimeInput({ name, value, onChange, required, className = "", dis
                     ${className}
                 `}
             >
-                <Icons.Clock className={`w-4 h-4 ${isOpen ? "text-brand-primary" : "text-muted"}`} />
+                <IconClock className={`w-4 h-4 ${isOpen ? "text-brand-primary" : "text-muted"}`} />
                 <span className={`text-sm font-medium ${!value ? "text-muted" : "text-primary"}`}>
                     {value || "--:--"}
                 </span>
@@ -103,7 +103,7 @@ export function TimeInput({ name, value, onChange, required, className = "", dis
                                         onClick={() => setIsOpen(false)}
                                         className="p-1 hover:bg-white/10 rounded-md text-muted hover:text-primary transition-colors"
                                     >
-                                        <Icons.Check className="w-4 h-4" />
+                                        <IconCheck className="w-4 h-4" />
                                     </button>
                                 </div>
 

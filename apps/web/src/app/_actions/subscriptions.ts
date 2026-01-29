@@ -14,10 +14,7 @@ import {
 import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
 import {
-  DEFAULT_SUBSCRIPTION_CATEGORY,
-  DEFAULT_SUBSCRIPTION_CYCLE_UNIT,
   SUBSCRIPTION_CYCLE_UNIT,
-  subscriptionCycleUnitValues,
   type SubscriptionCycleUnit,
 } from "@/lib/subscriptions";
 import { subscriptions } from "@/server/db/schema";
@@ -27,14 +24,11 @@ import type { FlashAction } from "@/lib/flash";
 
 import {
   parseBooleanField,
-  parseEnumField,
-  parseNumberListField,
-  parsePositiveIntField,
   parseRedirectToField,
   parseStringField,
 } from "./form-data";
-import { parseCurrencyField, parseDateField, parsePriceCentsField } from "./form-fields";
 import { withAction } from "./redirect-url";
+import { subscriptionUpsertSchema } from "@/lib/validation/subscription";
 
 const SUBSCRIPTIONS_PATH = ROUTES.subscriptions;
 
@@ -42,9 +36,7 @@ function redirectWithSubscriptionAction(path: string, action: FlashAction): neve
   redirect(withAction(path, action));
 }
 
-function parseCycleUnitField(formData: FormData, key: string): SubscriptionCycleUnit {
-  return parseEnumField(formData, key, subscriptionCycleUnitValues, DEFAULT_SUBSCRIPTION_CYCLE_UNIT);
-}
+
 
 function revalidateSubscriptionDetailAndList(id: string) {
   revalidatePath(SUBSCRIPTIONS_PATH);
@@ -52,43 +44,27 @@ function revalidateSubscriptionDetailAndList(id: string) {
 }
 
 export async function createSubscription(formData: FormData) {
-  const name = parseStringField(formData, "name");
-  const category = parseStringField(formData, "category") || DEFAULT_SUBSCRIPTION_CATEGORY;
-  const nextRenewDate = parseDateField(formData, "nextRenewDate");
-  if (!name || !nextRenewDate) return;
-
-  const description = parseStringField(formData, "description");
-  const priceCents = parsePriceCentsField(formData, "price");
-  const currency = parseCurrencyField(formData, "currency");
-  const cycleUnit = parseCycleUnitField(formData, "cycleUnit");
-  const cycleInterval = Math.min(
-    120,
-    parsePositiveIntField(formData, "cycleInterval", 1),
-  );
-  const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
-  const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
+  const result = await subscriptionUpsertSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const data = result.data;
 
   // Ensure icon is available in shared service_icons table
-  await getOrFetchServiceIcon(name);
+  await getOrFetchServiceIcon(data.name);
 
-  // We no longer write to subscription.icon/color directly, logic is moved to service_icons
-  // But we pass null to be explicit or let DB default handle it (nullable)
   const now = new Date();
 
   await db.insert(subscriptions).values({
     id: randomUUID(),
-    name,
-    category,
-    description,
-    priceCents,
-    currency,
-    cycleUnit,
-    cycleInterval,
-    nextRenewDate,
-    autoRenew,
-    remindOffsetsDays: JSON.stringify(remindOffsetsDays),
-    // icon: null, // Legacy
-    // color: null, // Legacy
+    name: data.name,
+    category: data.category,
+    description: data.description,
+    priceCents: data.priceCents,
+    currency: data.currency,
+    cycleUnit: data.cycleUnit as SubscriptionCycleUnit,
+    cycleInterval: data.cycleInterval,
+    nextRenewDate: data.nextRenewDate,
+    autoRenew: data.autoRenew,
+    remindOffsetsDays: JSON.stringify(data.remindOffsetsDays),
     updatedAt: now,
   });
 
@@ -96,45 +72,34 @@ export async function createSubscription(formData: FormData) {
 }
 
 export async function updateSubscription(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const name = parseStringField(formData, "name");
-  const category = parseStringField(formData, "category") || DEFAULT_SUBSCRIPTION_CATEGORY;
-  const nextRenewDate = parseDateField(formData, "nextRenewDate");
-  if (!id || !name || !nextRenewDate) return;
+    const result = await subscriptionUpsertSchema.safeParseAsync(formData);
+    if (!result.success) return;
+    const data = result.data;
 
-  const description = parseStringField(formData, "description");
-  const priceCents = parsePriceCentsField(formData, "price");
-  const currency = parseCurrencyField(formData, "currency");
-  const cycleUnit = parseCycleUnitField(formData, "cycleUnit");
-  const cycleInterval = Math.min(
-    120,
-    parsePositiveIntField(formData, "cycleInterval", 1),
-  );
-  const autoRenew = parseBooleanField(formData, "autoRenew") ?? false;
-  const remindOffsetsDays = parseNumberListField(formData, "remindOffsetsDays");
+    if (!data.id) return;
 
   // Ensure icon update if name changed or just in case
-  await getOrFetchServiceIcon(name);
+  await getOrFetchServiceIcon(data.name);
   const now = new Date();
 
   await db
     .update(subscriptions)
     .set({
-      name,
-      category,
-      description,
-      priceCents,
-      currency,
-      cycleUnit,
-      cycleInterval,
-      nextRenewDate,
-      autoRenew,
-      remindOffsetsDays: JSON.stringify(remindOffsetsDays),
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      priceCents: data.priceCents,
+      currency: data.currency,
+      cycleUnit: data.cycleUnit as SubscriptionCycleUnit,
+      cycleInterval: data.cycleInterval,
+      nextRenewDate: data.nextRenewDate,
+      autoRenew: data.autoRenew,
+      remindOffsetsDays: JSON.stringify(data.remindOffsetsDays),
       updatedAt: now,
     })
-    .where(eq(subscriptions.id, id));
+    .where(eq(subscriptions.id, data.id));
 
-  revalidateSubscriptionDetailAndList(id);
+  revalidateSubscriptionDetailAndList(data.id);
   redirectWithSubscriptionAction(SUBSCRIPTIONS_PATH, "updated");
 }
 

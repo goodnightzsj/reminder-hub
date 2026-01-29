@@ -7,7 +7,7 @@ import { ROUTES } from "@/lib/routes";
 
 import { SubtaskList } from "../../_components/todo/SubtaskList";
 import { TodoUpdateForm } from "../../_components/todo/TodoUpdateForm";
-import { Icons } from "../../_components/Icons";
+import { IconCalendar, IconChevronLeft, IconRefresh } from "../../_components/Icons";
 import { Badge } from "../../_components/ui/Badge";
 import { getSmartColorStyle } from "../../_components/shared/SmartCategoryBadge";
 import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
@@ -56,7 +56,7 @@ export default async function TodoPage({ params }: TodoPageProps) {
               href={ROUTES.todo}
               className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
             >
-              <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+              <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Link>
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default async function TodoPage({ params }: TodoPageProps) {
               {nextTodo ? (
                 <div className="mb-8 overflow-hidden rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-brand-primary">
-                    <Icons.Refresh className="h-4 w-4" />
+                    <IconRefresh className="h-4 w-4" />
                     已生成下一次任务
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
@@ -115,7 +115,7 @@ export default async function TodoPage({ params }: TodoPageProps) {
                     </Link>
                     {nextTodo.dueAt && (
                       <span className="flex items-center gap-1 text-secondary">
-                        <Icons.Calendar className="h-3.5 w-3.5" />
+                        <IconCalendar className="h-3.5 w-3.5" />
                         截止 {formatDateTime(nextTodo.dueAt, timeZone)}
                       </span>
                     )}

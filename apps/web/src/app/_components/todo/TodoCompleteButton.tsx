@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useTransition } from "react";
 import { useConfetti } from "../ConfettiProvider";
 import { Tooltip } from "../ui/Tooltip";
-import { Icons } from "../Icons";
+import { IconCheck, IconRotateCcw } from "../Icons";
 
 type TodoCompleteButtonProps = {
     todoId: string;
@@ -58,9 +58,9 @@ export function TodoCompleteButton({
             >
                 <span className="sr-only">{isDone ? "取消完成" : "完成"}</span>
                 {isDone ? (
-                    <Icons.RotateCcw className="w-3.5 h-3.5" />
+                    <IconRotateCcw className="w-3.5 h-3.5" />
                 ) : (
-                    <Icons.Check active className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-brand-primary dark:text-brand-primary" />
+                    <IconCheck active className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-brand-primary dark:text-brand-primary" />
                 )}
             </motion.button>
         </Tooltip>

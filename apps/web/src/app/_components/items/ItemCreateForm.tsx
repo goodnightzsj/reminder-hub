@@ -6,7 +6,7 @@ import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/ui/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { createItem } from "@/app/_actions/items";
-import { Icons } from "@/app/_components/Icons";
+import { IconCheck } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/ui/Toast";
 import { useTimeouts } from "@/app/_components/hooks/useTimeouts";
 import { useCreateModal } from "../hooks/useCreateModal";
@@ -138,7 +138,7 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                 >
                     {isSuccess ? (
                         <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                            <Icons.Check className="h-5 w-5" />
+                            <IconCheck className="h-5 w-5" />
                             <span>已添加</span>
                         </div>
                     ) : (

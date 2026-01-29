@@ -94,8 +94,13 @@ export function GlobalToastListener() {
                 },
             },
             {
-                shouldRun: !!notifySummary,
-                run: () => notifySummary && success(FLASH_TOAST_MESSAGES.notifyAllFinished(notifySummary.slice(0, 200))),
+                // Even if summary is an empty string, we still want to treat it as an action
+                // so the URL gets cleaned up (see runAllNotifications summary generation).
+                shouldRun: notifySummary !== null,
+                run: () => {
+                    if (!notifySummary) return;
+                    success(FLASH_TOAST_MESSAGES.notifyAllFinished(notifySummary.slice(0, 200)));
+                },
             },
             {
                 shouldRun: isNotifyCleared,

@@ -1,4 +1,4 @@
-import { Icons } from "../Icons";
+import { IconRepeat } from "../Icons";
 import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
 import { getTodoPriorityLabel, type TodoPriority } from "@/lib/todo";
 
@@ -67,7 +67,7 @@ export function TodoItemBadges({
                 <div className="flex items-center">
                     <SmartCategoryBadge overrideColor="teal">
                         <span className="flex items-center gap-1">
-                            <Icons.Repeat className="w-3 h-3" />
+                            <IconRepeat className="w-3 h-3" />
                             {recurrenceLabel}
                         </span>
                     </SmartCategoryBadge>

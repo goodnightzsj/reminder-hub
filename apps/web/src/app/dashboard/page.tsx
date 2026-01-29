@@ -1,6 +1,6 @@
 import { AppHeader } from "../_components/layout/AppHeader";
 import { BentoCard } from "../_components/shared/BentoCard";
-import { Icons } from "../_components/Icons";
+import { IconCalendar, IconCalendarClock, IconCheckCircle, IconCheckSquare, IconCreditCard } from "../_components/Icons";
 import { TiltCard } from "../_components/shared/TiltCard";
 import { DashboardStatCard } from "../_components/dashboard/DashboardStatCard";
 import { UpcomingList } from "../_components/dashboard/UpcomingList";
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
 
           {/* Stats 1: Todo */}
           <DashboardStatCard
-            icon={<Icons.CheckSquare className="h-6 w-6" />}
+            icon={<IconCheckSquare className="h-6 w-6" />}
             iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary mb-2"
             value={stats.activeTodos}
             tickerDelay={0.2}
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
 
           {/* Stats 2: Done */}
           <DashboardStatCard
-            icon={<Icons.CheckCircle className="h-6 w-6" />}
+            icon={<IconCheckCircle className="h-6 w-6" />}
             iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500/10 text-green-600 mb-2"
             value={stats.doneTodosToday}
             tickerDelay={0.3}
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
 
           {/* Stats 3: Upcoming */}
           <DashboardStatCard
-            icon={<Icons.Calendar className="h-6 w-6" />}
+            icon={<IconCalendar className="h-6 w-6" />}
             iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-600 mb-2"
             value={stats.upcomingCount}
             tickerDelay={0.4}
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
 
           {/* Stats 4: Subscriptions */}
           <DashboardStatCard
-            icon={<Icons.CreditCard className="h-6 w-6" />}
+            icon={<IconCreditCard className="h-6 w-6" />}
             iconWrapperClassName="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-600 mb-2"
             value={stats.activeSubscriptions}
             tickerDelay={0.5}
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
 
           {/* Upcoming: (2x2) */}
           <TiltCard className="sm:col-span-2 lg:col-span-2 lg:row-span-2" maxRotation={5}>
-            <BentoCard title="即将到来" className="h-full" delay={0.3} icon={<Icons.CalendarClock className="h-5 w-5" />}>
+            <BentoCard title="即将到来" className="h-full" delay={0.3} icon={<IconCalendarClock className="h-5 w-5" />}>
               <div className="flex flex-col h-full overflow-y-auto custom-scrollbar pr-2 -mr-2">
                 <UpcomingList items={upcomingVisible} timeZone={timeZone} />
               </div>

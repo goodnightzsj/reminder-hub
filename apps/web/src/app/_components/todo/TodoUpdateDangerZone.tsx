@@ -1,5 +1,5 @@
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { Icons } from "../Icons";
+import { IconTrash } from "../Icons";
 import { deleteTodo } from "../../_actions/todos.actions";
 
 type TodoUpdateDangerZoneProps = {
@@ -25,7 +25,7 @@ export function TodoUpdateDangerZone({
                     confirmMessage="确定删除这个 Todo 吗？此操作不可撤销。"
                     className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 transition-colors"
                 >
-                    <Icons.Trash className="h-3.5 w-3.5" />
+                    <IconTrash className="h-3.5 w-3.5" />
                     删除任务
                 </ConfirmSubmitButton>
             </form>

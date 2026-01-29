@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-import { Icons } from "./Icons";
+import { IconPlus } from "./Icons";
 
 type CreateCardProps = {
     href: string;
@@ -24,7 +24,7 @@ export function CreateCard({ href, label, ariaLabel }: CreateCardProps) {
                 aria-label={ariaLabel ?? label}
             />
             <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary group-hover:scale-110 group-hover:bg-brand-primary group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-brand-primary/30">
-                <Icons.Plus className="h-6 w-6" />
+                <IconPlus className="h-6 w-6" />
             </div>
             <span className="relative z-10 text-sm font-medium text-secondary group-hover:text-primary transition-colors">
                 {label}

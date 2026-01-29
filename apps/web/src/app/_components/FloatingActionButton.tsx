@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Icons } from "./Icons";
+import { IconBox, IconCalendar, IconCreditCard, IconPlus, IconTodo } from "./Icons";
 import { Magnetic } from "./shared/Magnetic";
 import { buildCreateModalHref } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";
@@ -13,10 +13,10 @@ export function FloatingActionButton() {
     const pathname = usePathname();
 
     const actions = [
-        { label: "Todo", pathPrefix: ROUTES.todo, href: buildCreateModalHref(ROUTES.todo), icon: Icons.Todo },
-        { label: "纪念日", pathPrefix: ROUTES.anniversaries, href: buildCreateModalHref(ROUTES.anniversaries), icon: Icons.Calendar },
-        { label: "订阅", pathPrefix: ROUTES.subscriptions, href: buildCreateModalHref(ROUTES.subscriptions), icon: Icons.CreditCard },
-        { label: "物品", pathPrefix: ROUTES.items, href: buildCreateModalHref(ROUTES.items), icon: Icons.Box },
+        { label: "Todo", pathPrefix: ROUTES.todo, href: buildCreateModalHref(ROUTES.todo), icon: IconTodo },
+        { label: "纪念日", pathPrefix: ROUTES.anniversaries, href: buildCreateModalHref(ROUTES.anniversaries), icon: IconCalendar },
+        { label: "订阅", pathPrefix: ROUTES.subscriptions, href: buildCreateModalHref(ROUTES.subscriptions), icon: IconCreditCard },
+        { label: "物品", pathPrefix: ROUTES.items, href: buildCreateModalHref(ROUTES.items), icon: IconBox },
     ];
 
     // Determine default action based on current path
@@ -81,7 +81,7 @@ export function FloatingActionButton() {
                     {/* Ripple/Glow Effect */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 transition-opacity hover:opacity-100" />
 
-                    <Icons.Plus className="h-7 w-7 stroke-[2.5px] relative z-10" />
+                    <IconPlus className="h-7 w-7 stroke-[2.5px] relative z-10" />
                 </button>
             </Magnetic>
         </div>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { SearchModal } from "../modals/SearchModal";
-import { Icons } from "../Icons";
+import { IconSearch } from "../Icons";
 import { Magnetic } from "../shared/Magnetic";
 import { cn } from "../../../lib/utils";
 import { ROUTES } from "../../../lib/routes";
@@ -61,7 +61,7 @@ export function MainNav() {
                         className="group flex items-center justify-center rounded-lg p-2 text-secondary hover:bg-interactive-hover hover:text-primary active-press"
                         title="搜索 (Cmd+K)"
                     >
-                        <Icons.Search className="h-[18px] w-[18px] transition-transform group-hover:scale-110" />
+                        <IconSearch className="h-[18px] w-[18px] transition-transform group-hover:scale-110" />
                     </button>
                 </Magnetic>
             </nav>

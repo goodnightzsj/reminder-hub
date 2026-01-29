@@ -2,7 +2,7 @@
 
 import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
-import { Icons } from "../Icons";
+import { IconPlus } from "../Icons";
 import { motion } from "framer-motion";
 import { MODAL_CREATE_VALUE, MODAL_QUERY_KEY, setSearchParamOnPathname } from "@/lib/url";
 
@@ -37,7 +37,7 @@ export function MagicCapsuleButton() {
             />
 
             {/* Icon & Text */}
-            <Icons.Plus className="relative z-10 h-4 w-4 text-brand-primary transition-transform group-hover:rotate-90 group-active:rotate-90" />
+            <IconPlus className="relative z-10 h-4 w-4 text-brand-primary transition-transform group-hover:rotate-90 group-active:rotate-90" />
             <span className="relative z-10 text-sm font-medium text-brand-primary">
                 新建待办
             </span>

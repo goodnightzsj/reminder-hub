@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Icons } from "../Icons";
+import { IconSearch } from "../Icons";
 import { useTimeouts } from "../hooks/useTimeouts";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useEscapeKey } from "../hooks/useEscapeKey";
@@ -69,7 +69,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
                             <div className="relative z-10 p-4">
                                 <form onSubmit={handleSearch} className="flex items-center gap-3">
-                                    <Icons.Search className="h-5 w-5 text-muted/80 ml-1" />
+                                    <IconSearch className="h-5 w-5 text-muted/80 ml-1" />
                                     <input
                                         ref={inputRef}
                                         type="text"

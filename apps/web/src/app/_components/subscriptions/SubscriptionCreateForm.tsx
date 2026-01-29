@@ -6,7 +6,7 @@ import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/ui/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { createSubscription } from "@/app/_actions/subscriptions";
-import { Icons } from "@/app/_components/Icons";
+import { IconCheck } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/ui/Toast";
 import { useConfetti } from "@/app/_components/ConfettiProvider";
 import { useTimeouts } from "@/app/_components/hooks/useTimeouts";
@@ -217,7 +217,7 @@ export function SubscriptionCreateForm({
                 >
                     {isSuccess ? (
                         <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                            <Icons.Check className="h-5 w-5" />
+                            <IconCheck className="h-5 w-5" />
                             <span>已保存</span>
                         </div>
                     ) : isLoading ? (

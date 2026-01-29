@@ -8,7 +8,7 @@ import { deleteSubscription, renewSubscription, restoreSubscription } from "@/ap
 import { formatCurrencyCents } from "@/lib/format";
 import { SUBSCRIPTION_CYCLE_UNIT } from "@/lib/subscriptions";
 import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
-import { Icons } from "../Icons";
+import { IconArchiveRestore, IconBanknote, IconBell, IconEdit, IconTrash, IconWallet } from "../Icons";
 import { Tooltip } from "../ui/Tooltip";
 import { ProgressRing } from "./ProgressRing";
 import type {
@@ -155,7 +155,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                             {preview.length > 0 && (
                                 <Tooltip content={`所有提醒: ${preview.map(p => p.label).join(", ")}`}>
                                     <div className="flex items-center gap-1 mt-0.5 text-[10px] text-brand-primary animate-pulse cursor-help">
-                                        <Icons.Bell className="h-2.5 w-2.5" />
+                                        <IconBell className="h-2.5 w-2.5" />
                                         <span>{preview[0].label}{preview.length > 1 ? ` +${preview.length - 1}` : ""}</span>
                                     </div>
                                 </Tooltip>
@@ -168,7 +168,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                 <div className="mt-4 flex flex-1 flex-col justify-end bg-surface/50 p-6 pt-4 border-t border-divider/40">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Icons.Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+                            <IconWallet className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-xs text-secondary">
                                 续费总计: <span className="font-outfit font-bold text-primary">{formatCurrencyCents(item.priceCents ?? 0, item.currency)}</span>
                             </span>
@@ -187,7 +187,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                 href={`/subscriptions/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
                         <form action={restoreSubscription}>
@@ -197,7 +197,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                     type="submit"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-white shadow-lg shadow-success/20 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.ArchiveRestore className="h-5 w-5" />
+                                    <IconArchiveRestore className="h-5 w-5" />
                                 </button>
                             </Tooltip>
                         </form>
@@ -208,7 +208,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                     confirmMessage="确定彻底删除？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>
@@ -221,7 +221,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                 href={`/subscriptions/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
 
@@ -233,7 +233,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                     type="submit"
                                     className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Banknote className="h-6 w-6" />
+                                    <IconBanknote className="h-6 w-6" />
                                 </button>
                             </Tooltip>
                         </form>
@@ -246,7 +246,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                     confirmMessage="将订阅移至回收站？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-danger border border-divider shadow-md hover:bg-danger hover:text-white hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>

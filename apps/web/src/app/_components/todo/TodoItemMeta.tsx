@@ -1,4 +1,4 @@
-import { Icons } from "../Icons";
+import { IconCalendar, IconCheck } from "../Icons";
 import { formatDateTime } from "@/lib/format";
 
 type Subtask = {
@@ -22,7 +22,7 @@ export function TodoItemMeta({ subtasks, dueAt, timeZone, isOverdue }: TodoItemM
         <div className="mt-3 flex items-center gap-4 text-xs text-muted">
             {hasSubtasks && (
                 <div className="flex items-center gap-1">
-                    <Icons.Check className="h-3.5 w-3.5" />
+                    <IconCheck className="h-3.5 w-3.5" />
                     <span>
                         {doneCount}/{totalCount}
                     </span>
@@ -31,7 +31,7 @@ export function TodoItemMeta({ subtasks, dueAt, timeZone, isOverdue }: TodoItemM
 
             {dueAt && (
                 <div className={`flex items-center gap-1 ${isOverdue ? "text-danger font-bold" : ""}`}>
-                    <Icons.Calendar className="h-3.5 w-3.5" />
+                    <IconCalendar className="h-3.5 w-3.5" />
                     <span>{formatDateTime(dueAt, timeZone)}</span>
                 </div>
             )}

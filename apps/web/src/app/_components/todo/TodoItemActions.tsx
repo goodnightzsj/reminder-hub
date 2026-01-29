@@ -1,6 +1,6 @@
 import { Tooltip } from "../ui/Tooltip";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { Icons } from "../Icons";
+import { IconArchiveRestore, IconChevronDown, IconChevronRight, IconTrash } from "../Icons";
 import {
     deleteTodo,
     moveTodoDown,
@@ -28,7 +28,7 @@ export function TodoItemActions({ todoId, isDeleted, isDone }: TodoItemActionsPr
                                 type="submit"
                                 className="flex h-8 w-8 items-center justify-center rounded-full bg-success text-white shadow-md shadow-success/20 hover:scale-110 active:scale-95 transition-all"
                             >
-                                <Icons.ArchiveRestore className="h-4 w-4" />
+                                <IconArchiveRestore className="h-4 w-4" />
                             </button>
                         </Tooltip>
                     </form>
@@ -40,7 +40,7 @@ export function TodoItemActions({ todoId, isDeleted, isDone }: TodoItemActionsPr
                                 confirmMessage="确定彻底删除这个 Todo 吗？"
                                 className="flex h-8 w-8 items-center justify-center rounded-full bg-danger text-white shadow-md shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
                             >
-                                <Icons.Trash className="h-4 w-4" />
+                                <IconTrash className="h-4 w-4" />
                             </ConfirmSubmitButton>
                         </Tooltip>
                     </form>
@@ -60,7 +60,7 @@ export function TodoItemActions({ todoId, isDeleted, isDone }: TodoItemActionsPr
                                 onClick={() => moveTodoUp(todoId)}
                                 className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface"
                             >
-                                <Icons.ChevronRight className="w-4 h-4 -rotate-90" />
+                                <IconChevronRight className="w-4 h-4 -rotate-90" />
                             </button>
                         </Tooltip>
                         <Tooltip content="下移顺序">
@@ -68,7 +68,7 @@ export function TodoItemActions({ todoId, isDeleted, isDone }: TodoItemActionsPr
                                 onClick={() => moveTodoDown(todoId)}
                                 className="p-1.5 rounded text-muted hover:text-primary hover:bg-surface"
                             >
-                                <Icons.ChevronDown className="w-4 h-4" />
+                                <IconChevronDown className="w-4 h-4" />
                             </button>
                         </Tooltip>
 
@@ -79,7 +79,7 @@ export function TodoItemActions({ todoId, isDeleted, isDone }: TodoItemActionsPr
                                     confirmMessage="确定删除这个待办吗？"
                                     className="p-1.5 rounded text-muted hover:text-danger hover:bg-danger/10"
                                 >
-                                    <Icons.Trash className="w-4 h-4" />
+                                    <IconTrash className="w-4 h-4" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>

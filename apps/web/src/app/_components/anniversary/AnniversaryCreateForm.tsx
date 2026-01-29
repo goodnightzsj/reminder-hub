@@ -5,7 +5,7 @@ import { Input } from "@/app/_components/ui/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/ui/Select";
 import { createAnniversary } from "@/app/_actions/anniversaries";
-import { Icons } from "@/app/_components/Icons";
+import { IconCheck } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/ui/Toast";
 import { useTimeouts } from "@/app/_components/hooks/useTimeouts";
 import { useCreateModal } from "../hooks/useCreateModal";
@@ -153,7 +153,7 @@ export function AnniversaryCreateForm({
                 >
                     {isSuccess ? (
                         <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
-                            <Icons.Check className="h-5 w-5" />
+                            <IconCheck className="h-5 w-5" />
                             <span>已保存</span>
                         </div>
                     ) : (

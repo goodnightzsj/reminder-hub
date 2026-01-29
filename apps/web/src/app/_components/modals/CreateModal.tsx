@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Icons } from "../Icons";
+import { IconX } from "../Icons";
 import { useCreateModal } from "../hooks/useCreateModal";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useEscapeKey } from "../hooks/useEscapeKey";
@@ -48,7 +48,7 @@ export function CreateModal({ children, title }: CreateModalProps) {
                                     onClick={close}
                                     className="p-2 text-muted hover:text-primary transition-colors rounded-full hover:bg-surface"
                                 >
-                                    <Icons.X className="h-5 w-5" />
+                                    <IconX className="h-5 w-5" />
                                 </button>
                             </div>
 

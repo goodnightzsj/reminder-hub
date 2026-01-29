@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
 import { Input } from "./ui/Input";
-import { Icons } from "./Icons";
+import { IconCheck, IconChevronDown } from "./Icons";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Option = {
@@ -110,7 +110,7 @@ export function CustomSelect({
                 />
                 {!allowCustom && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
-                        <Icons.ChevronDown className="w-4 h-4" />
+                        <IconChevronDown className="w-4 h-4" />
                     </div>
                 )}
             </div>
@@ -140,7 +140,7 @@ export function CustomSelect({
                                     `}
                                 >
                                     <span className={`w-4 flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:text-white"}`}>
-                                        {isSelected && <Icons.Check className="w-3.5 h-3.5" />}
+                                        {isSelected && <IconCheck className="w-3.5 h-3.5" />}
                                     </span>
                                     <span className="flex-1 text-left truncate">{opt.label}</span>
                                 </button>

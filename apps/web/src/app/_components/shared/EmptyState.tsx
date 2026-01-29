@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Icons } from "../Icons";
+import { IconBox } from "../Icons";
 import { cn } from "../../../lib/utils";
 import { motion } from "framer-motion";
 
@@ -67,7 +67,7 @@ export function EmptyState({
                         <div className="relative text-muted/50 scale-110">{icon}</div>
                     ) : (
                         <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-surface/50 border border-white/10 shadow-lg backdrop-blur-sm dark:bg-zinc-800/50">
-                            <Icons.Box className="h-10 w-10 text-muted/80" />
+                            <IconBox className="h-10 w-10 text-muted/80" />
                         </div>
                     )}
                 </motion.div>

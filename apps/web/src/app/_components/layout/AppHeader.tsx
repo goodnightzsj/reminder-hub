@@ -1,4 +1,4 @@
-import { Icons } from "../Icons";
+import { IconSettings } from "../Icons";
 import { ThemeToggle } from "../ThemeToggle";
 import { MainNav } from "./MainNav";
 import { ROUTES } from "../../../lib/routes";
@@ -32,7 +32,7 @@ export function AppHeader({ title, description, children }: AppHeaderProps) {
                         className="flex h-9 w-9 items-center justify-center rounded-lg text-secondary transition-colors hover:bg-interactive-hover hover:text-primary active-press"
                         aria-label="Settings"
                     >
-                        <Icons.Settings className="h-4.5 w-4.5" />
+                        <IconSettings className="h-4.5 w-4.5" />
                     </a>
                 </div>
             </div>

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AppHeader } from "../_components/layout/AppHeader";
 import { Badge } from "@/app/_components/ui/Badge";
 import { Button } from "@/app/_components/ui/Button";
-import { Icons } from "@/app/_components/Icons";
+import { IconBox, IconCalendar, IconCheck, IconChevronRight, IconCreditCard, IconSearch, IconTodo } from "@/app/_components/Icons";
 import { Input } from "@/app/_components/ui/Input";
 import { ServiceIconBadge } from "../_components/shared/ServiceIconBadge";
 import { getAppTimeSettings } from "@/server/db/settings";
@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative flex-1">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">
-                  <Icons.Search className="h-5 w-5" />
+                  <IconSearch className="h-5 w-5" />
                 </div>
                 <Input
                   name={SEARCH_QUERY_KEY}
@@ -74,12 +74,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
         {q.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
-            <Icons.Search className="mb-4 h-12 w-12 opacity-20" />
+            <IconSearch className="mb-4 h-12 w-12 opacity-20" />
             <p>输入关键字开始搜索</p>
           </div>
         ) : total === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted">
-            <Icons.Box className="mb-4 h-12 w-12 opacity-20" />
+            <IconBox className="mb-4 h-12 w-12 opacity-20" />
             <p>没有找到匹配项</p>
           </div>
         ) : (
@@ -87,7 +87,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {todoRows.length > 0 ? (
               <section>
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
-                  <Icons.Todo className="h-4 w-4" />
+                  <IconTodo className="h-4 w-4" />
                   Todo
                   <Badge variant="default" className="ml-1">{todoRows.length}</Badge>
                 </h2>
@@ -111,7 +111,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                             </Badge>
 
                             {t.isDone ? (
-                              <span className="text-success flex items-center gap-1"><Icons.Check className="h-3 w-3" /> 已完成</span>
+                              <span className="text-success flex items-center gap-1"><IconCheck className="h-3 w-3" /> 已完成</span>
                             ) : t.dueAt ? (
                               <span className="text-secondary">截止 {formatDateTime(t.dueAt, timeZone)}</span>
                             ) : <span className="text-secondary">无截止日期</span>}
@@ -123,7 +123,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={`${ROUTES.todo}/${t.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          <Icons.ChevronRight className="h-4 w-4" />
+                          <IconChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </li>
@@ -135,7 +135,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {anniversaryRows.length > 0 ? (
               <section>
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
-                  <Icons.Calendar className="h-4 w-4" />
+                  <IconCalendar className="h-4 w-4" />
                   纪念日
                   <Badge variant="default" className="ml-1">{anniversaryRows.length}</Badge>
                 </h2>
@@ -160,7 +160,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={`${ROUTES.anniversaries}/${a.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          <Icons.ChevronRight className="h-4 w-4" />
+                          <IconChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </li>
@@ -172,7 +172,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {subscriptionRows.length > 0 ? (
               <section>
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
-                  <Icons.CreditCard className="h-4 w-4" />
+                  <IconCreditCard className="h-4 w-4" />
                   订阅
                   <Badge variant="default" className="ml-1">{subscriptionRows.length}</Badge>
                 </h2>
@@ -205,7 +205,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={`${ROUTES.subscriptions}/${s.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          <Icons.ChevronRight className="h-4 w-4" />
+                          <IconChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </li>
@@ -217,7 +217,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             {itemRows.length > 0 ? (
               <section>
                 <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-secondary">
-                  <Icons.Box className="h-4 w-4" />
+                  <IconBox className="h-4 w-4" />
                   物品
                   <Badge variant="default" className="ml-1">{itemRows.length}</Badge>
                 </h2>
@@ -243,7 +243,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={`${ROUTES.items}/${it.id}`}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-secondary hover:bg-surface-hover hover:text-primary"
                         >
-                          <Icons.ChevronRight className="h-4 w-4" />
+                          <IconChevronRight className="h-4 w-4" />
                         </Link>
                       </div>
                     </li>

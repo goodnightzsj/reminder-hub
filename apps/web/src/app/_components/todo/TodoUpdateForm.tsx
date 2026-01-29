@@ -8,7 +8,7 @@ import { Select } from "../ui/Select";
 import { CustomSelect } from "../CustomSelect";
 import { Textarea } from "../ui/Textarea";
 import { updateTodo } from "../../_actions/todos.actions";
-import { Icons } from "../Icons";
+import { IconCalendar } from "../Icons";
 import { TodoUpdateRecurrenceField } from "./TodoUpdateRecurrenceField";
 import { TodoUpdateRemindersField } from "./TodoUpdateRemindersField";
 import { TodoUpdateDangerZone } from "./TodoUpdateDangerZone";
@@ -69,7 +69,7 @@ export function TodoUpdateForm({
                     {/* Due Date */}
                     <div className="space-y-2 rounded-xl border border-default bg-surface/30 p-4 transition-colors hover:border-emphasis hover:bg-surface/50">
                         <label className="flex items-center gap-2 text-xs font-medium text-secondary">
-                            <Icons.Calendar className="h-4 w-4" />
+                            <IconCalendar className="h-4 w-4" />
                             截止时间
                         </label>
                         <SmartDateInput

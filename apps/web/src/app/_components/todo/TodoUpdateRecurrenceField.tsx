@@ -1,6 +1,6 @@
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
-import { Icons } from "../Icons";
+import { IconRefresh } from "../Icons";
 import { todoRecurrenceUnitEveryOptions, type TodoRecurrence, type TodoRecurrenceUnit } from "./TodoRecurrence.types";
 import { isRecurrenceUnit } from "@/lib/recurrence";
 
@@ -18,7 +18,7 @@ export function TodoUpdateRecurrenceField({
     return (
         <div className="space-y-2 rounded-xl border border-default bg-surface/30 p-4 transition-colors hover:border-emphasis hover:bg-surface/50">
             <label className="flex items-center gap-2 text-xs font-medium text-secondary">
-                <Icons.Refresh className="h-4 w-4" />
+                <IconRefresh className="h-4 w-4" />
                 重复设置
             </label>
             <div className="flex gap-2">

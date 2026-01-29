@@ -8,7 +8,7 @@ import { Select } from "../ui/Select";
 import { CustomSelect } from "../CustomSelect";
 import { Textarea } from "../ui/Textarea";
 import { createTodo } from "../../_actions/todos.actions";
-import { Icons } from "../Icons";
+import { IconCheck } from "../Icons";
 import { useToast } from "../ui/Toast";
 import { useTimeouts } from "../hooks/useTimeouts";
 import { useCreateModal } from "../hooks/useCreateModal";
@@ -91,7 +91,7 @@ export function TodoCreateForm({ className = "mb-6" }: TodoCreateFormProps) {
                         >
                             {isSuccess ? (
                                 <div className="flex items-center gap-1.5 animate-in fade-in zoom-in duration-300">
-                                    <Icons.Check className="h-4 w-4" />
+                                    <IconCheck className="h-4 w-4" />
                                     <span>已添加</span>
                                 </div>
                             ) : (

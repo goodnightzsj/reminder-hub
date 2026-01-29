@@ -1,4 +1,4 @@
-import { Icons } from "../Icons";
+import { IconTrash } from "../Icons";
 import { deleteTodo } from "../../_actions/todos.actions";
 
 type TodoItemSwipeDeleteProps = {
@@ -11,7 +11,7 @@ export function TodoItemSwipeDelete({ todoId }: TodoItemSwipeDeleteProps) {
             <form action={deleteTodo} className="flex h-full w-full items-center justify-center">
                 <input type="hidden" name="id" value={todoId} />
                 <button type="submit" className="flex h-full w-full items-center justify-center">
-                    <Icons.Trash className="h-5 w-5" />
+                    <IconTrash className="h-5 w-5" />
                 </button>
             </form>
         </div>

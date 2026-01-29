@@ -7,7 +7,7 @@ import { ANNIVERSARY_DATE_TYPE } from "@/lib/anniversary";
 import { ROUTES } from "@/lib/routes";
 import { BentoCard } from "../../_components/shared/BentoCard";
 import { Button } from "../../_components/ui/Button";
-import { Icons } from "../../_components/Icons";
+import { IconAlertTriangle, IconCalendar, IconCheck, IconCreditCard, IconGift, IconInbox, IconZap } from "../../_components/Icons";
 import { Tooltip } from "../../_components/ui/Tooltip";
 
 import type {
@@ -52,7 +52,7 @@ export function TodayFocusCard({
             className="h-full border-brand-primary/20"
             glow={true}
             delay={0.05}
-            icon={<Icons.Zap className="h-5 w-5 text-brand-primary" />}
+            icon={<IconZap className="h-5 w-5 text-brand-primary" />}
         >
             <div className="flex bg-surface/50 rounded-lg p-3 mb-4 items-center justify-between text-xs text-secondary">
                 <span>逾期 {overdueTodoCount}</span>
@@ -69,7 +69,7 @@ export function TodayFocusCard({
                 {hasOverdueTodos && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs font-semibold text-danger">
-                            <Icons.AlertTriangle className="h-3 w-3" />
+                            <IconAlertTriangle className="h-3 w-3" />
                             <span>逾期事项 ({overdueTodos.length})</span>
                         </div>
                         <ul className="space-y-2">
@@ -100,7 +100,7 @@ export function TodayFocusCard({
                                                 size="icon"
                                                 className="h-6 w-6 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50"
                                             >
-                                                <Icons.Check active className="h-3 w-3" />
+                                                <IconCheck active className="h-3 w-3" />
                                             </Button>
                                         </Tooltip>
                                     </form>
@@ -114,7 +114,7 @@ export function TodayFocusCard({
                 {hasTodayTodos && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs font-semibold text-brand-primary">
-                            <Icons.Calendar className="h-3 w-3" />
+                            <IconCalendar className="h-3 w-3" />
                             <span>今日待办 ({todayTodos.length})</span>
                         </div>
                         <ul className="space-y-2">
@@ -147,7 +147,7 @@ export function TodayFocusCard({
                                                 size="icon"
                                                 className="h-7 w-7 rounded-full hover:bg-brand-primary hover:text-white border border-transparent hover:border-brand-primary/50"
                                             >
-                                                <Icons.Check active className="h-3.5 w-3.5" />
+                                                <IconCheck active className="h-3.5 w-3.5" />
                                             </Button>
                                         </Tooltip>
                                     </form>
@@ -161,7 +161,7 @@ export function TodayFocusCard({
                 {hasTodayAnniversaries && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs font-semibold text-pink-500">
-                            <Icons.Gift className="h-3 w-3" />
+                            <IconGift className="h-3 w-3" />
                             <span>今日纪念 ({todayAnniversaries.length})</span>
                         </div>
                         <ul className="space-y-2">
@@ -189,7 +189,7 @@ export function TodayFocusCard({
                 {hasTodaySubscriptions && (
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs font-semibold text-blue-500">
-                            <Icons.CreditCard className="h-3 w-3" />
+                            <IconCreditCard className="h-3 w-3" />
                             <span>今日续费 ({todaySubscriptions.length})</span>
                         </div>
                         <ul className="space-y-2">
@@ -222,7 +222,7 @@ export function TodayFocusCard({
                 {/* Empty State */}
                 {isEmpty && (
                     <div className="flex h-40 flex-col items-center justify-center text-center text-muted">
-                        <Icons.Inbox className="h-10 w-10 opacity-20 mb-3" />
+                        <IconInbox className="h-10 w-10 opacity-20 mb-3" />
                         <p className="text-sm">今天暂无特别事项</p>
                         <p className="text-xs opacity-70">享受美好的一天！</p>
                     </div>

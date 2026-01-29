@@ -3,7 +3,7 @@
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { Icons } from "../Icons";
+import { IconCheck, IconCheckSquare, IconPlus, IconTrash } from "../Icons";
 import {
     createSubtask,
     deleteSubtask,
@@ -37,7 +37,7 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
             <div className="relative p-6 pb-2">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-2 text-base font-bold text-primary">
-                        <Icons.CheckSquare className="h-5 w-5 text-brand-primary" />
+                        <IconCheckSquare className="h-5 w-5 text-brand-primary" />
                         子任务
                     </h2>
                     {subtasks.length > 0 && (
@@ -91,7 +91,7 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                                                     : "border-default/60 bg-transparent group-hover/item:border-brand-primary/50",
                                             ].join(" ")}
                                         >
-                                            <Icons.Check
+                                            <IconCheck
                                                 className={`h-3.5 w-3.5 transition-transform duration-200 ${s.isDone ? "scale-100" : "scale-0"}`}
                                             />
                                         </div>
@@ -121,7 +121,7 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                                         confirmMessage="删除子任务？"
                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger"
                                     >
-                                        <Icons.Trash className="h-4 w-4" />
+                                        <IconTrash className="h-4 w-4" />
                                     </ConfirmSubmitButton>
                                 </form>
                             </li>
@@ -148,7 +148,7 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                             variant="ghost"
                             className="h-7 w-7 rounded-lg text-brand-primary hover:bg-brand-primary/10 active:scale-95"
                         >
-                            <Icons.Plus className="h-5 w-5" />
+                            <IconPlus className="h-5 w-5" />
                         </Button>
                     </div>
                 </form>

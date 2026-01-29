@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteAnniversary, restoreAnniversary } from "@/app/_actions/anniversaries";
-import { Icons } from "../Icons";
+import { IconArchiveRestore, IconCalendar, IconEdit, IconTrash } from "../Icons";
 import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
 import { Tooltip } from "../ui/Tooltip";
 import { ANNIVERSARY_DATE_TYPE, getAnniversaryCategoryLabel, type AnniversaryDateType } from "@/lib/anniversary";
@@ -121,7 +121,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                     {item.title}
                 </Link>
                 <div className="text-[11px] text-muted flex items-center justify-center gap-2">
-                    <Icons.Calendar className="h-3 w-3 opacity-70" />
+                    <IconCalendar className="h-3 w-3 opacity-70" />
                         <span>
                             {nextDate || "未知日期"}
                             {item.dateType === ANNIVERSARY_DATE_TYPE.LUNAR && item.isLeapMonth ? " (闰)" : ""}
@@ -138,7 +138,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                                 href={`/anniversaries/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-secondary border border-divider shadow-md hover:text-brand-primary hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
                         <form action={restoreAnniversary}>
@@ -148,7 +148,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                                     type="submit"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-success text-white shadow-lg shadow-success/20 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.ArchiveRestore className="h-5 w-5" />
+                                    <IconArchiveRestore className="h-5 w-5" />
                                 </button>
                             </Tooltip>
                         </form>
@@ -159,7 +159,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                                     confirmMessage="确定彻底删除这个纪念日吗？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-danger text-white shadow-lg shadow-danger/20 hover:bg-danger/90 hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>
@@ -171,7 +171,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                                 href={`/anniversaries/${item.id}`}
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg shadow-brand-primary/20 hover:scale-110 transition-all"
                             >
-                                <Icons.Edit className="h-5 w-5" />
+                                <IconEdit className="h-5 w-5" />
                             </Link>
                         </Tooltip>
                         <form action={deleteAnniversary}>
@@ -181,7 +181,7 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                                     confirmMessage="确定删除这个纪念日吗？"
                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-zinc-800 text-danger border border-divider shadow-md hover:bg-danger hover:text-white hover:scale-110 active:scale-95 transition-all"
                                 >
-                                    <Icons.Trash className="h-5 w-5" />
+                                    <IconTrash className="h-5 w-5" />
                                 </ConfirmSubmitButton>
                             </Tooltip>
                         </form>

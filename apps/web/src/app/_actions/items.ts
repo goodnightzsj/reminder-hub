@@ -7,19 +7,18 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
-import { DEFAULT_ITEM_CATEGORY, DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
+import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
 import { items } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
 import type { FlashAction } from "@/lib/flash";
 
 import {
   parseEnumField,
-  parseNonNegativeIntField,
   parseRedirectToField,
   parseStringField,
 } from "./form-data";
-import { parseCurrencyField, parseDateField, parsePriceCentsField } from "./form-fields";
 import { withAction } from "./redirect-url";
+import { itemUpsertSchema } from "@/lib/validation/item";
 
 const ITEMS_PATH = ROUTES.items;
 
@@ -37,28 +36,22 @@ function revalidateItemDetailAndList(id: string) {
 }
 
 export async function createItem(formData: FormData) {
-  const name = parseStringField(formData, "name");
-  if (!name) return;
+  const result = await itemUpsertSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const data = result.data;
 
-  const priceCents = parsePriceCentsField(formData, "price");
-  const currency = parseCurrencyField(formData, "currency");
-  const purchasedDate = parseDateField(formData, "purchasedDate");
-  const category = parseStringField(formData, "category") || DEFAULT_ITEM_CATEGORY;
-  const status = parseItemStatusField(formData, "status");
-  const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
-  const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");
   const now = new Date();
 
   await db.insert(items).values({
     id: randomUUID(),
-    name,
-    priceCents,
-    currency,
-    purchasedDate,
-    category,
-    status,
-    usageCount,
-    targetDailyCostCents,
+    name: data.name,
+    priceCents: data.priceCents,
+    currency: data.currency,
+    purchasedDate: data.purchasedDate,
+    category: data.category,
+    status: data.status as ItemStatus,
+    usageCount: data.usageCount,
+    targetDailyCostCents: data.targetDailyCostCents,
     updatedAt: now,
   });
 
@@ -66,35 +59,30 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const name = parseStringField(formData, "name");
-  if (!id || !name) return;
+  const result = await itemUpsertSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const data = result.data;
 
-  const priceCents = parsePriceCentsField(formData, "price");
-  const currency = parseCurrencyField(formData, "currency");
-  const purchasedDate = parseDateField(formData, "purchasedDate");
-  const category = parseStringField(formData, "category") || DEFAULT_ITEM_CATEGORY;
-  const status = parseItemStatusField(formData, "status");
-  const usageCount = parseNonNegativeIntField(formData, "usageCount", 0);
-  const targetDailyCostCents = parsePriceCentsField(formData, "targetDailyCost");
+  if (!data.id) return;
+
   const now = new Date();
 
   await db
     .update(items)
     .set({
-      name,
-      priceCents,
-      currency,
-      purchasedDate,
-      category,
-      status,
-      usageCount,
-      targetDailyCostCents,
+      name: data.name,
+      priceCents: data.priceCents,
+      currency: data.currency,
+      purchasedDate: data.purchasedDate,
+      category: data.category,
+      status: data.status as ItemStatus,
+      usageCount: data.usageCount,
+      targetDailyCostCents: data.targetDailyCostCents,
       updatedAt: now,
     })
-    .where(eq(items.id, id));
+    .where(eq(items.id, data.id));
 
-  revalidateItemDetailAndList(id);
+  revalidateItemDetailAndList(data.id);
   redirectWithItemAction(ITEMS_PATH, "updated");
 }
 

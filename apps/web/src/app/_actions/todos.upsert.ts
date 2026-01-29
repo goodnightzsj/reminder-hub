@@ -10,44 +10,35 @@ import { revalidatePath } from "next/cache";
 import { serializeRecurrenceRule } from "@/server/recurrence";
 import { db } from "@/server/db";
 import { todos } from "@/server/db/schema";
-import { DEFAULT_TODO_TASK_TYPE } from "@/lib/todo";
 import { ROUTES } from "@/lib/routes";
-
-import { parseStringField } from "./form-data";
-import {
-  parseDueAtAndReminderOffsetsMinutes,
-  parseRecurrenceRuleFields,
-  parseTagsField,
-  parseTodoPriorityField,
-} from "./todos.helpers";
+import { type TodoPriority } from "@/lib/todo";
+import { todoUpsertSchema } from "@/lib/validation/todo";
 import { revalidateTodoDetailAndHome } from "./todos.helpers";
 import { redirectWithTodoAction } from "./todos.helpers";
 
 export async function createTodo(formData: FormData) {
-  const title = parseStringField(formData, "title");
-  if (!title) return;
-
-  const description = parseStringField(formData, "description");
-  const taskType = parseStringField(formData, "taskType") || DEFAULT_TODO_TASK_TYPE;
-  const priority = parseTodoPriorityField(formData, "priority");
-  const tags = parseTagsField(formData, "tags");
-  const { dueAt, reminderOffsetsMinutes } =
-    await parseDueAtAndReminderOffsetsMinutes(formData);
+  const result = await todoUpsertSchema.safeParseAsync(formData);
+  if (!result.success) {
+    // console.error("Validation failed", result.error);
+    return;
+  }
+  const data = result.data;
+  
+  if (!data.title) return;
 
   const now = new Date();
   const id = randomUUID();
-  const recurrenceRule = parseRecurrenceRuleFields(formData, dueAt);
-  const recurrenceRuleJson = serializeRecurrenceRule(recurrenceRule);
+  const recurrenceRuleJson = serializeRecurrenceRule(data.recurrenceRule);
 
   await db.insert(todos).values({
     id,
-    title,
-    description,
-    taskType,
-    priority,
-    tags: JSON.stringify(tags),
-    dueAt,
-    reminderOffsetsMinutes: JSON.stringify(reminderOffsetsMinutes),
+    title: data.title,
+    description: data.description,
+    taskType: data.taskType,
+    priority: data.priority as TodoPriority,
+    tags: JSON.stringify(data.tags),
+    dueAt: data.dueAt,
+    reminderOffsetsMinutes: JSON.stringify(data.reminderOffsetsMinutes),
     recurrenceRule: recurrenceRuleJson,
     recurrenceRootId: recurrenceRuleJson ? id : null,
     updatedAt: now,
@@ -57,18 +48,15 @@ export async function createTodo(formData: FormData) {
 }
 
 export async function updateTodo(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const title = parseStringField(formData, "title");
-  if (!id || !title) return;
+  const result = await todoUpsertSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const data = result.data;
 
-  const description = parseStringField(formData, "description");
-  const taskType = parseStringField(formData, "taskType") || DEFAULT_TODO_TASK_TYPE;
-  const priority = parseTodoPriorityField(formData, "priority");
-  const tags = parseTagsField(formData, "tags");
-  const { dueAt, reminderOffsetsMinutes } =
-    await parseDueAtAndReminderOffsetsMinutes(formData);
-  const recurrenceRule = parseRecurrenceRuleFields(formData, dueAt);
-  const recurrenceRuleJson = serializeRecurrenceRule(recurrenceRule);
+  // For update, id is required. Schema makes it optional, but here we enforce it.
+  const id = data.id;
+  if (!id || !data.title) return;
+
+  const recurrenceRuleJson = serializeRecurrenceRule(data.recurrenceRule);
   const now = new Date();
 
   const existing = await db
@@ -86,13 +74,13 @@ export async function updateTodo(formData: FormData) {
   await db
     .update(todos)
     .set({
-      title,
-      description,
-      taskType,
-      priority,
-      tags: JSON.stringify(tags),
-      dueAt,
-      reminderOffsetsMinutes: JSON.stringify(reminderOffsetsMinutes),
+      title: data.title,
+      description: data.description,
+      taskType: data.taskType,
+      priority: data.priority as TodoPriority,
+      tags: JSON.stringify(data.tags),
+      dueAt: data.dueAt,
+      reminderOffsetsMinutes: JSON.stringify(data.reminderOffsetsMinutes),
       recurrenceRule: recurrenceRuleJson,
       recurrenceRootId,
       updatedAt: now,

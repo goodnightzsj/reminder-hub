@@ -14,12 +14,16 @@ import { isNotificationChannel, NOTIFICATION_CHANNELS, type NotificationChannel 
 import { NOTIFICATION_CHANNEL } from "@/lib/notifications";
 import { FLASH_FLAG_VALUE_FALSE, FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY } from "@/lib/flash";
 
-import { parseBooleanField, parseStringField } from "./form-data";
+import {
+  emailSettingsSchema,
+  telegramSettingsSchema,
+  webhookSettingsSchema,
+  wecomSettingsSchema,
+} from "@/lib/validation/notification";
+import { parseStringField } from "./form-data";
 import { withSearchParams } from "./redirect-url";
 import {
   SETTINGS_PATH,
-  normalizeUrl,
-  parsePortStringStrict,
   revalidateSettings,
   redirectSettingsError,
   redirectSettingsSavedAfterRevalidate,
@@ -52,10 +56,9 @@ async function validateAndUpsertSettings(
 
 
 export async function updateTelegramSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, (data, existing) => {
-    const enabled = parseBooleanField(data, "telegramEnabled") ?? false;
-    const token = parseStringField(data, "telegramBotToken");
-    const chatId = parseStringField(data, "telegramChatId");
+  await validateAndUpsertSettings(formData, async (data, existing) => {
+    const parsed = await telegramSettingsSchema.parseAsync(data);
+    const { telegramEnabled: enabled, telegramBotToken: token, telegramChatId: chatId } = parsed;
 
     if (enabled && !token && !existing.telegramBotToken) {
       redirectSettingsError("missing-telegram-token");
@@ -72,13 +75,14 @@ export async function updateTelegramSettings(formData: FormData) {
 }
 
 export async function updateWebhookSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, (data) => {
-    const enabled = parseBooleanField(data, "webhookEnabled") ?? false;
-    const rawUrl = parseStringField(data, "webhookUrl");
-    const webhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
+  await validateAndUpsertSettings(formData, async (data) => {
+    const parsed = await webhookSettingsSchema.parseAsync(data);
+    const { webhookEnabled: enabled, webhookUrl } = parsed;
+    
+    const rawUrl = data.get("webhookUrl")?.toString().trim();
+    if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
 
     if (enabled && !webhookUrl) redirectSettingsError("missing-webhook-url");
-    if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
 
     const set: AppSettingsUpdate = { webhookEnabled: enabled };
     if (webhookUrl) set.webhookUrl = webhookUrl;
@@ -87,10 +91,11 @@ export async function updateWebhookSettings(formData: FormData) {
 }
 
 export async function updateWecomSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, (data) => {
-    const enabled = parseBooleanField(data, "wecomEnabled") ?? false;
-    const rawUrl = parseStringField(data, "wecomWebhookUrl");
-    const wecomWebhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
+  await validateAndUpsertSettings(formData, async (data) => {
+    const parsed = await wecomSettingsSchema.parseAsync(data);
+    const { wecomEnabled: enabled, wecomWebhookUrl } = parsed;
+
+    const rawUrl = data.get("wecomWebhookUrl")?.toString().trim();
 
     if (enabled && !wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
     if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
@@ -102,21 +107,28 @@ export async function updateWecomSettings(formData: FormData) {
 }
 
 export async function updateEmailSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, (data, existing) => {
-    const enabled = parseBooleanField(data, "emailEnabled") ?? false;
-    const smtpHost = parseStringField(data, "smtpHost");
-    const smtpFrom = parseStringField(data, "smtpFrom");
-    const smtpTo = parseStringField(data, "smtpTo");
-    const smtpUser = parseStringField(data, "smtpUser");
-    const smtpPass = parseStringField(data, "smtpPass");
-    const smtpPortText = parseStringField(data, "smtpPort");
-    const smtpPort = smtpPortText ? parsePortStringStrict(smtpPortText) : null;
-    const smtpSecure = parseBooleanField(data, "smtpSecure") ?? false;
+  await validateAndUpsertSettings(formData, async (data, existing) => {
+    const parsed = await emailSettingsSchema.parseAsync(data);
+    const { 
+        emailEnabled: enabled, 
+        smtpHost, 
+        smtpFrom, 
+        smtpTo, 
+        smtpUser, 
+        smtpPass, 
+        smtpPort, 
+        smtpSecure 
+    } = parsed;
 
     if (enabled && !smtpHost && !existing.smtpHost) redirectSettingsError("missing-smtp-host");
     if (enabled && !smtpFrom && !existing.smtpFrom) redirectSettingsError("missing-smtp-from");
     if (enabled && !smtpTo && !existing.smtpTo) redirectSettingsError("missing-smtp-to");
-    if (smtpPortText && smtpPort === null) redirectSettingsError("invalid-smtp-port");
+    
+    // Check for invalid port
+    const rawPort = data.get("smtpPort")?.toString().trim();
+    if (rawPort && (smtpPort === undefined || smtpPort === null)) {
+         redirectSettingsError("invalid-smtp-port");
+    }
 
     if (
       (smtpUser && !smtpPass && !existing.smtpPass) ||
@@ -126,13 +138,13 @@ export async function updateEmailSettings(formData: FormData) {
     }
 
     const set: AppSettingsUpdate = { emailEnabled: enabled };
-    if (smtpHost !== null) set.smtpHost = smtpHost;
-    if (smtpFrom !== null) set.smtpFrom = smtpFrom;
-    if (smtpTo !== null) set.smtpTo = smtpTo;
-    if (smtpPort !== null) set.smtpPort = smtpPort;
+    if (smtpHost) set.smtpHost = smtpHost;
+    if (smtpFrom) set.smtpFrom = smtpFrom;
+    if (smtpTo) set.smtpTo = smtpTo;
+    if (smtpPort !== undefined && smtpPort !== null) set.smtpPort = smtpPort;
     set.smtpSecure = smtpSecure;
-    if (smtpUser !== null) set.smtpUser = smtpUser;
-    if (smtpPass !== null) set.smtpPass = smtpPass;
+    if (smtpUser) set.smtpUser = smtpUser;
+    if (smtpPass) set.smtpPass = smtpPass;
 
     return set;
   });

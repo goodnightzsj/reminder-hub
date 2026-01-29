@@ -6,7 +6,7 @@ import { Button } from "@/app/_components/ui/Button";
 import { Input } from "@/app/_components/ui/Input";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
-import { Icons } from "@/app/_components/Icons";
+import { IconChevronLeft } from "@/app/_components/Icons";
 import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 import { AnniversaryDateFields } from "@/app/_components/anniversary/AnniversaryDateFields";
 import {
@@ -58,7 +58,7 @@ export default async function AnniversaryDetailPage({
               href={ROUTES.anniversaries}
               className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
             >
-              <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+              <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Link>
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-2">

@@ -9,7 +9,7 @@ import { Select } from "@/app/_components/ui/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
-import { Icons } from "@/app/_components/Icons";
+import { IconCalendar, IconChevronLeft, IconHash, IconTrendingDown, IconWallet } from "@/app/_components/Icons";
 import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 import { deleteItem, setItemStatus, updateItem } from "@/app/_actions/items";
 import { formatCurrencyCents } from "@/lib/format";
@@ -51,7 +51,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
               href={ROUTES.items}
               className="group flex items-center justify-center p-2 rounded-lg text-secondary hover:bg-surface hover:text-primary transition-colors"
             >
-              <Icons.ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
+              <IconChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             </Link>
             <div className="flex flex-col">
               <h1 className="text-sm font-semibold text-primary">编辑物品</h1>
@@ -113,7 +113,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             </div>
 
             <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
-              <span className="text-xs text-muted flex items-center gap-1"><Icons.Calendar className="h-3 w-3" /> 购入日期</span>
+              <span className="text-xs text-muted flex items-center gap-1"><IconCalendar className="h-3 w-3" /> 购入日期</span>
               <div>
                 <div className="text-lg font-semibold font-mono">{item.purchasedDate ?? "未填写"}</div>
                 {typeof daysUsed === "number" && (
@@ -123,21 +123,21 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
             </div>
 
             <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
-              <span className="text-xs text-muted flex items-center gap-1"><Icons.Wallet className="h-3 w-3" /> 总价</span>
+              <span className="text-xs text-muted flex items-center gap-1"><IconWallet className="h-3 w-3" /> 总价</span>
               <div className="text-lg font-semibold font-mono">
                 {typeof item.priceCents === "number" ? formatCurrencyCents(item.priceCents, item.currency) : "未设置"}
               </div>
             </div>
 
             <div className="rounded-xl border border-brand-primary/20 bg-brand-primary/5 p-4 flex flex-col justify-between gap-2">
-              <span className="text-xs text-brand-primary flex items-center gap-1"><Icons.TrendingDown className="h-3 w-3" /> 日均成本</span>
+              <span className="text-xs text-brand-primary flex items-center gap-1"><IconTrendingDown className="h-3 w-3" /> 日均成本</span>
               <div className="text-lg font-semibold font-mono text-brand-primary">
                 {dailyCents !== null ? formatCurrencyCents(dailyCents, item.currency) : "-"}
               </div>
             </div>
 
             <div className="rounded-xl border border-default bg-surface/50 p-4 flex flex-col justify-between gap-2">
-              <span className="text-xs text-muted flex items-center gap-1"><Icons.Hash className="h-3 w-3" /> 使用次数</span>
+              <span className="text-xs text-muted flex items-center gap-1"><IconHash className="h-3 w-3" /> 使用次数</span>
               <div>
                 <div className="text-lg font-semibold font-mono">{item.usageCount}</div>
                 {costPerUseCents !== null && (
