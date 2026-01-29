@@ -3,6 +3,7 @@
 import { Input } from "../Input";
 import { Button } from "../Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
+import { Icons } from "../Icons";
 import {
     createSubtask,
     deleteSubtask,
@@ -20,91 +21,128 @@ type SubtaskListProps = {
 
 export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
     const subtaskDoneCount = subtasks.filter((s) => s.isDone).length;
+    const progress = subtasks.length === 0 ? 0 : Math.round((subtaskDoneCount / subtasks.length) * 100);
 
     return (
-        <section className="rounded-xl border border-default bg-elevated p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h2 className="text-sm font-medium">子任务</h2>
-                    <p className="mt-1 text-xs text-muted">
-                        {subtasks.length === 0
-                            ? "用于拆分可执行的小步骤。"
-                            : `完成进度：${subtaskDoneCount}/${subtasks.length}`}
-                    </p>
+        <section className="group/section relative overflow-hidden rounded-3xl bg-surface/40 backdrop-blur-md transition-all">
+            {/* Header & Progress */}
+            <div className="relative p-6 pb-2">
+                <div className="flex items-center justify-between">
+                    <h2 className="flex items-center gap-2 text-base font-bold text-primary">
+                        <Icons.CheckSquare className="h-5 w-5 text-brand-primary" />
+                        子任务
+                    </h2>
+                    {subtasks.length > 0 && (
+                        <span className="font-mono text-xs font-bold text-brand-primary/80">
+                            {progress}%
+                        </span>
+                    )}
                 </div>
+
+                {/* Visual Progress Bar (Only show if there are tasks) */}
+                {subtasks.length > 0 && (
+                    <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-default/20">
+                        <div
+                            className="h-full rounded-full bg-brand-primary transition-all duration-500 ease-out"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                )}
             </div>
 
-            <form action={createSubtask} className="mt-4 flex gap-2">
-                <input type="hidden" name="todoId" value={todoId} />
-                <Input
-                    name="title"
-                    placeholder="添加子任务..."
-                    className="h-9 text-xs"
-                    required
-                    autoComplete="off"
-                />
-                <Button
-                    type="submit"
-                    variant="secondary"
-                    size="sm"
-                    className="h-9 shrink-0"
-                >
-                    添加
-                </Button>
-            </form>
-
-            <ul className="mt-4 divide-y divide-divider rounded-lg border border-divider">
-                {subtasks.length === 0 ? (
-                    <li className="p-3 text-sm text-muted">暂无子任务。</li>
-                ) : (
-                    subtasks.map((s, index) => (
-                        <li
-                            key={s.id}
-                            className={`group flex items-center gap-3 p-3 animate-slide-up stagger-${Math.min(index + 1, 5)}`}
-                        >
-                            <form action={toggleSubtask} className="flex items-center">
-                                <input type="hidden" name="id" value={s.id} />
-                                <input type="hidden" name="todoId" value={todoId} />
-                                <label className="flex items-center p-2 -m-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        name="isDone"
-                                        value={s.isDone ? "0" : "1"}
-                                        checked={s.isDone}
-                                        onChange={(e) => e.target.form?.requestSubmit()}
-                                        className="h-5 w-5 rounded border-emphasis text-brand-primary focus:ring-brand-primary/20 transition-all active:scale-95"
-                                    />
-                                </label>
-                            </form>
-
-                            <span
-                                className={[
-                                    "flex-1 text-sm transition-colors",
-                                    s.isDone
-                                        ? "text-muted line-through"
-                                        : "text-primary",
-                                ].join(" ")}
-                            >
-                                {s.title}
-                            </span>
-
-                            <form
-                                action={deleteSubtask}
-                                className="opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
-                            >
-                                <input type="hidden" name="id" value={s.id} />
-                                <input type="hidden" name="todoId" value={todoId} />
-                                <ConfirmSubmitButton
-                                    confirmMessage="确定删除这个子任务吗？"
-                                    className="h-9 rounded-lg border border-default px-3 text-xs font-medium text-danger hover:bg-danger/10 dark:text-danger dark:hover:bg-danger/20"
-                                >
-                                    删除
-                                </ConfirmSubmitButton>
-                            </form>
+            {/* List */}
+            <div className="px-3 py-2">
+                <ul className="space-y-0.5">
+                    {subtasks.length === 0 ? (
+                        <li className="flex flex-col items-center justify-center py-6 text-center text-muted/50">
+                            <span className="text-xs">暂无子任务</span>
                         </li>
-                    ))
-                )}
-            </ul>
+                    ) : (
+                        subtasks.map((s, index) => (
+                            <li
+                                key={s.id}
+                                className={`group/item relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-muted/50 animate-slide-up stagger-${Math.min(index + 1, 5)}`}
+                            >
+                                <form action={toggleSubtask} className="flex shrink-0 items-center">
+                                    <input type="hidden" name="id" value={s.id} />
+                                    <input type="hidden" name="todoId" value={todoId} />
+                                    <label className="relative flex cursor-pointer items-center justify-center p-1">
+                                        <input
+                                            type="checkbox"
+                                            name="isDone"
+                                            value={s.isDone ? "0" : "1"}
+                                            checked={s.isDone}
+                                            onChange={(e) => e.target.form?.requestSubmit()}
+                                            className="peer sr-only"
+                                        />
+                                        <div
+                                            className={[
+                                                "flex h-5 w-5 items-center justify-center rounded-[6px] border transition-all duration-300",
+                                                s.isDone
+                                                    ? "border-brand-primary bg-brand-primary text-white"
+                                                    : "border-default/60 bg-transparent group-hover/item:border-brand-primary/50",
+                                            ].join(" ")}
+                                        >
+                                            <Icons.Check
+                                                className={`h-3.5 w-3.5 transition-transform duration-200 ${s.isDone ? "scale-100" : "scale-0"}`}
+                                            />
+                                        </div>
+                                    </label>
+                                </form>
+
+                                <span
+                                    className={[
+                                        "flex-1 select-none break-all text-sm transition-colors duration-200",
+                                        s.isDone
+                                            ? "text-muted line-through opacity-70"
+                                            : "text-primary",
+                                    ].join(" ")}
+                                >
+                                    {s.title}
+                                </span>
+
+                                <form
+                                    action={deleteSubtask}
+                                    className="transition-opacity duration-200"
+                                >
+                                    <input type="hidden" name="id" value={s.id} />
+                                    <input type="hidden" name="todoId" value={todoId} />
+                                    <ConfirmSubmitButton
+                                        confirmMessage="删除子任务？"
+                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+                                    >
+                                        <Icons.Trash className="h-4 w-4" />
+                                    </ConfirmSubmitButton>
+                                </form>
+                            </li>
+                        ))
+                    )}
+                </ul>
+            </div>
+
+            {/* Chat-style Input Footer */}
+            <div className="bg-muted/40 p-3">
+                <form action={createSubtask} className="relative flex items-center">
+                    <input type="hidden" name="todoId" value={todoId} />
+                    <Input
+                        name="title"
+                        placeholder="添加新步骤..."
+                        className="h-10 w-full rounded-xl border-none bg-elevated pl-4 pr-12 text-sm shadow-sm ring-1 ring-black/5 transition-all placeholder:text-muted-foreground/70 focus:bg-surface focus:ring-2 focus:ring-brand-primary/20 dark:bg-white/5 dark:ring-white/10"
+                        required
+                        autoComplete="off"
+                    />
+                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                        <Button
+                            type="submit"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 rounded-lg text-brand-primary hover:bg-brand-primary/10 active:scale-95"
+                        >
+                            <Icons.Plus className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </form>
+            </div>
         </section>
     );
 }

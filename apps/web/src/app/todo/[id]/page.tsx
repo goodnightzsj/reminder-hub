@@ -140,7 +140,7 @@ export default async function TodoPage({ params }: TodoPageProps) {
 
                 <div className="border-t border-divider pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
                   <div className="sticky top-20">
-                    <h3 className="mb-4 text-sm font-medium text-secondary">子任务</h3>
+
                     <div className="rounded-xl border border-default bg-surface/50 p-1">
                       <SubtaskList todoId={todo.id} subtasks={subtasks} />
                     </div>

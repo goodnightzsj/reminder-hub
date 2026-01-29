@@ -21,3 +21,4 @@ Plan.md
 **/data/
 
 *.sql
+.ace-tool/
