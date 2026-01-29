@@ -1,7 +1,6 @@
 
 "use server";
 
-import { isValidTimeOfDay, isValidTimeZone } from "@/server/datetime";
 import { db } from "@/server/db";
 import { setAppDateReminderTime, setAppTimeZone } from "@/server/db/settings";
 import {
@@ -13,7 +12,7 @@ import {
   todos,
 } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-import { parseStringField } from "./form-data";
+import { dateReminderTimeSchema, timeZoneSchema } from "@/lib/validation/settings";
 import { revalidatePaths } from "./revalidate";
 import {
   SETTINGS_PATH,
@@ -40,9 +39,15 @@ const CLEAR_ALL_DATA_PATHS = [
 ] as const;
 
 export async function updateTimeZone(formData: FormData) {
-  const timeZone = parseStringField(formData, "timeZone");
-  if (!timeZone) redirectSettingsError("missing-timezone");
-  if (!isValidTimeZone(timeZone)) redirectSettingsError("invalid-timezone");
+  const result = await timeZoneSchema.safeParseAsync(formData);
+  if (!result.success) {
+      if (result.error.issues.some(i => i.path.includes("timeZone") && i.message === "Invalid timezone")) {
+        redirectSettingsError("invalid-timezone");
+      }
+      redirectSettingsError("missing-timezone");
+  }
+
+  const { timeZone } = result.data;
 
   await setAppTimeZone(timeZone);
   revalidatePaths(SETTINGS_PATHS);
@@ -50,9 +55,16 @@ export async function updateTimeZone(formData: FormData) {
 }
 
 export async function updateDateReminderTime(formData: FormData) {
-  const dateReminderTime = parseStringField(formData, "dateReminderTime");
-  if (!dateReminderTime) redirectSettingsError("missing-date-reminder-time");
-  if (!isValidTimeOfDay(dateReminderTime)) redirectSettingsError("invalid-date-reminder-time");
+  const result = await dateReminderTimeSchema.safeParseAsync(formData);
+  
+  if (!result.success) {
+      if (result.error.issues.some(i => i.path.includes("dateReminderTime") && i.message.includes("Invalid time"))) {
+          redirectSettingsError("invalid-date-reminder-time");
+      }
+      redirectSettingsError("missing-date-reminder-time");
+  }
+  
+  const { dateReminderTime } = result.data;
 
   await setAppDateReminderTime(dateReminderTime);
   revalidatePaths(DATE_REMINDER_PATHS);

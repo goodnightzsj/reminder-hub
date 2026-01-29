@@ -15,17 +15,19 @@ import {
 import { todos } from "@/server/db/schema";
 
 import {
-  parseBooleanField,
-  parseRedirectToField,
-  parseStringField,
-} from "./form-data";
+  todoArchiveSchema,
+  todoIdSchema,
+  todoToggleSchema,
+} from "@/lib/validation/todo";
 import { revalidateTodoAfterDelete, revalidateTodoDetailAndHome } from "./todos.helpers";
 import { redirectWithTodoAction } from "./todos.helpers";
 
 export async function toggleTodo(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const isDone = parseBooleanField(formData, "isDone");
-  if (!id || isDone === null) return;
+  const result = await todoToggleSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, isDone } = result.data;
+  
+  if (!id) return;
 
   const { timeZone } = await getAppTimeSettings();
 
@@ -111,9 +113,11 @@ export async function toggleTodo(formData: FormData) {
 }
 
 export async function deleteTodo(formData: FormData) {
-  const id = parseStringField(formData, "id");
+  const result = await todoIdSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
+  
   if (!id) return;
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
 
   const existing = await db
     .select({ deletedAt: todos.deletedAt })
@@ -146,9 +150,12 @@ export async function deleteTodo(formData: FormData) {
 }
 
 export async function restoreTodo(formData: FormData) {
-  const id = parseStringField(formData, "id");
+  const result = await todoIdSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
+
   if (!id) return;
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+
   const now = new Date();
 
   await db
@@ -162,9 +169,11 @@ export async function restoreTodo(formData: FormData) {
 }
 
 export async function setTodoArchived(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const isArchived = parseBooleanField(formData, "isArchived");
-  if (!id || isArchived === null) return;
+  const result = await todoArchiveSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, isArchived } = result.data;
+
+  if (!id) return;
 
   const now = new Date();
   await db

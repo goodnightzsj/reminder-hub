@@ -75,3 +75,41 @@ export const todoUpsertSchema = zfd.formData({
       recurrenceRule
   };
 });
+
+export const subtaskCreateSchema = zfd.formData({
+  todoId: trimmedText(z.string()),
+  title: trimmedText(z.string()),
+});
+
+export const subtaskUpdateSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  todoId: trimmedText(z.string()),
+  title: trimmedText(z.string()),
+});
+
+export const subtaskToggleSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  todoId: trimmedText(z.string()),
+  isDone: zfd.checkbox(),
+});
+
+export const subtaskIdSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  todoId: trimmedText(z.string()),
+});
+
+// Lifecycle schemas
+export const todoIdSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  redirectTo: trimmedText(z.string().optional()),
+});
+
+export const todoToggleSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  isDone: zfd.checkbox(),
+});
+
+export const todoArchiveSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  isArchived: zfd.checkbox(),
+});

@@ -9,13 +9,18 @@ import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { todoSubtasks } from "@/server/db/schema";
 
-import { parseBooleanField, parseStringField } from "./form-data";
+import {
+  subtaskCreateSchema,
+  subtaskIdSchema,
+  subtaskToggleSchema,
+  subtaskUpdateSchema,
+} from "@/lib/validation/todo";
 import { revalidateTodoDetailAndHome } from "./todos.helpers";
 
 export async function createSubtask(formData: FormData) {
-  const todoId = parseStringField(formData, "todoId");
-  const title = parseStringField(formData, "title");
-  if (!todoId || !title) return;
+  const result = await subtaskCreateSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { todoId, title } = result.data;
 
   const now = new Date();
   await db.insert(todoSubtasks).values({
@@ -29,10 +34,11 @@ export async function createSubtask(formData: FormData) {
 }
 
 export async function toggleSubtask(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const todoId = parseStringField(formData, "todoId");
-  const isDone = parseBooleanField(formData, "isDone");
-  if (!id || !todoId || isDone === null) return;
+  const result = await subtaskToggleSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, todoId, isDone } = result.data;
+  
+  if (!id || !todoId) return; // Should be handled by schema but double check
 
   const now = new Date();
   await db
@@ -44,8 +50,10 @@ export async function toggleSubtask(formData: FormData) {
 }
 
 export async function deleteSubtask(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const todoId = parseStringField(formData, "todoId");
+  const result = await subtaskIdSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, todoId } = result.data;
+  
   if (!id || !todoId) return;
 
   await db.delete(todoSubtasks).where(eq(todoSubtasks.id, id));
@@ -54,9 +62,10 @@ export async function deleteSubtask(formData: FormData) {
 }
 
 export async function updateSubtask(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const todoId = parseStringField(formData, "todoId");
-  const title = parseStringField(formData, "title");
+  const result = await subtaskUpdateSchema.safeParseAsync(formData);
+  if (!result.success) return;
+  const { id, todoId, title } = result.data;
+
   if (!id || !todoId || !title) return;
 
   const now = new Date();

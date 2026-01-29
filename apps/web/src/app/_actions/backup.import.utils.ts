@@ -1,5 +1,6 @@
 import "server-only";
 
+import { zfd } from "zod-form-data";
 import { redirect } from "next/navigation";
 
 import { isValidTimeOfDay, isValidTimeZone } from "@/server/datetime";
@@ -14,7 +15,6 @@ import {
 import { FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY, type FlashErrorCode } from "@/lib/flash";
 
 import { withSearchParams } from "./redirect-url";
-import { parseFileField } from "./form-data";
 import {
   isRecord,
   parseAnniversaryRow,
@@ -28,6 +28,10 @@ import {
 } from "@/server/backup/backup-parser";
 import { revalidateBackupPaths } from "./backup.utils";
 import { SETTINGS_PATH, redirectSettingsError } from "./settings.utils";
+
+const backupUploadSchema = zfd.formData({
+  backupFile: zfd.file(),
+});
 
 const BACKUP_MESSAGE_MAX_LENGTH = 300;
 
@@ -74,8 +78,15 @@ export function redirectBackupMerged(stats: BackupImportToastStats): never {
 }
 
 export async function parseBackupUploadOrRedirect(formData: FormData): Promise<BackupV1> {
-  const file = parseFileField(formData, "backupFile");
-  if (!file) redirectSettingsError("backup-missing-file");
+  const result = backupUploadSchema.safeParse(formData);
+  if (!result.success) {
+    redirectSettingsError("backup-missing-file");
+  }
+  
+  const file = result.data.backupFile;
+  
+  // Zod file check above ensures it exists, but let's double check content
+  if (!file || file.size === 0) redirectSettingsError("backup-missing-file");
 
   let parsed: unknown = null;
   try {
