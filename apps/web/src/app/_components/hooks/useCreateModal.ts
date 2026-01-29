@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import { MODAL_CREATE_VALUE, MODAL_QUERY_KEY, removeSearchParamFromPathname } from "@/lib/url";
+import { MODAL_CREATE_VALUE, MODAL_QUERY_KEY, removeSearchParamFromPathname } from "../../../lib/url";
 
 export function useCreateModal() {
   const router = useRouter();

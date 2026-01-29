@@ -1,14 +1,15 @@
 "use client";
 
-import { Input } from "../Input";
-import { Button } from "../Button";
+import { Input } from "../ui/Input";
+import { Button } from "../ui/Button";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { Icons } from "../Icons";
 import {
     createSubtask,
     deleteSubtask,
     toggleSubtask,
-} from "../../_actions/todos";
+} from "../../_actions/todos.actions";
+import { useToast } from "../ui/Toast";
 
 type SubtaskListProps = {
     todoId: string;
@@ -22,9 +23,16 @@ type SubtaskListProps = {
 export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
     const subtaskDoneCount = subtasks.filter((s) => s.isDone).length;
     const progress = subtasks.length === 0 ? 0 : Math.round((subtaskDoneCount / subtasks.length) * 100);
+    const { success } = useToast();
+
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        success("已复制到剪贴板");
+    };
 
     return (
         <section className="group/section relative overflow-hidden rounded-3xl bg-surface/40 backdrop-blur-md transition-all">
+            {/* ... existing header code ... */}
             {/* Header & Progress */}
             <div className="relative p-6 pb-2">
                 <div className="flex items-center justify-between">
@@ -91,12 +99,14 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                                 </form>
 
                                 <span
+                                    onClick={() => handleCopy(s.title)}
                                     className={[
-                                        "flex-1 select-none break-all text-sm transition-colors duration-200",
+                                        "flex-1 select-none break-all text-sm transition-colors duration-200 cursor-pointer hover:text-brand-primary active:opacity-70",
                                         s.isDone
                                             ? "text-muted line-through opacity-70"
                                             : "text-primary",
                                     ].join(" ")}
+                                    title="点击复制"
                                 >
                                     {s.title}
                                 </span>

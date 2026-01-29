@@ -1,3 +1,5 @@
+"use server";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -17,8 +19,8 @@ import {
   parseRedirectToField,
   parseStringField,
 } from "./form-data";
-import { revalidateTodoAfterDelete, revalidateTodoDetailAndHome } from "./todos.revalidate";
-import { redirectWithTodoAction } from "./todos.redirect";
+import { revalidateTodoAfterDelete, revalidateTodoDetailAndHome } from "./todos.helpers";
+import { redirectWithTodoAction } from "./todos.helpers";
 
 export async function toggleTodo(formData: FormData) {
   const id = parseStringField(formData, "id");

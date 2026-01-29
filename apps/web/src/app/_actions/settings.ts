@@ -1,3 +1,4 @@
+
 "use server";
 
 import { isValidTimeOfDay, isValidTimeZone } from "@/server/datetime";
@@ -12,15 +13,14 @@ import {
   todos,
 } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-
 import { parseStringField } from "./form-data";
+import { revalidatePaths } from "./revalidate";
 import {
   SETTINGS_PATH,
   redirectSettingsDataCleared,
   redirectSettingsError,
   redirectSettingsSaved,
-} from "./settings.redirect";
-import { revalidatePaths } from "./revalidate";
+} from "./settings.utils";
 
 const SETTINGS_PATHS = [ROUTES.home, SETTINGS_PATH] as const;
 const DATE_REMINDER_PATHS = [

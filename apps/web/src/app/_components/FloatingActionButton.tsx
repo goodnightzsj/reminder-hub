@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Icons } from "./Icons";
-import { Magnetic } from "./Magnetic";
+import { Magnetic } from "./shared/Magnetic";
 import { buildCreateModalHref } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";
 

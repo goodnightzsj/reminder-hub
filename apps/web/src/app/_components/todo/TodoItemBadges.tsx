@@ -1,5 +1,5 @@
 import { Icons } from "../Icons";
-import { SmartCategoryBadge } from "../SmartCategoryBadge";
+import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
 import { getTodoPriorityLabel, type TodoPriority } from "@/lib/todo";
 
 const todoPriorityBadgeColorByPriority: Record<TodoPriority, string> = {

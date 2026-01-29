@@ -1,6 +1,6 @@
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { Icons } from "../Icons";
-import { deleteTodo } from "../../_actions/todos";
+import { deleteTodo } from "../../_actions/todos.actions";
 
 type TodoUpdateDangerZoneProps = {
     todoId: string;

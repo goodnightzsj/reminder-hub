@@ -7,9 +7,9 @@ import { deleteItem, setItemStatus, restoreItem } from "@/app/_actions/items";
 import { formatCurrencyCents } from "@/lib/format";
 import { ITEM_STATUS, type ItemStatus } from "@/lib/items";
 import { ROUTES } from "@/lib/routes";
-import { SmartCategoryBadge } from "../SmartCategoryBadge";
+import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
 import { Icons } from "../Icons";
-import { Tooltip } from "../Tooltip";
+import { Tooltip } from "../ui/Tooltip";
 import { ITEM_STATUS_ACTIONS, itemVariants } from "./ItemCard.constants";
 
 export type ItemCardItemData = {

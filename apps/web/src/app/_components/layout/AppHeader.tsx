@@ -1,7 +1,7 @@
-import { Icons } from "./Icons";
-import { ThemeToggle } from "./ThemeToggle";
+import { Icons } from "../Icons";
+import { ThemeToggle } from "../ThemeToggle";
 import { MainNav } from "./MainNav";
-import { ROUTES } from "@/lib/routes";
+import { ROUTES } from "../../../lib/routes";
 
 type AppHeaderProps = {
     title: string;

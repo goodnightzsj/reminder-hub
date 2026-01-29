@@ -1,4 +1,4 @@
-import { PageTransition } from "./_components/PageTransition";
+import { PageTransition } from "./_components/layout/PageTransition";
 
 /**
  * Next.js template.tsx - 每次路由切换时会重新 mount。

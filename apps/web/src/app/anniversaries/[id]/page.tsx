@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
-import { Button } from "@/app/_components/Button";
-import { Input } from "@/app/_components/Input";
+import { SmartCategoryBadge } from "../../_components/shared/SmartCategoryBadge";
+import { Button } from "@/app/_components/ui/Button";
+import { Input } from "@/app/_components/ui/Input";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
-import { PageBackgroundDecoration } from "@/app/_components/PageBackgroundDecoration";
+import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 import { AnniversaryDateFields } from "@/app/_components/anniversary/AnniversaryDateFields";
 import {
   deleteAnniversary,

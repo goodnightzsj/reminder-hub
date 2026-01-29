@@ -1,7 +1,7 @@
-import { AppHeader } from "../_components/AppHeader";
-import { BentoCard } from "../_components/BentoCard";
+import { AppHeader } from "../_components/layout/AppHeader";
+import { BentoCard } from "../_components/shared/BentoCard";
 import { Icons } from "../_components/Icons";
-import { TiltCard } from "../_components/TiltCard";
+import { TiltCard } from "../_components/shared/TiltCard";
 import { DashboardStatCard } from "../_components/dashboard/DashboardStatCard";
 import { UpcomingList } from "../_components/dashboard/UpcomingList";
 import { InsightsCard } from "./_components/InsightsCard";

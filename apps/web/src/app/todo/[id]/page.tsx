@@ -8,9 +8,9 @@ import { ROUTES } from "@/lib/routes";
 import { SubtaskList } from "../../_components/todo/SubtaskList";
 import { TodoUpdateForm } from "../../_components/todo/TodoUpdateForm";
 import { Icons } from "../../_components/Icons";
-import { Badge } from "../../_components/Badge";
-import { getSmartColorStyle } from "../../_components/SmartCategoryBadge";
-import { PageBackgroundDecoration } from "../../_components/PageBackgroundDecoration";
+import { Badge } from "../../_components/ui/Badge";
+import { getSmartColorStyle } from "../../_components/shared/SmartCategoryBadge";
+import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 
 import { getTodoDetailPageData } from "./_lib/todo-detail";
 

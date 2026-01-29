@@ -3,7 +3,7 @@
 import { createContext, useContext, useRef, useState, ReactNode, useCallback } from "react";
 import { Confetti } from "./Confetti";
 import { MicroConfetti, createMicroConfettiParticles, type MicroConfettiParticle } from "./MicroConfetti";
-import { useTimeouts } from "./useTimeouts";
+import { useTimeouts } from "./hooks/useTimeouts";
 
 type ConfettiContextType = {
     triggerConfetti: () => void;

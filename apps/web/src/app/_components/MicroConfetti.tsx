@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Portal } from "./Portal";
+import { Portal } from "./ui/Portal";
 
 export type MicroConfettiParticle = {
     id: number;

@@ -1,5 +1,5 @@
 import { Icons } from "../Icons";
-import { deleteTodo } from "../../_actions/todos";
+import { deleteTodo } from "../../_actions/todos.actions";
 
 type TodoItemSwipeDeleteProps = {
     todoId: string;

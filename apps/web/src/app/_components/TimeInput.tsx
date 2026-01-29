@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Icons } from "./Icons";
 import { TimePicker } from "./ui/TimePicker";
-import { Portal } from "./Portal";
+import { Portal } from "./ui/Portal";
 
 type TimeInputProps = {
     name: string;

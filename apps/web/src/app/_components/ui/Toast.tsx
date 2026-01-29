@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTimeouts } from "./useTimeouts";
+import { useTimeouts } from "../hooks/useTimeouts";
 import { Portal } from "./Portal";
 
 type ToastType = "success" | "error" | "info";

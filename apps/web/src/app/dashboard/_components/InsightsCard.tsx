@@ -1,5 +1,5 @@
 import { formatCurrencyAmount } from "@/lib/format";
-import { BentoCard } from "../../_components/BentoCard";
+import { BentoCard } from "../../_components/shared/BentoCard";
 import { Icons } from "../../_components/Icons";
 import { SpendBarChart } from "./SpendBarChart";
 

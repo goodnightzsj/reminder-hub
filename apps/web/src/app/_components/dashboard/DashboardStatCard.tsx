@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-import { BentoCard } from "../BentoCard";
-import { NumberTicker } from "../NumberTicker";
-import { TiltCard } from "../TiltCard";
+import { BentoCard } from "../shared/BentoCard";
+import { NumberTicker } from "../shared/NumberTicker";
+import { TiltCard } from "../shared/TiltCard";
 
 type DashboardStatCardProps = {
   icon: ReactNode;

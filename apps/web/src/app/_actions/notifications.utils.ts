@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { getAppSettings, SETTINGS_ID } from "@/server/db/settings";
 import { appSettings } from "@/server/db/schema";
-import { SETTINGS_PATH, redirectSettingsSaved } from "./settings.redirect";
+import { SETTINGS_PATH, redirectSettingsSaved } from "./settings.utils";
 
-export { SETTINGS_PATH, redirectSettingsError, redirectSettingsSaved } from "./settings.redirect";
+export { SETTINGS_PATH, redirectSettingsError, redirectSettingsSaved } from "./settings.utils";
 
 export type ExistingAppSettings = Awaited<ReturnType<typeof getAppSettings>>;
 export type AppSettingsUpdate = Partial<typeof appSettings.$inferInsert>;

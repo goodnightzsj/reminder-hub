@@ -1,8 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Icons } from "./Icons";
-import { cn } from "@/lib/utils";
+import { Icons } from "../Icons";
+import { cn } from "../../../lib/utils";
 import { motion } from "framer-motion";
 
 type EmptyStateProps = {

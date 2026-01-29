@@ -1,3 +1,5 @@
+"use server";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -8,7 +10,7 @@ import { db } from "@/server/db";
 import { todoSubtasks } from "@/server/db/schema";
 
 import { parseBooleanField, parseStringField } from "./form-data";
-import { revalidateTodoDetailAndHome } from "./todos.revalidate";
+import { revalidateTodoDetailAndHome } from "./todos.helpers";
 
 export async function createSubtask(formData: FormData) {
   const todoId = parseStringField(formData, "todoId");

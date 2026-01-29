@@ -1,7 +1,7 @@
 "use client";
 
 import { ModernCalendar } from "./ui/ModernCalendar";
-import { Portal } from "./Portal";
+import { Portal } from "./ui/Portal";
 
 type SmartDateCalendarPopoverProps = {
   open: boolean;

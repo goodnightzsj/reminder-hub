@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTimeouts } from "./useTimeouts";
+import { useTimeouts } from "../hooks/useTimeouts";
 import { Portal } from "./Portal";
 
 type TooltipProps = {

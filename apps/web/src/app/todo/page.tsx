@@ -15,10 +15,10 @@ import {
   TODO_TASK_TYPE_QUERY_KEY,
 } from "@/lib/url";
 
-import { AppHeader } from "../_components/AppHeader";
+import { AppHeader } from "../_components/layout/AppHeader";
 import { TodoCreateForm } from "../_components/todo/TodoCreateForm";
 import { TodoList } from "../_components/todo/TodoList";
-import { CreateModal } from "../_components/CreateModal";
+import { CreateModal } from "../_components/modals/CreateModal";
 import { SegmentedControl } from "../_components/SegmentedControl";
 import { MagicCapsuleButton } from "../_components/todo/MagicCapsuleButton";
 import type { TodoItemData } from "../_components/todo/TodoItem.types";

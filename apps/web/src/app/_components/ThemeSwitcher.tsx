@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import { MicroConfetti, createMicroConfettiParticles, MicroConfettiParticle } from "./MicroConfetti";
-import { Magnetic } from "./Magnetic";
-import { useTimeouts } from "./useTimeouts";
+import { Magnetic } from "./shared/Magnetic";
+import { useTimeouts } from "./hooks/useTimeouts";
 import {
     COLOR_THEME_STORAGE_KEY,
     COLOR_THEMES,

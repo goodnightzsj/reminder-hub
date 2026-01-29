@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { AppHeader } from "@/app/_components/AppHeader";
-import { CreateModal } from "@/app/_components/CreateModal";
-import { EmptyState } from "@/app/_components/EmptyState";
+import { AppHeader } from "../_components/layout/AppHeader";
+import { CreateModal } from "../_components/modals/CreateModal";
+import { EmptyState } from "../_components/shared/EmptyState";
 import { SegmentedControl } from "@/app/_components/SegmentedControl";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
 import { ItemList } from "@/app/_components/items/ItemList";

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icons } from "./Icons";
-import { Magnetic } from "./Magnetic";
-import { ROUTES } from "@/lib/routes";
+import { Icons } from "../Icons";
+import { Magnetic } from "../shared/Magnetic";
+import { ROUTES } from "../../../lib/routes";
 
 export function BottomNav() {
     const pathname = usePathname();

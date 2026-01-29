@@ -1,4 +1,4 @@
-import { Tooltip } from "../Tooltip";
+import { Tooltip } from "../ui/Tooltip";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { Icons } from "../Icons";
 import {
@@ -7,7 +7,7 @@ import {
     moveTodoUp,
     restoreTodo,
     toggleTodo,
-} from "../../_actions/todos";
+} from "../../_actions/todos.actions";
 import { TodoCompleteButton } from "./TodoCompleteButton";
 
 type TodoItemActionsProps = {

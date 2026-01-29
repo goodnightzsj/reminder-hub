@@ -1,7 +1,7 @@
 "use client";
 
 import { Children, isValidElement, type ComponentProps } from "react";
-import { CustomSelect } from "./CustomSelect";
+import { CustomSelect } from "../CustomSelect";
 
 type SelectChangeEvent = {
     target: { value: string };

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Icons } from "./Icons";
-import { useTimeouts } from "./useTimeouts";
-import { useBodyScrollLock } from "./useBodyScrollLock";
-import { useEscapeKey } from "./useEscapeKey";
-import { Portal } from "./Portal";
-import { buildSearchHref } from "@/lib/url";
+import { Icons } from "../Icons";
+import { useTimeouts } from "../hooks/useTimeouts";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { useEscapeKey } from "../hooks/useEscapeKey";
+import { Portal } from "../ui/Portal";
+import { buildSearchHref } from "../../../lib/url";
 
 type SearchModalProps = {
     isOpen: boolean;

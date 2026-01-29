@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge, getBadgeVariantFromLabel } from "@/app/_components/Badge";
-import { Button } from "@/app/_components/Button";
-import { Input } from "@/app/_components/Input";
+import { Badge, getBadgeVariantFromLabel } from "@/app/_components/ui/Badge";
+import { Button } from "@/app/_components/ui/Button";
+import { Input } from "@/app/_components/ui/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
-import { Select } from "@/app/_components/Select";
+import { Select } from "@/app/_components/ui/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
-import { Textarea } from "@/app/_components/Textarea";
+import { Textarea } from "@/app/_components/ui/Textarea";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
-import { PageBackgroundDecoration } from "@/app/_components/PageBackgroundDecoration";
+import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 import {
   deleteSubscription,
   renewSubscription,

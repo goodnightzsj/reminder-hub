@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "./Button";
+import { Button } from "../ui/Button";
 import { motion, AnimatePresence } from "framer-motion";
-import { useBodyScrollLock } from "./useBodyScrollLock";
-import { useEscapeKey } from "./useEscapeKey";
-import { Portal } from "./Portal";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { useEscapeKey } from "../hooks/useEscapeKey";
+import { Portal } from "../ui/Portal";
 
 type ConfirmModalProps = {
     isOpen: boolean;

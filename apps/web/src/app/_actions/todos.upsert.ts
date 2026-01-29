@@ -1,3 +1,5 @@
+"use server";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -18,8 +20,8 @@ import {
   parseTagsField,
   parseTodoPriorityField,
 } from "./todos.helpers";
-import { revalidateTodoDetailAndHome } from "./todos.revalidate";
-import { redirectWithTodoAction } from "./todos.redirect";
+import { revalidateTodoDetailAndHome } from "./todos.helpers";
+import { redirectWithTodoAction } from "./todos.helpers";
 
 export async function createTodo(formData: FormData) {
   const title = parseStringField(formData, "title");

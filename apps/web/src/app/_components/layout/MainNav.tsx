@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { SearchModal } from "./SearchModal";
-import { Icons } from "./Icons";
-import { Magnetic } from "./Magnetic";
-import { cn } from "@/lib/utils";
-import { ROUTES } from "@/lib/routes";
+import { SearchModal } from "../modals/SearchModal";
+import { Icons } from "../Icons";
+import { Magnetic } from "../shared/Magnetic";
+import { cn } from "../../../lib/utils";
+import { ROUTES } from "../../../lib/routes";
 
 export function MainNav() {
     const pathname = usePathname();

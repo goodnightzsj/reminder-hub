@@ -1,5 +1,5 @@
-import { Input } from "../Input";
-import { Select } from "../Select";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
 import { Icons } from "../Icons";
 import { todoRecurrenceUnitEveryOptions, type TodoRecurrence, type TodoRecurrenceUnit } from "./TodoRecurrence.types";
 import { isRecurrenceUnit } from "@/lib/recurrence";

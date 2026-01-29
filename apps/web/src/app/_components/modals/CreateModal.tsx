@@ -1,11 +1,11 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Icons } from "./Icons";
-import { useCreateModal } from "./useCreateModal";
-import { useBodyScrollLock } from "./useBodyScrollLock";
-import { useEscapeKey } from "./useEscapeKey";
-import { Portal } from "./Portal";
+import { Icons } from "../Icons";
+import { useCreateModal } from "../hooks/useCreateModal";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { useEscapeKey } from "../hooks/useEscapeKey";
+import { Portal } from "../ui/Portal";
 
 type CreateModalProps = {
     children: React.ReactNode;

@@ -1,14 +1,14 @@
 import Link from "next/link";
 
 import { renewSubscription } from "@/app/_actions/subscriptions";
-import { toggleTodo } from "@/app/_actions/todos";
+import { toggleTodo } from "@/app/_actions/todos.actions";
 import { formatDateTime } from "@/lib/format";
 import { ANNIVERSARY_DATE_TYPE } from "@/lib/anniversary";
 import { ROUTES } from "@/lib/routes";
-import { BentoCard } from "../../_components/BentoCard";
-import { Button } from "../../_components/Button";
+import { BentoCard } from "../../_components/shared/BentoCard";
+import { Button } from "../../_components/ui/Button";
 import { Icons } from "../../_components/Icons";
-import { Tooltip } from "../../_components/Tooltip";
+import { Tooltip } from "../../_components/ui/Tooltip";
 
 import type {
     AnniversaryPreview,

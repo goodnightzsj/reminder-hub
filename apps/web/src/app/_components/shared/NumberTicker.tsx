@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMotionValue, useSpring, useTransform, motion, useInView } from "framer-motion";
-import { useTimeouts } from "./useTimeouts";
+import { useTimeouts } from "../hooks/useTimeouts";
 
 type NumberTickerProps = {
     value: number;

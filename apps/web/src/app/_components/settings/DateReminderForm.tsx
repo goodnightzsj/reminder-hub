@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Icon } from "@iconify/react";
-import { Button } from "@/app/_components/Button";
+import { Button } from "@/app/_components/ui/Button";
 import { TimeInput } from "@/app/_components/TimeInput";
 import { updateDateReminderTime } from "@/app/_actions/settings";
 

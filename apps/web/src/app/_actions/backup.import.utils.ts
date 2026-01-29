@@ -25,9 +25,9 @@ import {
   parseTodoRow,
   parseTodoSubtaskRow,
   type BackupV1,
-} from "./backup-parser";
+} from "@/server/backup/backup-parser";
 import { revalidateBackupPaths } from "./backup.utils";
-import { SETTINGS_PATH, redirectSettingsError } from "./settings.redirect";
+import { SETTINGS_PATH, redirectSettingsError } from "./settings.utils";
 
 const BACKUP_MESSAGE_MAX_LENGTH = 300;
 

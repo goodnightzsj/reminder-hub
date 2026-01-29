@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { TodoItem } from "./TodoItem";
 import type { TodoItemData } from "./TodoItem.types";
-import { EmptyState } from "../EmptyState";
+import { EmptyState } from "../shared/EmptyState";
 
 type TodoListProps = {
     items: TodoItemData[];

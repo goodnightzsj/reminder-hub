@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/app/_components/Input";
+import { Input } from "@/app/_components/ui/Input";
 import {
   runEmailNotifications,
   runTelegramNotifications,

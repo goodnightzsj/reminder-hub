@@ -3,8 +3,8 @@
 import type { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { solarToLunar } from "@/lib/lunar-utils";
-import { ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "@/lib/anniversary";
+import { solarToLunar } from "../../../lib/lunar-utils";
+import { ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "../../../lib/anniversary";
 
 import {
     computeSmartDateCalendarPopoverPosition,
@@ -16,7 +16,7 @@ import {
     type SmartDateCalendarPopoverDirection,
     type SmartDateCalendarPosition,
     type SmartDateParts,
-} from "./SmartDateInput.utils";
+} from "../SmartDateInput.utils";
 
 type UseSmartDateInputOptions = {
     type: "date" | "datetime-local";

@@ -1,11 +1,9 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-
-import { ROUTES } from "@/lib/routes";
 import { FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY, type FlashErrorCode } from "@/lib/flash";
-
 import { withSearchParam } from "./redirect-url";
+import { ROUTES } from "@/lib/routes";
 
 export const SETTINGS_PATH = ROUTES.settings;
 
@@ -20,4 +18,3 @@ export function redirectSettingsDataCleared(): never {
 export function redirectSettingsError(code: FlashErrorCode): never {
   redirect(withSearchParam(SETTINGS_PATH, FLASH_TOAST_QUERY_KEY.ERROR, code));
 }
-

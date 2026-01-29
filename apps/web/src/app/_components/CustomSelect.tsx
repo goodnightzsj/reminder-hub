@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
-import { Input } from "./Input";
+import { Input } from "./ui/Input";
 import { Icons } from "./Icons";
 import { motion, AnimatePresence } from "framer-motion";
 

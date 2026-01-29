@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import { Portal } from "@/app/_components/Portal";
-import { useEscapeKey } from "@/app/_components/useEscapeKey";
+import { Portal } from "@/app/_components/ui/Portal";
+import { useEscapeKey } from "../hooks/useEscapeKey";
 import type { AppSettings, ChannelType } from "./NotificationChannelForms";
 import { NOTIFICATION_CHANNEL_META } from "./NotificationChannels.meta";
 

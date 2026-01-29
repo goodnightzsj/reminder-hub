@@ -3,8 +3,8 @@
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
-import { Magnetic } from "./Magnetic";
-import { Tooltip } from "./Tooltip";
+import { Magnetic } from "./shared/Magnetic";
+import { Tooltip } from "./ui/Tooltip";
 
 type ViewTransition = {
     ready: Promise<void>;

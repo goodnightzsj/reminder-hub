@@ -3,13 +3,13 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
-import { ServiceIconBadge } from "../ServiceIconBadge";
+import { ServiceIconBadge } from "../shared/ServiceIconBadge";
 import { deleteSubscription, renewSubscription, restoreSubscription } from "@/app/_actions/subscriptions";
 import { formatCurrencyCents } from "@/lib/format";
 import { SUBSCRIPTION_CYCLE_UNIT } from "@/lib/subscriptions";
-import { SmartCategoryBadge } from "../SmartCategoryBadge";
+import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
 import { Icons } from "../Icons";
-import { Tooltip } from "../Tooltip";
+import { Tooltip } from "../ui/Tooltip";
 import { ProgressRing } from "./ProgressRing";
 import type {
     SubscriptionCardItemData,

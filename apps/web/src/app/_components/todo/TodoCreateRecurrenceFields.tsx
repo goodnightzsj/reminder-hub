@@ -1,5 +1,5 @@
-import { Input } from "../Input";
-import { Select } from "../Select";
+import { Input } from "../ui/Input";
+import { Select } from "../ui/Select";
 import { todoRecurrenceUnitOptions } from "./TodoRecurrence.types";
 
 export function TodoCreateRecurrenceFields() {

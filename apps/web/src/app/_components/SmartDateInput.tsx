@@ -3,7 +3,7 @@
 import { SmartDateCalendarPopover } from "./SmartDateCalendarPopover";
 import { SmartDatePartInput } from "./SmartDatePartInput";
 import { DEFAULT_ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "@/lib/anniversary";
-import { useSmartDateInput } from "./useSmartDateInput";
+import { useSmartDateInput } from "./hooks/useSmartDateInput";
 
 type SmartDateInputProps = {
     name: string;

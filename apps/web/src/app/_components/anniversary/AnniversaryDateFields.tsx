@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
-import { Select } from "@/app/_components/Select";
+import { Select } from "@/app/_components/ui/Select";
 import { ANNIVERSARY_DATE_TYPE, isAnniversaryDateType, type AnniversaryDateType } from "@/lib/anniversary";
 
 type AnniversaryDateFieldsProps = {

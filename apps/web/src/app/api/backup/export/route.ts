@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import type { BackupV1 } from "@/app/_actions/backup-parser";
+import type { BackupV1 } from "@/server/backup/backup-parser";
 import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
 import {

@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-import { AppHeader } from "@/app/_components/AppHeader";
-import { Badge } from "@/app/_components/Badge";
-import { Button } from "@/app/_components/Button";
+import { AppHeader } from "../_components/layout/AppHeader";
+import { Badge } from "@/app/_components/ui/Badge";
+import { Button } from "@/app/_components/ui/Button";
 import { Icons } from "@/app/_components/Icons";
-import { Input } from "@/app/_components/Input";
-import { ServiceIconBadge } from "@/app/_components/ServiceIconBadge";
+import { Input } from "@/app/_components/ui/Input";
+import { ServiceIconBadge } from "../_components/shared/ServiceIconBadge";
 import { getAppTimeSettings } from "@/server/db/settings";
 import { formatDateTime } from "@/lib/format";
 import { ANNIVERSARY_DATE_TYPE } from "@/lib/anniversary";

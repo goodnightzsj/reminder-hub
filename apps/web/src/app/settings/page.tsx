@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
-import { AppHeader } from "@/app/_components/AppHeader";
+import { AppHeader } from "../_components/layout/AppHeader";
 import { getAppSettings } from "@/server/db/settings";
 import { NotificationSettingsSection } from "@/app/_components/settings/NotificationSettingsSection";
 import type { AppSettings as NotificationSettings } from "@/app/_components/settings/NotificationChannelForms";

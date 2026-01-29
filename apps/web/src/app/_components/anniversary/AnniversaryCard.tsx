@@ -5,8 +5,8 @@ import Link from "next/link";
 import { ConfirmSubmitButton } from "../ConfirmSubmitButton";
 import { deleteAnniversary, restoreAnniversary } from "@/app/_actions/anniversaries";
 import { Icons } from "../Icons";
-import { SmartCategoryBadge } from "../SmartCategoryBadge";
-import { Tooltip } from "../Tooltip";
+import { SmartCategoryBadge } from "../shared/SmartCategoryBadge";
+import { Tooltip } from "../ui/Tooltip";
 import { ANNIVERSARY_DATE_TYPE, getAnniversaryCategoryLabel, type AnniversaryDateType } from "@/lib/anniversary";
 
 export type AnniversaryCardItemData = {

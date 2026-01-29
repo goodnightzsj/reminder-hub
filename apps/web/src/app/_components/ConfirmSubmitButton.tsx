@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, MouseEvent } from "react";
-import { ConfirmModal } from "./ConfirmModal";
+import { ConfirmModal } from "./modals/ConfirmModal";
 
 type ConfirmSubmitButtonProps = Omit<
   React.ButtonHTMLAttributes<HTMLButtonElement>,

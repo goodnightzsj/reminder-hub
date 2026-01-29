@@ -1,4 +1,4 @@
-import { Button } from "@/app/_components/Button";
+import { Button } from "@/app/_components/ui/Button";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { clearFailedDeliveries } from "@/app/_actions/notifications";
 

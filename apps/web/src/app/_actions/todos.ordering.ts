@@ -1,3 +1,5 @@
+"use server";
+
 import "server-only";
 
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -25,14 +27,15 @@ export async function reorderTodos(ids: string[]) {
     .sort((a, b) => b.getTime() - a.getTime());
 
   // Assign newest timestamps to the first IDs in the list (Top of list)
-  await db.transaction(async (tx) => {
+  db.transaction((tx) => {
     const now = new Date();
     const limit = Math.min(ids.length, timestamps.length);
     for (let i = 0; i < limit; i++) {
-      await tx
+      tx
         .update(todos)
         .set({ createdAt: timestamps[i], updatedAt: now })
-        .where(eq(todos.id, ids[i]));
+        .where(eq(todos.id, ids[i]))
+        .run();
     }
   });
 
@@ -68,12 +71,13 @@ async function moveTodoByOffset(id: string, offset: -1 | 1) {
 
   const adjacent = siblings[adjacentIdx];
 
-  await db.transaction(async (tx) => {
-    await tx.update(todos).set({ createdAt: adjacent.createdAt }).where(eq(todos.id, id));
-    await tx
+  db.transaction((tx) => {
+    tx.update(todos).set({ createdAt: adjacent.createdAt }).where(eq(todos.id, id)).run();
+    tx
       .update(todos)
       .set({ createdAt: current.createdAt })
-      .where(eq(todos.id, adjacent.id));
+      .where(eq(todos.id, adjacent.id))
+      .run();
   });
 
   revalidatePath(ROUTES.todo);

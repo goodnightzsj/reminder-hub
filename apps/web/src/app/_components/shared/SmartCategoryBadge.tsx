@@ -1,5 +1,5 @@
-import { Badge } from "@/app/_components/Badge";
-import { getStableHashCode } from "@/lib/hash";
+import { Badge } from "../ui/Badge";
+import { getStableHashCode } from "../../../lib/hash";
 
 export type SmartColorVariant = "glass" | "solid";
 

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useTransition } from "react";
 import { useConfetti } from "../ConfettiProvider";
-import { Tooltip } from "../Tooltip";
+import { Tooltip } from "../ui/Tooltip";
 import { Icons } from "../Icons";
 
 type TodoCompleteButtonProps = {

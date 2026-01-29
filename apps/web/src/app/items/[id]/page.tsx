@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Badge } from "@/app/_components/Badge";
-import { SmartCategoryBadge } from "@/app/_components/SmartCategoryBadge";
-import { Button } from "@/app/_components/Button";
-import { Input } from "@/app/_components/Input";
-import { Select } from "@/app/_components/Select";
+import { Badge } from "@/app/_components/ui/Badge";
+import { SmartCategoryBadge } from "../../_components/shared/SmartCategoryBadge";
+import { Button } from "@/app/_components/ui/Button";
+import { Input } from "@/app/_components/ui/Input";
+import { Select } from "@/app/_components/ui/Select";
 import { CustomSelect } from "@/app/_components/CustomSelect";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
 import { Icons } from "@/app/_components/Icons";
-import { PageBackgroundDecoration } from "@/app/_components/PageBackgroundDecoration";
+import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 import { deleteItem, setItemStatus, updateItem } from "@/app/_actions/items";
 import { formatCurrencyCents } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";

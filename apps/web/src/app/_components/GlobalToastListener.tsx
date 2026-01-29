@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { useToast } from "@/app/_components/Toast";
+import { useToast } from "@/app/_components/ui/Toast";
 import { removeSearchParamsFromPathname } from "@/lib/url";
 import {
     FLASH_ACTION_MESSAGES,
