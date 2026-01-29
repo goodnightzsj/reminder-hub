@@ -15,6 +15,11 @@ import {
     isFlashAction,
 } from "@/lib/flash";
 
+type ToastHandler = {
+    shouldRun: boolean;
+    run: () => void;
+};
+
 export function GlobalToastListener() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -23,26 +28,24 @@ export function GlobalToastListener() {
     const processedRef = useRef<string | null>(null);
 
     useEffect(() => {
-        const action = searchParams.get(FLASH_TOAST_QUERY_KEY.ACTION);
-        const saved = searchParams.get(FLASH_TOAST_QUERY_KEY.SAVED);
-        const errorMsg = searchParams.get(FLASH_TOAST_QUERY_KEY.ERROR);
-        const dataCleared = searchParams.get(FLASH_TOAST_QUERY_KEY.DATA_CLEARED);
+        // 1. Extract all relevant params
+        const get = (k: string) => searchParams.get(k);
+        const action = get(FLASH_TOAST_QUERY_KEY.ACTION);
+        const saved = get(FLASH_TOAST_QUERY_KEY.SAVED);
+        const errorMsg = get(FLASH_TOAST_QUERY_KEY.ERROR);
+        const dataCleared = get(FLASH_TOAST_QUERY_KEY.DATA_CLEARED);
+        const backupImported = get(FLASH_TOAST_QUERY_KEY.BACKUP_IMPORTED);
+        const backupMerged = get(FLASH_TOAST_QUERY_KEY.BACKUP_MERGED);
+        const backupMessage = get(FLASH_TOAST_QUERY_KEY.BACKUP_MESSAGE);
+        const notifySent = get(FLASH_TOAST_QUERY_KEY.NOTIFY_SENT);
+        const notifyFailed = get(FLASH_TOAST_QUERY_KEY.NOTIFY_FAILED);
+        const notifySummary = get(FLASH_TOAST_QUERY_KEY.NOTIFY_SUMMARY);
+        const notifyCleared = get(FLASH_TOAST_QUERY_KEY.NOTIFY_CLEARED);
+        const testChannel = get(FLASH_TOAST_QUERY_KEY.TEST_CHANNEL);
+        const test = get(FLASH_TOAST_QUERY_KEY.TEST);
+        const testMessage = get(FLASH_TOAST_QUERY_KEY.TEST_MESSAGE) ?? get(FLASH_TOAST_QUERY_KEY.MESSAGE);
 
-        const backupImported = searchParams.get(FLASH_TOAST_QUERY_KEY.BACKUP_IMPORTED);
-        const backupMerged = searchParams.get(FLASH_TOAST_QUERY_KEY.BACKUP_MERGED);
-        const backupMessage = searchParams.get(FLASH_TOAST_QUERY_KEY.BACKUP_MESSAGE);
-
-        const notifySent = searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_SENT);
-        const notifyFailed = searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_FAILED);
-        const notifySummary = searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_SUMMARY);
-        const notifyCleared = searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_CLEARED);
-
-        const testChannel = searchParams.get(FLASH_TOAST_QUERY_KEY.TEST_CHANNEL);
-        const test = searchParams.get(FLASH_TOAST_QUERY_KEY.TEST);
-        const testMessage =
-            searchParams.get(FLASH_TOAST_QUERY_KEY.TEST_MESSAGE) ??
-            searchParams.get(FLASH_TOAST_QUERY_KEY.MESSAGE);
-
+        // 2. Define flags
         const isSaved = saved === FLASH_FLAG_VALUE_TRUE;
         const isDataCleared = dataCleared === FLASH_FLAG_VALUE_TRUE;
         const isBackupImported = backupImported === FLASH_FLAG_VALUE_TRUE;
@@ -50,80 +53,93 @@ export function GlobalToastListener() {
         const isNotifyCleared = notifyCleared === FLASH_FLAG_VALUE_TRUE;
         const hasNotifyResults = notifySent !== null || notifyFailed !== null;
 
-        const hasAction =
-            (action && isFlashAction(action)) ||
-            isSaved ||
-            errorMsg ||
-            isDataCleared ||
-            isBackupImported ||
-            isBackupMerged ||
-            backupMessage ||
-            hasNotifyResults ||
-            notifySummary !== null ||
-            isNotifyCleared ||
-            testChannel;
+        // 3. Define Handlers
+	        const handlers: ToastHandler[] = [
+	            {
+	                shouldRun: !!action && isFlashAction(action),
+	                run: () => {
+	                    if (!action) return;
+	                    if (!isFlashAction(action)) return;
+	                    success(FLASH_ACTION_MESSAGES[action]);
+	                },
+	            },
+	            {
+	                shouldRun: isSaved,
+	                run: () => success(FLASH_STATUS_MESSAGES.SETTINGS_SAVED),
+	            },
+            {
+                shouldRun: isDataCleared,
+                run: () => success(FLASH_STATUS_MESSAGES.SETTINGS_DATA_CLEARED),
+            },
+            {
+                shouldRun: isBackupImported,
+                run: () => {
+                    const stats = buildBackupStats(searchParams, { todoLabel: "Todo" });
+                    success(FLASH_TOAST_MESSAGES.backupImported(stats));
+                },
+            },
+            {
+                shouldRun: isBackupMerged,
+                run: () => {
+                    const stats = buildBackupStats(searchParams, { todoLabel: "新增 Todo" });
+                    success(FLASH_TOAST_MESSAGES.backupMerged(stats));
+                },
+            },
+            {
+                shouldRun: hasNotifyResults,
+                run: () => {
+                    const ch = get(FLASH_TOAST_QUERY_KEY.NOTIFY_CHANNEL);
+                    const msg = `发送 ${notifySent || 0} · 失败 ${notifyFailed || 0} · 跳过 ${get(FLASH_TOAST_QUERY_KEY.NOTIFY_SKIPPED) || 0}`;
+                    success(FLASH_TOAST_MESSAGES.notifyFinished(ch, msg));
+                },
+            },
+            {
+                shouldRun: !!notifySummary,
+                run: () => notifySummary && success(FLASH_TOAST_MESSAGES.notifyAllFinished(notifySummary.slice(0, 200))),
+            },
+            {
+                shouldRun: isNotifyCleared,
+                run: () => success(FLASH_STATUS_MESSAGES.NOTIFY_CLEARED),
+            },
+            {
+                shouldRun: !!testChannel && test === FLASH_FLAG_VALUE_TRUE,
+                run: () => testChannel && success(FLASH_TOAST_MESSAGES.testSent(testChannel)),
+            },
+            {
+                shouldRun: !!testChannel && test !== FLASH_FLAG_VALUE_TRUE,
+                run: () => {
+                    if (testChannel) error(FLASH_TOAST_MESSAGES.testFailed(testChannel));
+                    if (testMessage) error(testMessage.slice(0, 200));
+                },
+            },
+            {
+                shouldRun: !!errorMsg,
+                run: () => errorMsg && error(getFlashErrorMessage(errorMsg)),
+            },
+            {
+                shouldRun: !!backupMessage,
+                run: () => backupMessage && error(backupMessage.slice(0, 300)),
+            },
+        ];
 
+        // 4. Check if any action is needed
+        const hasAction = handlers.some(h => h.shouldRun);
         const key = searchParams.toString();
+
         if (!hasAction) {
             processedRef.current = null;
             return;
         }
+
         if (processedRef.current === key) return;
         processedRef.current = key;
 
-        if (action && isFlashAction(action)) {
-            success(FLASH_ACTION_MESSAGES[action]);
-        }
+        // 5. Execute handlers
+        handlers.forEach((h) => {
+            if (h.shouldRun) h.run();
+        });
 
-        if (isSaved) {
-            success(FLASH_STATUS_MESSAGES.SETTINGS_SAVED);
-        }
-
-        if (isDataCleared) {
-            success(FLASH_STATUS_MESSAGES.SETTINGS_DATA_CLEARED);
-        }
-
-        if (isBackupImported) {
-            const stats = buildBackupStats(searchParams, { todoLabel: "Todo" });
-            success(FLASH_TOAST_MESSAGES.backupImported(stats));
-        }
-
-        if (isBackupMerged) {
-            const stats = buildBackupStats(searchParams, { todoLabel: "新增 Todo" });
-            success(FLASH_TOAST_MESSAGES.backupMerged(stats));
-        }
-
-        if (hasNotifyResults) {
-            const ch = searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_CHANNEL);
-            const msg = `发送 ${notifySent || 0} · 失败 ${notifyFailed || 0} · 跳过 ${searchParams.get(FLASH_TOAST_QUERY_KEY.NOTIFY_SKIPPED) || 0}`;
-            success(FLASH_TOAST_MESSAGES.notifyFinished(ch, msg));
-        }
-
-        if (notifySummary) {
-            success(FLASH_TOAST_MESSAGES.notifyAllFinished(notifySummary.slice(0, 200)));
-        }
-
-        if (isNotifyCleared) {
-            success(FLASH_STATUS_MESSAGES.NOTIFY_CLEARED);
-        }
-
-        if (testChannel && test === FLASH_FLAG_VALUE_TRUE) {
-            success(FLASH_TOAST_MESSAGES.testSent(testChannel));
-        } else if (testChannel && test !== FLASH_FLAG_VALUE_TRUE) {
-            error(FLASH_TOAST_MESSAGES.testFailed(testChannel));
-            if (testMessage) {
-                error(testMessage.slice(0, 200));
-            }
-        }
-
-        if (errorMsg) {
-            error(getFlashErrorMessage(errorMsg));
-        }
-
-        if (backupMessage) {
-            error(backupMessage.slice(0, 300));
-        }
-
+        // 6. Cleanup URL
         router.replace(
             removeSearchParamsFromPathname(pathname, searchParams.toString(), FLASH_TOAST_QUERY_KEYS),
         );

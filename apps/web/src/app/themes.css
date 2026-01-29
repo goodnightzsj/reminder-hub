@@ -1,0 +1,210 @@
+/* ========================================
+   THEME SYSTEM: 8 Color Themes × Light/Dark
+   Default: ocean-blue
+   ======================================== */
+
+/* Base layout colors (shared by all themes in light mode) */
+:root {
+  --font-inter: "Inter";
+  --font-outfit: "Outfit";
+
+  /* Modern Clean Light Mode */
+  --background: 240 10% 98%;
+  --foreground: 240 10% 4%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 4%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 4%;
+  --primary: 240 6% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+  --success: 150 80% 35%;
+  --warning: 35 95% 55%;
+  --info: 210 90% 55%;
+  --cta: 24 95% 53%;
+  --cta-foreground: 0 0% 100%;
+  --radius: 0.75rem;
+  --bg-elevated: 0 0% 100%;
+  --bg-surface: 240 5% 97%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 240 10% 4%;
+  --sidebar-border: 240 6% 90%;
+  --theme-gradient: none;
+}
+
+/* === Theme 1: Ocean Blue (Default) - Enhanced Saturation === */
+:root,
+[data-theme="ocean-blue"] {
+  --brand-primary: 217 95% 62%;
+  /* Increased saturation */
+  --brand-secondary: 213 96% 72%;
+  --accent: 217 95% 96%;
+  --accent-foreground: 217 95% 60%;
+  --ring: 217 95% 62%;
+  /* Tailwind color tokens */
+  --theme-brand-primary: hsl(217 95% 62%);
+  --theme-brand-secondary: hsl(213 96% 72%);
+  --theme-accent: hsl(217 95% 96%);
+  --theme-accent-foreground: hsl(217 95% 60%);
+  --theme-ring: hsl(217 95% 62%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 2: Emerald Pro - Enhanced Saturation === */
+[data-theme="emerald"] {
+  --brand-primary: 160 88% 38%;
+  --brand-secondary: 158 70% 50%;
+  --accent: 160 88% 96%;
+  --accent-foreground: 160 88% 38%;
+  --ring: 160 88% 38%;
+  --theme-brand-primary: hsl(160 88% 38%);
+  --theme-brand-secondary: hsl(158 70% 50%);
+  --theme-accent: hsl(160 88% 96%);
+  --theme-accent-foreground: hsl(160 88% 38%);
+  --theme-ring: hsl(160 88% 38%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 3: Notion Gray - Preserved === */
+/* Using accent brown/orange as primary for better visibility */
+[data-theme="notion-gray"] {
+  --brand-primary: 32 30% 45%;
+  --brand-secondary: 32 25% 55%;
+  --accent: 32 95% 92%;
+  --accent-foreground: 32 95% 44%;
+  --ring: 32 30% 45%;
+  --theme-brand-primary: hsl(32 30% 45%);
+  --theme-brand-secondary: hsl(32 25% 55%);
+  --theme-accent: hsl(32 95% 92%);
+  --theme-accent-foreground: hsl(32 95% 44%);
+  --theme-ring: hsl(32 30% 45%);
+  --theme-cta: hsl(32 95% 50%);
+}
+
+/* === Theme 4: Todoist Zeus - Enhanced Saturation === */
+/* Using warm olive/moss green accent */
+[data-theme="todoist-zeus"] {
+  --brand-primary: 78 55% 38%;
+  --brand-secondary: 78 50% 48%;
+  --accent: 78 70% 93%;
+  --accent-foreground: 78 70% 35%;
+  --ring: 78 55% 38%;
+  --theme-brand-primary: hsl(78 55% 38%);
+  --theme-brand-secondary: hsl(78 50% 48%);
+  --theme-accent: hsl(78 70% 93%);
+  --theme-accent-foreground: hsl(78 70% 35%);
+  --theme-ring: hsl(78 55% 38%);
+  --theme-cta: hsl(78 70% 45%);
+}
+
+/* === Theme 5: TickTick Teal - Enhanced Saturation === */
+[data-theme="ticktick-teal"] {
+  --brand-primary: 174 78% 38%;
+  --brand-secondary: 187 78% 43%;
+  --accent: 174 78% 94%;
+  --accent-foreground: 174 78% 38%;
+  --ring: 174 78% 38%;
+  --theme-brand-primary: hsl(174 78% 38%);
+  --theme-brand-secondary: hsl(187 78% 43%);
+  --theme-accent: hsl(174 78% 94%);
+  --theme-accent-foreground: hsl(174 78% 38%);
+  --theme-ring: hsl(174 78% 38%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 6: Fintech Gold - Enhanced Saturation === */
+/* Gold as primary color for luxury feel */
+[data-theme="fintech-gold"] {
+  --brand-primary: 45 96% 45%;
+  --brand-secondary: 38 94% 48%;
+  --accent: 45 96% 92%;
+  --accent-foreground: 45 96% 35%;
+  --ring: 45 96% 45%;
+  --cta: 45 96% 45%;
+  --theme-brand-primary: hsl(45 96% 45%);
+  --theme-brand-secondary: hsl(38 94% 48%);
+  --theme-accent: hsl(45 96% 92%);
+  --theme-accent-foreground: hsl(45 96% 35%);
+  --theme-ring: hsl(45 96% 45%);
+  --theme-cta: hsl(45 96% 45%);
+}
+
+/* === Theme 7: Peach Fuzz - Enhanced Saturation === */
+[data-theme="peach-fuzz"] {
+  --brand-primary: 24 78% 65%;
+  --brand-secondary: 15 90% 70%;
+  --accent: 24 78% 96%;
+  --accent-foreground: 24 78% 50%;
+  --ring: 24 78% 65%;
+  --theme-brand-primary: hsl(24 78% 65%);
+  --theme-brand-secondary: hsl(15 90% 70%);
+  --theme-accent: hsl(24 78% 96%);
+  --theme-accent-foreground: hsl(24 78% 50%);
+  --theme-ring: hsl(24 78% 65%);
+  --theme-cta: hsl(24 95% 53%);
+}
+
+/* === Theme 8: Aurora Gradient - Enhanced Saturation === */
+[data-theme="aurora"] {
+  --brand-primary: 210 100% 50%;
+  --brand-secondary: 328 100% 54%;
+  --accent: 180 100% 92%;
+  --accent-foreground: 180 100% 35%;
+  --ring: 210 100% 50%;
+  --theme-brand-primary: hsl(210 100% 50%);
+  --theme-brand-secondary: hsl(328 100% 54%);
+  --theme-accent: hsl(180 100% 92%);
+  --theme-accent-foreground: hsl(180 100% 35%);
+  --theme-ring: hsl(210 100% 50%);
+  --theme-cta: hsl(24 95% 53%);
+  --theme-gradient: linear-gradient(135deg, hsl(210 100% 50%), hsl(328 100% 54%));
+}
+
+.dark {
+  /* Deep Blue/Black Theme - Enhanced Contrast */
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+
+  --card: 240 10% 6%;
+  /* Slightly lighter than bg */
+  --card-foreground: 0 0% 98%;
+
+  --popover: 240 10% 6%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 6% 10%;
+
+  --secondary: 240 4% 12%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 240 4% 16%;
+  --muted-foreground: 240 5% 70%;
+
+  --accent: 250 40% 15%;
+  --accent-foreground: 250 90% 75%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 4% 16%;
+  --input: 240 4% 16%;
+  --ring: 250 95% 64%;
+
+  --cta: 24 100% 55%;
+  --cta-foreground: 0 0% 100%;
+
+  --bg-elevated: 240 4% 9%;
+  --bg-surface: 240 4% 7%;
+
+  --sidebar: 240 4% 5%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 240 4% 16%;
+}

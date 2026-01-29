@@ -26,121 +26,116 @@ import {
   upsertAppSettings,
   type AppSettingsUpdate,
 } from "./notifications.utils";
+import { type InferSelectModel } from "drizzle-orm";
+import { appSettings } from "@/server/db/schema";
 
-export async function updateTelegramSettings(formData: FormData) {
-  const enabled = parseBooleanField(formData, "telegramEnabled") ?? false;
-  const token = parseStringField(formData, "telegramBotToken");
-  const chatId = parseStringField(formData, "telegramChatId");
+type AppSettings = InferSelectModel<typeof appSettings>;
 
+type SettingsUpdater = (
+  formData: FormData,
+  existing: AppSettings
+) => Promise<AppSettingsUpdate | null> | AppSettingsUpdate | null;
+
+async function validateAndUpsertSettings(
+  formData: FormData,
+  updater: SettingsUpdater
+) {
   const existing = await getAppSettings();
+  const update = await updater(formData, existing);
 
-  if (enabled && !token && !existing.telegramBotToken) {
-    redirectSettingsError("missing-telegram-token");
+  if (update) {
+    await upsertAppSettings(existing, update);
   }
-  if (enabled && !chatId && !existing.telegramChatId) {
-    redirectSettingsError("missing-telegram-chat-id");
-  }
-
-  const set: AppSettingsUpdate = {
-    telegramEnabled: enabled,
-  };
-  if (token) set.telegramBotToken = token;
-  if (chatId) set.telegramChatId = chatId;
-
-  await upsertAppSettings(existing, set);
 
   redirectSettingsSavedAfterRevalidate();
+}
+
+
+export async function updateTelegramSettings(formData: FormData) {
+  await validateAndUpsertSettings(formData, (data, existing) => {
+    const enabled = parseBooleanField(data, "telegramEnabled") ?? false;
+    const token = parseStringField(data, "telegramBotToken");
+    const chatId = parseStringField(data, "telegramChatId");
+
+    if (enabled && !token && !existing.telegramBotToken) {
+      redirectSettingsError("missing-telegram-token");
+    }
+    if (enabled && !chatId && !existing.telegramChatId) {
+      redirectSettingsError("missing-telegram-chat-id");
+    }
+
+    const set: AppSettingsUpdate = { telegramEnabled: enabled };
+    if (token) set.telegramBotToken = token;
+    if (chatId) set.telegramChatId = chatId;
+    return set;
+  });
 }
 
 export async function updateWebhookSettings(formData: FormData) {
-  const enabled = parseBooleanField(formData, "webhookEnabled") ?? false;
-  const rawUrl = parseStringField(formData, "webhookUrl");
-  const webhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
+  await validateAndUpsertSettings(formData, (data) => {
+    const enabled = parseBooleanField(data, "webhookEnabled") ?? false;
+    const rawUrl = parseStringField(data, "webhookUrl");
+    const webhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
 
-  const existing = await getAppSettings();
+    if (enabled && !webhookUrl) redirectSettingsError("missing-webhook-url");
+    if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
 
-  if (enabled && !webhookUrl) redirectSettingsError("missing-webhook-url");
-  if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
-
-  const set: AppSettingsUpdate = {
-    webhookEnabled: enabled,
-  };
-  if (webhookUrl) set.webhookUrl = webhookUrl;
-
-  await upsertAppSettings(existing, set);
-
-  redirectSettingsSavedAfterRevalidate();
+    const set: AppSettingsUpdate = { webhookEnabled: enabled };
+    if (webhookUrl) set.webhookUrl = webhookUrl;
+    return set;
+  });
 }
 
 export async function updateWecomSettings(formData: FormData) {
-  const enabled = parseBooleanField(formData, "wecomEnabled") ?? false;
-  const rawUrl = parseStringField(formData, "wecomWebhookUrl");
-  const wecomWebhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
+  await validateAndUpsertSettings(formData, (data) => {
+    const enabled = parseBooleanField(data, "wecomEnabled") ?? false;
+    const rawUrl = parseStringField(data, "wecomWebhookUrl");
+    const wecomWebhookUrl = rawUrl ? normalizeUrl(rawUrl) : null;
 
-  const existing = await getAppSettings();
+    if (enabled && !wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
+    if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
 
-  if (enabled && !wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
-  if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
-
-  const set: AppSettingsUpdate = {
-    wecomEnabled: enabled,
-  };
-  if (wecomWebhookUrl) set.wecomWebhookUrl = wecomWebhookUrl;
-
-  await upsertAppSettings(existing, set);
-
-  redirectSettingsSavedAfterRevalidate();
+    const set: AppSettingsUpdate = { wecomEnabled: enabled };
+    if (wecomWebhookUrl) set.wecomWebhookUrl = wecomWebhookUrl;
+    return set;
+  });
 }
 
 export async function updateEmailSettings(formData: FormData) {
-  const enabled = parseBooleanField(formData, "emailEnabled") ?? false;
+  await validateAndUpsertSettings(formData, (data, existing) => {
+    const enabled = parseBooleanField(data, "emailEnabled") ?? false;
+    const smtpHost = parseStringField(data, "smtpHost");
+    const smtpFrom = parseStringField(data, "smtpFrom");
+    const smtpTo = parseStringField(data, "smtpTo");
+    const smtpUser = parseStringField(data, "smtpUser");
+    const smtpPass = parseStringField(data, "smtpPass");
+    const smtpPortText = parseStringField(data, "smtpPort");
+    const smtpPort = smtpPortText ? parsePortStringStrict(smtpPortText) : null;
+    const smtpSecure = parseBooleanField(data, "smtpSecure") ?? false;
 
-  const existing = await getAppSettings();
+    if (enabled && !smtpHost && !existing.smtpHost) redirectSettingsError("missing-smtp-host");
+    if (enabled && !smtpFrom && !existing.smtpFrom) redirectSettingsError("missing-smtp-from");
+    if (enabled && !smtpTo && !existing.smtpTo) redirectSettingsError("missing-smtp-to");
+    if (smtpPortText && smtpPort === null) redirectSettingsError("invalid-smtp-port");
 
-  const smtpHost = parseStringField(formData, "smtpHost");
-  const smtpFrom = parseStringField(formData, "smtpFrom");
-  const smtpTo = parseStringField(formData, "smtpTo");
-  const smtpUser = parseStringField(formData, "smtpUser");
-  const smtpPass = parseStringField(formData, "smtpPass");
-  const smtpPortText = parseStringField(formData, "smtpPort");
-  const smtpPort = smtpPortText ? parsePortStringStrict(smtpPortText) : null;
-  const smtpSecure = parseBooleanField(formData, "smtpSecure") ?? false;
+    if (
+      (smtpUser && !smtpPass && !existing.smtpPass) ||
+      (!smtpUser && smtpPass && !existing.smtpUser)
+    ) {
+      redirectSettingsError("missing-smtp-auth");
+    }
 
-  if (enabled && !smtpHost && !existing.smtpHost) {
-    redirectSettingsError("missing-smtp-host");
-  }
-  if (enabled && !smtpFrom && !existing.smtpFrom) {
-    redirectSettingsError("missing-smtp-from");
-  }
-  if (enabled && !smtpTo && !existing.smtpTo) {
-    redirectSettingsError("missing-smtp-to");
-  }
-  if (smtpPortText && smtpPort === null) {
-    redirectSettingsError("invalid-smtp-port");
-  }
+    const set: AppSettingsUpdate = { emailEnabled: enabled };
+    if (smtpHost !== null) set.smtpHost = smtpHost;
+    if (smtpFrom !== null) set.smtpFrom = smtpFrom;
+    if (smtpTo !== null) set.smtpTo = smtpTo;
+    if (smtpPort !== null) set.smtpPort = smtpPort;
+    set.smtpSecure = smtpSecure;
+    if (smtpUser !== null) set.smtpUser = smtpUser;
+    if (smtpPass !== null) set.smtpPass = smtpPass;
 
-  if (
-    (smtpUser && !smtpPass && !existing.smtpPass) ||
-    (!smtpUser && smtpPass && !existing.smtpUser)
-  ) {
-    redirectSettingsError("missing-smtp-auth");
-  }
-
-  const set: AppSettingsUpdate = {
-    emailEnabled: enabled,
-  };
-
-  if (smtpHost !== null) set.smtpHost = smtpHost;
-  if (smtpFrom !== null) set.smtpFrom = smtpFrom;
-  if (smtpTo !== null) set.smtpTo = smtpTo;
-  if (smtpPort !== null) set.smtpPort = smtpPort;
-  set.smtpSecure = smtpSecure;
-  if (smtpUser !== null) set.smtpUser = smtpUser;
-  if (smtpPass !== null) set.smtpPass = smtpPass;
-
-  await upsertAppSettings(existing, set);
-
-  redirectSettingsSavedAfterRevalidate();
+    return set;
+  });
 }
 
 async function sendTestForChannel(channel: NotificationChannel) {

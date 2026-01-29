@@ -4,6 +4,7 @@ import { Providers } from "./Providers";
 import { BottomNav } from "./_components/layout/BottomNav";
 import { FloatingActionButton } from "./_components/FloatingActionButton";
 import { GlobalToastListener } from "./_components/GlobalToastListener";
+import "./themes.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
