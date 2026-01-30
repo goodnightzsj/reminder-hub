@@ -1,6 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { ZodError } from "zod";
+
+
+
 
 import { getAppSettings } from "@/server/db/settings";
 import {
@@ -8,11 +12,10 @@ import {
   clearFailedDeliveries as clearFailedDeliveriesForChannel,
   runAllNotificationsInOrder,
   runNotificationsForChannel,
-  sendTestNotification,
 } from "@/server/notification-runner";
 import { isNotificationChannel, NOTIFICATION_CHANNELS, type NotificationChannel } from "@/server/notifications";
 import { NOTIFICATION_CHANNEL } from "@/lib/notifications";
-import { FLASH_FLAG_VALUE_FALSE, FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY } from "@/lib/flash";
+import { FLASH_TOAST_QUERY_KEY, FLASH_FLAG_VALUE_TRUE } from "@/lib/flash";
 
 import {
   emailSettingsSchema,
@@ -40,7 +43,7 @@ type SettingsUpdater = (
   existing: AppSettings
 ) => Promise<AppSettingsUpdate | null> | AppSettingsUpdate | null;
 
-import { ZodError } from "zod";
+
 
 async function validateAndUpsertSettings(
   formData: FormData,
@@ -61,7 +64,8 @@ async function validateAndUpsertSettings(
       // But settings page has specific error codes. Zod errors might be structural.
       // For now, mapping ZodError to a generic validation-failed toast is better than 500.
       console.error("Settings validation error:", error);
-      redirectSettingsError("validation-failed");
+      // Ensures the function terminates by redirecting (throwing NEXT_REDIRECT)
+      return redirectSettingsError("validation-failed");
     }
     throw error;
   }
@@ -163,46 +167,9 @@ export async function updateEmailSettings(formData: FormData) {
   });
 }
 
-async function sendTestForChannel(channel: NotificationChannel) {
-  try {
-    await sendTestNotification(channel);
-  } catch (err) {
-    if (err instanceof NotificationConfigError) {
-      redirectSettingsError(err.code);
-    }
-    const message = err instanceof Error ? err.message : "Unknown error";
-    redirect(
-      withSearchParams(SETTINGS_PATH, {
-        [FLASH_TOAST_QUERY_KEY.TEST_CHANNEL]: channel,
-        [FLASH_TOAST_QUERY_KEY.TEST]: FLASH_FLAG_VALUE_FALSE,
-        [FLASH_TOAST_QUERY_KEY.MESSAGE]: message,
-      }),
-    );
-  }
 
-  redirect(
-    withSearchParams(SETTINGS_PATH, {
-      [FLASH_TOAST_QUERY_KEY.TEST_CHANNEL]: channel,
-      [FLASH_TOAST_QUERY_KEY.TEST]: FLASH_FLAG_VALUE_TRUE,
-    }),
-  );
-}
 
-export async function sendTestTelegram() {
-  await sendTestForChannel(NOTIFICATION_CHANNEL.TELEGRAM);
-}
 
-export async function sendTestWebhook() {
-  await sendTestForChannel(NOTIFICATION_CHANNEL.WEBHOOK);
-}
-
-export async function sendTestWecom() {
-  await sendTestForChannel(NOTIFICATION_CHANNEL.WECOM);
-}
-
-export async function sendTestEmail() {
-  await sendTestForChannel(NOTIFICATION_CHANNEL.EMAIL);
-}
 
 async function runNotificationsForChannelAndRedirect(channel: NotificationChannel) {
   try {

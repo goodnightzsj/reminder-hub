@@ -6,15 +6,17 @@ import {
   runTelegramNotifications,
   runWebhookNotifications,
   runWecomNotifications,
-  sendTestEmail,
-  sendTestTelegram,
-  sendTestWebhook,
-  sendTestWecom,
   updateEmailSettings,
   updateTelegramSettings,
   updateWebhookSettings,
   updateWecomSettings,
 } from "@/app/_actions/notifications";
+import {
+  sendTestEmail,
+  sendTestTelegram,
+  sendTestWebhook,
+  sendTestWecom,
+} from "@/app/_actions/notifications.test-actions";
 
 import { NOTIFICATION_CHANNEL } from "@/lib/notifications";
 import { ActionButtons, ChannelEnabledToggle, SaveConfigButton } from "./NotificationChannelForms.shared";
