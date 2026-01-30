@@ -32,19 +32,4 @@ export function redirectSettingsSavedAfterRevalidate(): never {
   redirectSettingsSaved();
 }
 
-export function normalizeUrl(value: string): string | null {
-  try {
-    const parsed = new URL(value);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
-
-export function parsePortStringStrict(value: string): number | null {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed)) return null;
-  if (parsed < 1 || parsed > 65535) return null;
-  return parsed;
-}
+export { normalizeUrl, parsePortStringStrict } from "@/lib/validation/common";

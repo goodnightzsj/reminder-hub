@@ -20,20 +20,23 @@ import {
 import { subscriptions } from "@/server/db/schema";
 import { getOrFetchServiceIcon } from "@/server/lib/icon-fetcher";
 import { ROUTES } from "@/lib/routes";
-import type { FlashAction } from "@/lib/flash";
+import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 
 import {
-  parseBooleanField,
-  parseRedirectToField,
-  parseStringField,
-} from "./form-data";
-import { withAction } from "./redirect-url";
-import { subscriptionUpsertSchema } from "@/lib/validation/subscription";
+  subscriptionArchiveSchema,
+  subscriptionIdSchema,
+  subscriptionUpsertSchema,
+} from "@/lib/validation/subscription";
+import { withAction, withSearchParams } from "./redirect-url";
 
 const SUBSCRIPTIONS_PATH = ROUTES.subscriptions;
 
 function redirectWithSubscriptionAction(path: string, action: FlashAction): never {
   redirect(withAction(path, action));
+}
+
+function redirectWithSubscriptionError(path: string): never {
+  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
 }
 
 
@@ -45,7 +48,7 @@ function revalidateSubscriptionDetailAndList(id: string) {
 
 export async function createSubscription(formData: FormData) {
   const result = await subscriptionUpsertSchema.safeParseAsync(formData);
-  if (!result.success) return;
+  if (!result.success) redirectWithSubscriptionError(SUBSCRIPTIONS_PATH);
   const data = result.data;
 
   // Ensure icon is available in shared service_icons table
@@ -73,7 +76,7 @@ export async function createSubscription(formData: FormData) {
 
 export async function updateSubscription(formData: FormData) {
     const result = await subscriptionUpsertSchema.safeParseAsync(formData);
-    if (!result.success) return;
+    if (!result.success) redirectWithSubscriptionError(SUBSCRIPTIONS_PATH);
     const data = result.data;
 
     if (!data.id) return;
@@ -104,9 +107,9 @@ export async function updateSubscription(formData: FormData) {
 }
 
 export async function setSubscriptionArchived(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const isArchived = parseBooleanField(formData, "isArchived");
-  if (!id || isArchived === null) return;
+  const result = subscriptionArchiveSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, isArchived } = result.data;
 
   const now = new Date();
   await db
@@ -122,10 +125,9 @@ export async function setSubscriptionArchived(formData: FormData) {
 }
 
 export async function renewSubscription(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = subscriptionIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
 
   const { timeZone } = await getAppTimeSettings();
   const now = new Date();
@@ -164,10 +166,9 @@ export async function renewSubscription(formData: FormData) {
 }
 
 export async function deleteSubscription(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = subscriptionIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
 
   const existing = await db
     .select({ deletedAt: subscriptions.deletedAt })
@@ -191,9 +192,9 @@ export async function deleteSubscription(formData: FormData) {
 }
 
 export async function restoreSubscription(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = subscriptionIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
   const now = new Date();
 
   await db

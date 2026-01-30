@@ -53,6 +53,7 @@ export const FLASH_ERROR_MESSAGES = {
   "missing-smtp-to": "SMTP 收件人未填写",
   "missing-smtp-auth": "SMTP 账号/密码不完整",
   "invalid-smtp-port": "SMTP Port 无效",
+  "validation-failed": "请检查填写内容",
 } as const;
 
 export type FlashErrorCode = keyof typeof FLASH_ERROR_MESSAGES;

@@ -11,19 +11,7 @@ import { recurrenceUnits, type RecurrenceUnit } from "@/server/recurrence";
 import { dateTimeLocalToUtcDate } from "@/server/datetime";
 import { getAppTimeSettings } from "@/server/db/settings";
 
-function trimToUndefined(value: unknown): unknown {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function trimmedText<T extends z.ZodTypeAny>(schema: T) {
-  return zfd.text(z.preprocess(trimToUndefined, schema));
-}
-
-function normalizeIntList(values: number[]): number[] {
-  return Array.from(new Set(values)).sort((a, b) => a - b);
-}
+import { normalizeIntList, safeRedirectTo, trimmedText, looseCheckbox } from "./common";
 
 export const todoUpsertSchema = zfd.formData({
   id: trimmedText(z.string().optional()),
@@ -47,7 +35,7 @@ export const todoUpsertSchema = zfd.formData({
 
   // Recurrence fields
   recurrenceUnit: zfd.text(z.enum(recurrenceUnits as unknown as [string, ...string[]]).optional()),
-  recurrenceInterval: zfd.numeric(z.number().int().min(1).default(1)),
+  recurrenceInterval: zfd.numeric(z.number().int().min(1).catch(1)),
 
 }).transform(async (data) => {
   // Async transform to fetch timezone
@@ -90,7 +78,7 @@ export const subtaskUpdateSchema = zfd.formData({
 export const subtaskToggleSchema = zfd.formData({
   id: trimmedText(z.string()),
   todoId: trimmedText(z.string()),
-  isDone: zfd.checkbox(),
+  isDone: looseCheckbox(),
 });
 
 export const subtaskIdSchema = zfd.formData({
@@ -101,15 +89,17 @@ export const subtaskIdSchema = zfd.formData({
 // Lifecycle schemas
 export const todoIdSchema = zfd.formData({
   id: trimmedText(z.string()),
-  redirectTo: trimmedText(z.string().optional()),
+  // Keep behavior consistent with legacy parseRedirectToField:
+  // invalid values are dropped instead of failing the whole parse.
+  redirectTo: trimmedText(z.string().optional().transform(safeRedirectTo)),
 });
 
 export const todoToggleSchema = zfd.formData({
   id: trimmedText(z.string()),
-  isDone: zfd.checkbox(),
+  isDone: looseCheckbox(),
 });
 
 export const todoArchiveSchema = zfd.formData({
   id: trimmedText(z.string()),
-  isArchived: zfd.checkbox(),
+  isArchived: looseCheckbox(),
 });

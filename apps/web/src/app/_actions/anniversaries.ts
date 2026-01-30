@@ -9,20 +9,23 @@ import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { anniversaries } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-import type { FlashAction } from "@/lib/flash";
-import { anniversaryUpsertSchema } from "@/lib/validation/anniversary";
-
+import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 import {
-  parseBooleanField,
-  parseRedirectToField,
-  parseStringField,
-} from "./form-data";
-import { withAction } from "./redirect-url";
+  anniversaryArchiveSchema,
+  anniversaryCreateSchema,
+  anniversaryIdSchema,
+  anniversaryUpdateSchema,
+} from "@/lib/validation/anniversary";
+import { withAction, withSearchParams } from "./redirect-url";
 
 const ANNIVERSARIES_PATH = ROUTES.anniversaries;
 
 function redirectWithAnniversaryAction(path: string, action: FlashAction): never {
   redirect(withAction(path, action));
+}
+
+function redirectWithAnniversaryError(path: string): never {
+  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
 }
 
 function revalidateAnniversaryDetailAndList(id: string) {
@@ -31,12 +34,11 @@ function revalidateAnniversaryDetailAndList(id: string) {
 }
 
 export async function createAnniversary(formData: FormData) {
-  const result = anniversaryUpsertSchema.safeParse(formData);
+  const result = anniversaryCreateSchema.safeParse(formData);
   
   if (!result.success) {
-    // In a real app we'd return errors, but matching existing behavior we just return
     console.error("Validation failed", result.error);
-    return;
+    redirectWithAnniversaryError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;
 
@@ -46,7 +48,7 @@ export async function createAnniversary(formData: FormData) {
     id: randomUUID(),
     title: parsed.title,
     category: parsed.category,
-    dateType: parsed.dateType,
+    dateType: parsed.dateType as "solar" | "lunar",
     isLeapMonth: parsed.isLeapMonth,
     date: parsed.date,
     remindOffsetsDays: JSON.stringify(parsed.remindOffsetsDays),
@@ -57,15 +59,14 @@ export async function createAnniversary(formData: FormData) {
 }
 
 export async function updateAnniversary(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-
-  const result = anniversaryUpsertSchema.safeParse(formData);
+  const result = anniversaryUpdateSchema.safeParse(formData);
+  
   if (!result.success) {
       console.error("Validation failed", result.error);
-      return;
+      redirectWithAnniversaryError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;
+  const { id } = parsed;
 
   const now = new Date();
 
@@ -74,7 +75,7 @@ export async function updateAnniversary(formData: FormData) {
     .set({
       title: parsed.title,
       category: parsed.category,
-      dateType: parsed.dateType,
+      dateType: parsed.dateType as "solar" | "lunar",
       isLeapMonth: parsed.isLeapMonth,
       date: parsed.date,
       remindOffsetsDays: JSON.stringify(parsed.remindOffsetsDays),
@@ -88,9 +89,9 @@ export async function updateAnniversary(formData: FormData) {
 
 
 export async function setAnniversaryArchived(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const isArchived = parseBooleanField(formData, "isArchived");
-  if (!id || isArchived === null) return;
+  const result = anniversaryArchiveSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, isArchived } = result.data;
 
   const now = new Date();
   await db
@@ -106,10 +107,9 @@ export async function setAnniversaryArchived(formData: FormData) {
 }
 
 export async function deleteAnniversary(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = anniversaryIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
 
   const existing = await db
     .select({ deletedAt: anniversaries.deletedAt })
@@ -133,9 +133,9 @@ export async function deleteAnniversary(formData: FormData) {
 }
 
 export async function restoreAnniversary(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = anniversaryIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
   const now = new Date();
 
   await db

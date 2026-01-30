@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { eq } from "drizzle-orm";
 
@@ -52,7 +53,13 @@ export type AppTimeSettings = {
   dateReminderTime: string;
 };
 
-export async function getAppTimeSettings(): Promise<AppTimeSettings> {
+/**
+ * Cached getter for app settings using React.cache.
+ * WARNING: This cache is request-scoped. If you mutate settings in the same request (e.g. in the same Server Action),
+ * subsequent calls to this function WILL return stale data.
+ * Ensure mutations and reads are separated or handle cache invalidation manually if needed.
+ */
+export const getAppTimeSettings = cache(async function getAppTimeSettings(): Promise<AppTimeSettings> {
   const existing = await db
     .select({
       timeZone: appSettings.timeZone,
@@ -78,7 +85,7 @@ export async function getAppTimeSettings(): Promise<AppTimeSettings> {
   if (created) return created;
 
   throw new Error("Failed to create default app settings");
-}
+});
 
 export async function setAppTimeZone(timeZone: string) {
   await db

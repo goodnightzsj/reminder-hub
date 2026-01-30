@@ -2,39 +2,30 @@ import "server-only";
 
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { ANNIVERSARY_DATE_TYPE, anniversaryDateTypeValues, canonicalizeAnniversaryCategory, DEFAULT_ANNIVERSARY_CATEGORY, DEFAULT_ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "../anniversary";
+import { ANNIVERSARY_DATE_TYPE, anniversaryDateTypeValues, canonicalizeAnniversaryCategory, DEFAULT_ANNIVERSARY_CATEGORY, DEFAULT_ANNIVERSARY_DATE_TYPE } from "../anniversary";
 import { parseMonthDayString } from "@/server/anniversary";
 import { parseDateString, formatDateString } from "@/server/date";
 
-function trimToUndefined(value: unknown): unknown {
-    if (typeof value !== "string") return value;
-    const trimmed = value.trim();
-    return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function trimmedText<T extends z.ZodTypeAny>(schema: T) {
-    return zfd.text(z.preprocess(trimToUndefined, schema));
-}
-
-function normalizeIntList(values: number[]): number[] {
-    return Array.from(new Set(values)).sort((a, b) => a - b);
-}
+import { normalizeIntList, safeRedirectTo, trimmedText, looseCheckbox } from "./common";
 
 function pad2(n: number): string {
     return String(n).padStart(2, "0");
 }
 
 // Transformation chain
-export const anniversaryUpsertSchema = zfd.formData({
+const anniversaryBaseShape = {
     title: trimmedText(z.string()),
     category: trimmedText(z.string().transform(canonicalizeAnniversaryCategory).optional().default(DEFAULT_ANNIVERSARY_CATEGORY)),
     dateType: zfd.text(z.enum(anniversaryDateTypeValues as unknown as [string, ...string[]]).catch(DEFAULT_ANNIVERSARY_DATE_TYPE)),
-    isLeapMonth: zfd.checkbox(),
+    isLeapMonth: looseCheckbox(),
     solarDate: trimmedText(z.string().optional()),
     lunarMonth: trimmedText(z.string().optional()),
     lunarDay: trimmedText(z.string().optional()),
     remindOffsetsDays: zfd.repeatable(z.array(zfd.numeric(z.number().int().min(0)))),
-}).transform((data, ctx) => {
+};
+
+// Common transformer for both create and update
+const anniversaryTransformer = (data: z.infer<z.ZodObject<typeof anniversaryBaseShape>>, ctx: z.RefinementCtx) => {
     let date = "";
     
     // reset isLeapMonth if not lunar
@@ -65,11 +56,39 @@ export const anniversaryUpsertSchema = zfd.formData({
     }
 
     return {
-        title: data.title,
-        category: data.category,
-        dateType: data.dateType as AnniversaryDateType,
+        ...data,
         isLeapMonth: finalIsLeapMonth,
         date,
         remindOffsetsDays: normalizeIntList(data.remindOffsetsDays)
     };
+};
+
+export const anniversaryCreateSchema = zfd.formData(anniversaryBaseShape).transform(anniversaryTransformer);
+
+export const anniversaryUpdateSchema = zfd.formData({
+    ...anniversaryBaseShape,
+    id: trimmedText(z.string()),
+}).transform((data, ctx) => {
+    const { id, ...rest } = data;
+    const transformed = anniversaryTransformer(rest, ctx);
+    
+    if (transformed === z.NEVER) return z.NEVER;
+    
+    return {
+        id,
+        ...transformed
+    };
+});
+
+// Backward compatibility if needed, otherwise deprecate
+export const anniversaryUpsertSchema = anniversaryCreateSchema;
+
+export const anniversaryIdSchema = zfd.formData({
+    id: trimmedText(z.string()),
+    redirectTo: trimmedText(z.string().optional().transform(safeRedirectTo)),
+});
+
+export const anniversaryArchiveSchema = zfd.formData({
+    id: trimmedText(z.string()),
+    isArchived: looseCheckbox(),
 });

@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { zfd } from "zod-form-data";
-import { normalizeUrl, parsePortStringStrict } from "@/app/_actions/notifications.utils";
+import { normalizeUrl, parsePortStringStrict, looseCheckbox } from "./common";
 
 // Re-usable transformers
 const urlTransformer = (val: string | undefined | null) => {
@@ -17,26 +17,26 @@ const urlTransformer = (val: string | undefined | null) => {
 
 // Telegram
 export const telegramSettingsSchema = zfd.formData({
-    telegramEnabled: zfd.checkbox(),
+    telegramEnabled: looseCheckbox(),
     telegramBotToken: zfd.text(z.string().optional()),
     telegramChatId: zfd.text(z.string().optional()),
 });
 
 // Webhook
 export const webhookSettingsSchema = zfd.formData({
-    webhookEnabled: zfd.checkbox(),
+    webhookEnabled: looseCheckbox(),
     webhookUrl: zfd.text(z.string().transform(urlTransformer).optional()),
 });
 
 // Wecom
 export const wecomSettingsSchema = zfd.formData({
-    wecomEnabled: zfd.checkbox(),
+    wecomEnabled: looseCheckbox(),
     wecomWebhookUrl: zfd.text(z.string().transform(urlTransformer).optional()),
 });
 
 // Email
 export const emailSettingsSchema = zfd.formData({
-    emailEnabled: zfd.checkbox(),
+    emailEnabled: looseCheckbox(),
     smtpHost: zfd.text(z.string().optional()),
     smtpFrom: zfd.text(z.string().optional()),
     smtpTo: zfd.text(z.string().optional()),
@@ -46,5 +46,9 @@ export const emailSettingsSchema = zfd.formData({
         if (!val) return undefined;
         return parsePortStringStrict(val);
     })),
-    smtpSecure: zfd.checkbox(),
+    smtpSecure: looseCheckbox(),
+});
+
+export const notificationClearSchema = zfd.formData({
+  channel: zfd.text(z.string().optional()),
 });

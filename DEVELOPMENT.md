@@ -82,7 +82,7 @@
 - 纪念日分类（`anniversaries.category`）写入前统一用 `canonicalizeAnniversaryCategory`；列表筛选需用 `getAnniversaryCategoryAliases` 扩展匹配，避免历史数据造成重复标签/过滤遗漏
 - 路由路径（如 `"/settings"`/`"/todo"`）统一从 `@/lib/routes` 引用，避免跨模块硬编码导致的漂移与重复
 - 全局 Toast/重定向错误码（flash messages）统一在 `@/lib/flash` 定义：新增/修改 error code 时必须同步更新映射表，确保 UI 提示与 server 行为一致
-- Query 参数枚举解析统一用 `@/lib/parse-enum`；FormData 字段解析统一用 `apps/web/src/app/_actions/form-data.ts` 的 `parse*Field`
+- Query 参数枚举解析统一用 `@/lib/parse-enum`；FormData 字段解析统一使用 Zod Validation Schemas (`@/lib/validation/*`)。
 - 禁止随意使用 `as SomeEnumType` 来“糊”类型：优先使用 `@/lib/*` 中的 `is*` type guard（或 `parseEnumString/parseEnumField`）在边界处完成收敛，避免无声引入非法值
 
 ---
@@ -173,4 +173,4 @@ npm -C apps/web audit
 - [x] **低耦合**：将 `items/subscriptions/anniversaries` 列表页的 DB 查询与数据整形下沉到各自 `/_lib`（`page.tsx` 只做编排）
 - [x] **低耦合**：将 `todo/[id]` 详情页的 DB 查询与数据整形下沉到 `apps/web/src/app/todo/[id]/_lib`（`page.tsx` 只做编排）
 - [x] **Muda**：清理仓库根目录无 `package.json` 时遗留的 `package-lock.json`（避免误导安装方式）
-- [x] **可靠性**：为 `apps/web/src/server/anniversary.ts`、`apps/web/src/server/date.ts`、`apps/web/src/server/datetime.ts`、`apps/web/src/server/recurrence.ts`、`apps/web/src/server/notifications.utils.ts`、`apps/web/src/server/reminder-preview.ts`、`apps/web/src/app/_actions/form-data.ts` 的关键纯函数补最小单测（使用 Node 内置 `node:test` + `apps/web/scripts/test-loader.mjs`）
+- [x] **可靠性**：为 `apps/web/src/server/anniversary.ts`、`apps/web/src/server/date.ts`、`apps/web/src/server/datetime.ts`、`apps/web/src/server/recurrence.ts`、`apps/web/src/server/notifications.utils.ts`、`apps/web/src/server/reminder-preview.ts`、`apps/web/src/lib/validation/common.ts` 的关键纯函数补最小单测（使用 Node 内置 `node:test` + `apps/web/scripts/test-loader.mjs`）

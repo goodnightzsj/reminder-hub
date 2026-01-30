@@ -10,15 +10,7 @@ import {
   subscriptionCycleUnitValues,
 } from "../subscriptions";
 
-function trimToUndefined(value: unknown): unknown {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function trimmedText<T extends z.ZodTypeAny>(schema: T) {
-  return zfd.text(z.preprocess(trimToUndefined, schema));
-}
+import { normalizeIntList, safeRedirectTo, trimmedText, looseCheckbox } from "./common";
 
 function parsePriceCents(value: string | undefined): number | null {
   if (!value) return null;
@@ -27,10 +19,6 @@ function parsePriceCents(value: string | undefined): number | null {
   if (parsed < 0) return null;
   if (parsed > 1_000_000_000) return null;
   return Math.round(parsed * 100);
-}
-
-function normalizeIntList(values: number[]): number[] {
-  return Array.from(new Set(values)).sort((a, b) => a - b);
 }
 
 export const subscriptionUpsertSchema = zfd.formData({
@@ -43,9 +31,9 @@ export const subscriptionUpsertSchema = zfd.formData({
   cycleUnit: zfd.text(
     z.enum(subscriptionCycleUnitValues as unknown as [string, ...string[]]).catch(DEFAULT_SUBSCRIPTION_CYCLE_UNIT)
   ),
-  cycleInterval: zfd.numeric(z.number().int().positive().max(120).default(1)),
+  cycleInterval: zfd.numeric(z.number().int().min(1).max(120).catch(1)),
   nextRenewDate: trimmedText(z.string()),
-  autoRenew: zfd.checkbox(),
+  autoRenew: looseCheckbox(),
   remindOffsetsDays: zfd.repeatable(z.array(zfd.numeric(z.number().int().min(0)))),
 }).transform((data, ctx) => {
   const nextRenewDateParsed = parseDateString(data.nextRenewDate);
@@ -59,4 +47,15 @@ export const subscriptionUpsertSchema = zfd.formData({
   const remindOffsetsDays = normalizeIntList(data.remindOffsetsDays);
 
   return { ...data, nextRenewDate, priceCents, remindOffsetsDays };
+});
+
+export const subscriptionIdSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  isArchived: looseCheckbox(),
+  redirectTo: trimmedText(z.string().optional().transform(safeRedirectTo)),
+});
+
+export const subscriptionArchiveSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  isArchived: looseCheckbox(),
 });

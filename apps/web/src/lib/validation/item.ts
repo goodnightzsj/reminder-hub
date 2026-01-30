@@ -10,15 +10,7 @@ import {
   itemStatusValues,
 } from "../items";
 
-function trimToUndefined(value: unknown): unknown {
-  if (typeof value !== "string") return value;
-  const trimmed = value.trim();
-  return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function trimmedText<T extends z.ZodTypeAny>(schema: T) {
-  return zfd.text(z.preprocess(trimToUndefined, schema));
-}
+import { safeRedirectTo, trimmedText } from "./common";
 
 function parsePriceCents(value: string | undefined): number | null {
   if (!value) return null;
@@ -44,7 +36,7 @@ export const itemUpsertSchema = zfd.formData({
   purchasedDate: trimmedText(z.string().optional()),
   category: trimmedText(z.string().optional().default(DEFAULT_ITEM_CATEGORY)),
   status: trimmedText(z.enum(itemStatusValues as unknown as [string, ...string[]]).catch(DEFAULT_ITEM_STATUS)),
-  usageCount: zfd.numeric(z.number().int().min(0).default(0)),
+  usageCount: zfd.numeric(z.number().int().min(0).catch(0)),
   targetDailyCost: trimmedText(z.string().optional()),
 }).transform((data) => {
   const purchasedDate = parseOptionalDate(data.purchasedDate);
@@ -52,4 +44,15 @@ export const itemUpsertSchema = zfd.formData({
   const targetDailyCostCents = parsePriceCents(data.targetDailyCost);
 
   return { ...data, purchasedDate, priceCents, targetDailyCostCents };
+});
+
+export const itemIdSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  redirectTo: trimmedText(z.string().optional().transform(safeRedirectTo)),
+});
+
+export const itemStatusSchema = zfd.formData({
+  id: trimmedText(z.string()),
+  status: trimmedText(z.enum(itemStatusValues as unknown as [string, ...string[]]).catch(DEFAULT_ITEM_STATUS)),
+  redirectTo: trimmedText(z.string().optional().transform(safeRedirectTo)),
 });

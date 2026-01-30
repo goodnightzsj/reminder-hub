@@ -7,18 +7,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
-import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
+import { type ItemStatus } from "@/lib/items";
 import { items } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-import type { FlashAction } from "@/lib/flash";
+import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 
 import {
-  parseEnumField,
-  parseRedirectToField,
-  parseStringField,
-} from "./form-data";
-import { withAction } from "./redirect-url";
-import { itemUpsertSchema } from "@/lib/validation/item";
+  itemIdSchema,
+  itemStatusSchema,
+  itemUpsertSchema,
+} from "@/lib/validation/item";
+import { withAction, withSearchParams } from "./redirect-url";
 
 const ITEMS_PATH = ROUTES.items;
 
@@ -26,9 +25,11 @@ function redirectWithItemAction(path: string, action: FlashAction): never {
   redirect(withAction(path, action));
 }
 
-function parseItemStatusField(formData: FormData, key: string): ItemStatus {
-  return parseEnumField(formData, key, itemStatusValues, DEFAULT_ITEM_STATUS);
+function redirectWithItemError(path: string): never {
+  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
 }
+
+
 
 function revalidateItemDetailAndList(id: string) {
   revalidatePath(ITEMS_PATH);
@@ -37,7 +38,7 @@ function revalidateItemDetailAndList(id: string) {
 
 export async function createItem(formData: FormData) {
   const result = await itemUpsertSchema.safeParseAsync(formData);
-  if (!result.success) return;
+  if (!result.success) redirectWithItemError(ITEMS_PATH);
   const data = result.data;
 
   const now = new Date();
@@ -60,7 +61,7 @@ export async function createItem(formData: FormData) {
 
 export async function updateItem(formData: FormData) {
   const result = await itemUpsertSchema.safeParseAsync(formData);
-  if (!result.success) return;
+  if (!result.success) redirectWithItemError(ITEMS_PATH);
   const data = result.data;
 
   if (!data.id) return;
@@ -87,16 +88,15 @@ export async function updateItem(formData: FormData) {
 }
 
 export async function setItemStatus(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  const status = parseItemStatusField(formData, "status");
-  if (!id) return;
+  const result = itemStatusSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, status, redirectTo } = result.data;
 
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
   const now = new Date();
 
   await db
     .update(items)
-    .set({ status, updatedAt: now })
+    .set({ status: status as ItemStatus, updatedAt: now })
     .where(eq(items.id, id));
 
   revalidateItemDetailAndList(id);
@@ -104,10 +104,9 @@ export async function setItemStatus(formData: FormData) {
 }
 
 export async function deleteItem(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = itemIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
 
   const existing = await db
     .select({ deletedAt: items.deletedAt })
@@ -132,9 +131,9 @@ export async function deleteItem(formData: FormData) {
 }
 
 export async function restoreItem(formData: FormData) {
-  const id = parseStringField(formData, "id");
-  if (!id) return;
-  const redirectTo = parseRedirectToField(formData, "redirectTo");
+  const result = itemIdSchema.safeParse(formData);
+  if (!result.success) return;
+  const { id, redirectTo } = result.data;
   const now = new Date();
 
   await db

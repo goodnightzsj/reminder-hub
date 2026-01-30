@@ -16,11 +16,11 @@ import { FLASH_FLAG_VALUE_FALSE, FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY } 
 
 import {
   emailSettingsSchema,
+  notificationClearSchema,
   telegramSettingsSchema,
   webhookSettingsSchema,
   wecomSettingsSchema,
 } from "@/lib/validation/notification";
-import { parseStringField } from "./form-data";
 import { withSearchParams } from "./redirect-url";
 import {
   SETTINGS_PATH,
@@ -40,18 +40,31 @@ type SettingsUpdater = (
   existing: AppSettings
 ) => Promise<AppSettingsUpdate | null> | AppSettingsUpdate | null;
 
+import { ZodError } from "zod";
+
 async function validateAndUpsertSettings(
   formData: FormData,
   updater: SettingsUpdater
 ) {
-  const existing = await getAppSettings();
-  const update = await updater(formData, existing);
+  try {
+    const existing = await getAppSettings();
+    const update = await updater(formData, existing);
 
-  if (update) {
-    await upsertAppSettings(existing, update);
+    if (update) {
+      await upsertAppSettings(existing, update);
+    }
+
+    redirectSettingsSavedAfterRevalidate();
+  } catch (error) {
+    if (error instanceof ZodError) {
+      // Logic from other actions: if validation fails, generic error or first issue message
+      // But settings page has specific error codes. Zod errors might be structural.
+      // For now, mapping ZodError to a generic validation-failed toast is better than 500.
+      console.error("Settings validation error:", error);
+      redirectSettingsError("validation-failed");
+    }
+    throw error;
   }
-
-  redirectSettingsSavedAfterRevalidate();
 }
 
 
@@ -242,7 +255,12 @@ export async function runAllNotifications() {
 }
 
 export async function clearFailedDeliveries(formData: FormData) {
-  const channelRaw = parseStringField(formData, "channel");
+  const result = notificationClearSchema.safeParse(formData);
+  if (!result.success) {
+      redirect(SETTINGS_PATH);
+  }
+  
+  const channelRaw = result.data.channel;
   const channel = channelRaw && isNotificationChannel(channelRaw) ? channelRaw : null;
   if (!channel) redirect(SETTINGS_PATH);
 
