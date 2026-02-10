@@ -10,9 +10,13 @@
 | Subscription | [subscription-module.md](architecture/subscription-module.md) | [how-to-add-subscription.md](guides/how-to-add-subscription.md) |
 | Anniversary | [anniversary-module.md](architecture/anniversary-module.md) | [how-to-add-anniversary.md](guides/how-to-add-anniversary.md) |
 | Items | [items-module.md](architecture/items-module.md) | - |
+| Search | [search-module.md](architecture/search-module.md) | - |
+| Settings | [settings-module.md](architecture/settings-module.md) | - |
 | Notifications | [notification-system.md](architecture/notification-system.md) | [how-to-add-notification-channels.md](guides/how-to-add-notification-channels.md) |
 | Dashboard | [dashboard.md](architecture/dashboard.md) | - |
 | Backup | [backup-system.md](architecture/backup-system.md) | - |
+| API Routes | [api-routes.md](architecture/api-routes.md) | - |
+| Theme | [theme-system.md](architecture/theme-system.md) | - |
 | UI Components | [ui-components.md](architecture/ui-components.md) | - |
 | Database | [database-schema.md](architecture/database-schema.md) | - |
 
@@ -45,7 +49,11 @@ apps/web/src/
 - [Subscription Module](architecture/subscription-module.md) - Billing cycles, renewals
 - [Anniversary Module](architecture/anniversary-module.md) - Solar/lunar calendar
 - [Items Module](architecture/items-module.md) - Usage tracking, cost analysis
+- [Search Module](architecture/search-module.md) - Global search across entities
+- [Settings Module](architecture/settings-module.md) - App configuration
 - [Notification System](architecture/notification-system.md) - Multi-channel delivery
+- [API Routes](architecture/api-routes.md) - Cron & backup endpoints
+- [Theme System](architecture/theme-system.md) - Color themes & dark mode
 - [UI Components](architecture/ui-components.md) - Reusable components
 - [Dashboard](architecture/dashboard.md) - Data aggregation
 - [Backup System](architecture/backup-system.md) - Import/export
