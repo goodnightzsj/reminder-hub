@@ -1,0 +1,134 @@
+# Database Schema Architecture
+
+## Overview
+SQLite database with 8 core tables, managed by Drizzle ORM.
+
+**Connection**: `src/server/db/index.ts:17-20`
+**Schema**: `src/server/db/schema.ts`
+
+## Entity Relationship Diagram
+```
+todos ──1:N──► todo_subtasks
+app_settings (singleton)
+subscriptions
+anniversaries
+items
+notification_deliveries
+service_icons (cache)
+brand_metadata (cache)
+```
+
+## Core Tables
+
+### todos
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | UUID |
+| title | text | Task title |
+| description | text? | Optional description |
+| taskType | text | Category ("个人", "公司", "生活") |
+| priority | text | "low" / "medium" / "high" |
+| tags | text | JSON array string |
+| dueAt | timestamp_ms? | Due date |
+| reminderOffsetsMinutes | text | JSON array of minutes before due |
+| recurrenceRule | text? | Recurrence pattern |
+| recurrenceRootId | text? | Original recurring task |
+| recurrenceNextId | text? | Next instance |
+| isDone | boolean | Completion status |
+| completedAt | timestamp_ms? | When completed |
+| isArchived | boolean | Archive status |
+| archivedAt | timestamp_ms? | When archived |
+| deletedAt | timestamp_ms? | Soft delete |
+
+### todo_subtasks
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | UUID |
+| todoId | text FK→todos | Parent todo |
+| title | text | Subtask title |
+| isDone | boolean | Completion status |
+
+### subscriptions
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | UUID |
+| name | text | Service name |
+| category | text | Category ("娱乐", "工具", etc.) |
+| priceCents | integer? | Price in cents |
+| currency | text | Currency code |
+| cycleUnit | text | "month" / "year" |
+| cycleInterval | integer | Billing frequency |
+| nextRenewDate | text | YYYY-MM-DD format |
+| autoRenew | boolean | Auto-renewal enabled |
+| remindOffsetsDays | text | JSON array of days before |
+| icon | text? | Iconify ID |
+| color | text? | Hex color |
+
+### anniversaries
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | UUID |
+| title | text | Anniversary title |
+| category | text | "生日" / "纪念日" / "节日" |
+| dateType | text | "solar" / "lunar" |
+| isLeapMonth | boolean | Lunar leap month |
+| date | text | MM-DD or lunar equivalent |
+| remindOffsetsDays | text | JSON array of days before |
+
+### items
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | UUID |
+| name | text | Item name |
+| priceCents | integer? | Purchase price |
+| currency | text | Currency code |
+| purchasedDate | text? | YYYY-MM-DD |
+| category | text? | Category |
+| status | text | "using" / "idle" / "retired" |
+| usageCount | integer | Times used |
+| targetDailyCostCents | integer? | Target daily cost |
+
+### app_settings
+Singleton table for app configuration.
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | Fixed ID |
+| timeZone | text | User timezone |
+| dateReminderTime | text | HH:MM for date-based reminders |
+| telegramEnabled | boolean | Telegram notifications |
+| telegramBotToken | text? | Bot token |
+| telegramChatId | text? | Chat ID |
+| webhookEnabled | boolean | Webhook notifications |
+| webhookUrl | text? | Webhook URL |
+| wecomEnabled | boolean | WeCom notifications |
+| wecomWebhookUrl | text? | WeCom URL |
+| emailEnabled | boolean | Email notifications |
+| smtp* | text/int | SMTP configuration |
+
+### notification_deliveries
+| Column | Type | Description |
+|--------|------|-------------|
+| id | text PK | channel:itemType:itemId:scheduledAt |
+| channel | text | "telegram" / "webhook" / "wecom" / "email" |
+| itemType | text | "todo" / "anniversary" / "subscription" |
+| itemId | text | Source item ID |
+| scheduledAt | timestamp_ms | When to send |
+| status | text | "sending" / "sent" / "failed" |
+| sentAt | timestamp_ms? | When sent |
+| error | text? | Error message |
+
+## Common Patterns
+
+### Soft Delete
+All main entities use `deletedAt` for soft delete:
+- First delete: Sets `deletedAt`
+- Second delete: Permanent removal
+
+### Archive
+Subscriptions and anniversaries use `isArchived` + `archivedAt`.
+
+### Timestamps
+All tables have `createdAt` and `updatedAt` with default `unixepoch()*1000`.
+
+### JSON Arrays
+Reminder offsets stored as JSON text: `"[0, 10, 60, 1440]"`
