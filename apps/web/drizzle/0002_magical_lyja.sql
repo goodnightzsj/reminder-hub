@@ -1,0 +1,1 @@
+ALTER TABLE `todos` ADD `reminder_offsets_minutes` text DEFAULT '[]' NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE `subscriptions` ADD `category` text DEFAULT '其他' NOT NULL;

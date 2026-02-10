@@ -37,7 +37,6 @@ export async function createAnniversary(formData: FormData) {
   const result = anniversaryCreateSchema.safeParse(formData);
   
   if (!result.success) {
-    console.error("Validation failed", result.error);
     redirectWithAnniversaryError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;
@@ -62,7 +61,6 @@ export async function updateAnniversary(formData: FormData) {
   const result = anniversaryUpdateSchema.safeParse(formData);
   
   if (!result.success) {
-      console.error("Validation failed", result.error);
       redirectWithAnniversaryError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;

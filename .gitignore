@@ -21,4 +21,5 @@ Plan.md
 **/data/
 
 *.sql
+!**/drizzle/*.sql
 .ace-tool/

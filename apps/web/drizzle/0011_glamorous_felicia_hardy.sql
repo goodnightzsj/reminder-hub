@@ -1,0 +1,1 @@
+ALTER TABLE `app_settings` ADD `date_reminder_time` text DEFAULT '09:00' NOT NULL;

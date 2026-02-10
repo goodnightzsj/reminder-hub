@@ -1,0 +1,1 @@
+ALTER TABLE `anniversaries` ADD `is_leap_month` integer DEFAULT false NOT NULL;

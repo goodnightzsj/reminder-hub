@@ -132,3 +132,25 @@ All tables have `createdAt` and `updatedAt` with default `unixepoch()*1000`.
 
 ### JSON Arrays
 Reminder offsets stored as JSON text: `"[0, 10, 60, 1440]"`
+
+## Performance Indexes
+**Migration**: `drizzle/0019_add_performance_indexes.sql`
+
+| Table | Index | Column |
+|-------|-------|--------|
+| todos | idx_todos_deleted_at | deleted_at |
+| todos | idx_todos_is_done | is_done |
+| todos | idx_todos_due_at | due_at |
+| todos | idx_todos_is_archived | is_archived |
+| subscriptions | idx_subscriptions_deleted_at | deleted_at |
+| subscriptions | idx_subscriptions_next_renew_date | next_renew_date |
+| subscriptions | idx_subscriptions_is_archived | is_archived |
+| anniversaries | idx_anniversaries_deleted_at | deleted_at |
+| anniversaries | idx_anniversaries_date | date |
+| anniversaries | idx_anniversaries_is_archived | is_archived |
+| items | idx_items_deleted_at | deleted_at |
+| items | idx_items_status | status |
+| notification_deliveries | idx_notification_deliveries_scheduled_at | scheduled_at |
+| notification_deliveries | idx_notification_deliveries_status | status |
+| notification_deliveries | idx_notification_deliveries_channel | channel |
+| todo_subtasks | idx_todo_subtasks_todo_id | todo_id |
