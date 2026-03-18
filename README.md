@@ -1,46 +1,105 @@
-# 综合提醒管理平台 (Todo List + Reminders)
+# Todo List / 综合提醒管理平台
 
-一个现代化的个人综合提醒管理平台，集成待办事项、纪念日、订阅管理与物品追踪。
+一个面向长期自托管的个人提醒与记录平台，统一管理待办、纪念日、订阅和物品信息，并通过多渠道通知、周期摘要和年度回顾把“记录”变成“可执行的提醒系统”。
 
-## 🌟 核心功能 (Features)
+## 项目定位
 
-- **Todo 待办管理**: 
-    - 优先级/分类/标签过滤
-    - 截止时间与多重提醒
-    - 子任务拆分 (Subtasks)
-    - 循环任务 (Recurrence)
-- **纪念日 (Anniversaries)**:
-    - 公历/农历支持
-    - 每年自动重复与提醒
-- **订阅管理 (Subscriptions)**:
-    - 月付/年付周期追踪
-    - 到期提醒与手动续期模式
-- **仪表盘 (Dashboard)**:
-    - 聚合今日任务、即将到期订阅、纪念日
-- **现代化 UI**:
-    - 全面语义化配色 (Supports Dark Mode)
-    - 响应式布局 (Mobile/Desktop)
-    - 微交互与平滑动效
+- 适合个人或小团队自托管，优先考虑长期运行、低维护成本和本地数据持久化。
+- 以 SQLite 为默认存储，部署门槛低，适合 NAS、VPS、家庭服务器和开发机。
+- 除日常管理外，已经内置通知、周报/月报、年度回顾等复盘能力。
 
-## 🛠️ 技术栈 (Tech Stack)
+## 核心能力
 
-- **Framework**: [Next.js 16](https://nextjs.org/) (App Router；build 默认使用 Webpack 以保证稳定性)
-- **Database**: SQLite（运行时 `better-sqlite3`）
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team/) + `drizzle-kit` 迁移
-- **UI**: Tailwind CSS v4 + 语义化配色 (Semantic Tokens)
-- **Language**: TypeScript + React 19
+### 1. Todo 待办管理
 
-## 🚀 快速开始 (Getting Started)
+- 优先级、分类、标签
+- 截止时间与多重提醒
+- 子任务拆分
+- 循环任务
+- 完成、归档、软删除
 
-### 1. 依赖安装
+### 2. 纪念日管理
+
+- 公历 / 农历
+- 每年自动重复
+- 提前提醒
+- 即将到来统计
+
+### 3. 订阅管理
+
+- 月付 / 年付周期
+- 到期提醒
+- 手动续期记录
+- 自动续费信息整理
+
+### 4. 物品与清单管理
+
+- 物品记录与状态追踪
+- 清单视图
+- 年度回顾中的分类展示
+
+### 5. 通知与摘要
+
+- 通知渠道：飞书、企业微信、Telegram、Webhook、Email
+- 启用渠道统一发送
+- 支持系统内置定时任务
+- 支持外部 cron 触发
+- 周报、月报、年度回顾
+
+### 6. 年度回顾
+
+- `/review` 年份入口页
+- `/review/[year]` 年度独立回顾页
+- 年度概览、完成统计、分类汇总、完成详情、清单预览
+
+## 技术栈
+
+- Framework: [Next.js 16](https://nextjs.org/) + App Router
+- Language: TypeScript + React 19
+- Database: SQLite + `better-sqlite3`
+- ORM: [Drizzle ORM](https://orm.drizzle.team/) + `drizzle-kit`
+- UI: Tailwind CSS v4
+
+## 本地开发
+
+### 1. 安装依赖
 
 ```bash
 npm -C apps/web install
 ```
 
-## 🐳 Docker 部署（推荐）
+### 2. 配置环境变量
 
-> 适合 NAS / VPS / 服务器长期运行。SQLite 数据会持久化到 `/app/data`（Compose 默认使用数据卷）。
+```bash
+cp apps/web/.env.example apps/web/.env
+```
+
+默认配置如下：
+
+```env
+DATABASE_FILE_PATH=./data/app.db
+DATABASE_URL=file:./data/app.db
+NOTIFY_CRON_SECRET=
+SKIP_DB_MIGRATIONS=0
+```
+
+### 3. 初始化数据库
+
+```bash
+npm -C apps/web run db:migrate
+```
+
+### 4. 启动开发环境
+
+```bash
+npm -C apps/web run dev
+```
+
+访问 `http://localhost:3000`。
+
+## Docker 部署
+
+适合 NAS / VPS / 长期运行服务器。容器内 SQLite 默认持久化到 `/app/data`。
 
 ### 方式 A：Docker Compose（推荐）
 
@@ -48,15 +107,6 @@ npm -C apps/web install
 
 ```bash
 docker compose up -d --build
-```
-
-访问 `http://localhost:3000`。
-
-可选：在仓库根目录创建 `.env`，用于给容器注入配置：
-
-```env
-NOTIFY_CRON_SECRET=
-SKIP_DB_MIGRATIONS=0
 ```
 
 ### 方式 B：docker run
@@ -67,60 +117,35 @@ docker volume create todo_list_data
 docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data todo-list:latest
 ```
 
-> 更完整说明请查看：`llmdoc/guides/how-to-deploy-with-docker.md`
+更完整说明见 `llmdoc/guides/how-to-deploy-with-docker.md`。
 
-### 2. 环境变量配置
+## 目录结构
 
-复制示例环境变量文件：
+- `apps/web`：Web 应用
+- `apps/web/src/app`：页面、路由、Server Actions
+- `apps/web/src/server`：数据库、通知、摘要、调度器等服务端逻辑
+- `apps/web/drizzle`：数据库迁移
+- `llmdoc`：面向协作与维护的文档
 
-```bash
-cp apps/web/.env.example apps/web/.env
-```
-
-配置 `apps/web/.env` 中的数据库路径（默认使用本地 SQLite 文件）：
-
-```env
-# SQLite database file path (app runtime)
-DATABASE_FILE_PATH=./data/app.db
-
-# SQLite database URL (drizzle-kit)
-DATABASE_URL=file:./data/app.db
-```
-
-### 3. 数据库迁移
-
-初始化数据库表结构：
-
-```bash
-npm -C apps/web run db:migrate
-```
-
-### 4. 启动开发服务器
-
-```bash
-npm -C apps/web run dev
-```
-
-访问 [http://localhost:3000](http://localhost:3000) 即可使用。
-
-## 📂 项目结构
-
-- `apps/web`: Next.js 应用程序源码
-    - `src/app`: 页面路由与组件
-    - `src/server`: 后端逻辑、数据库 Schema、Actions
-    - `drizzle`: 数据库迁移文件
-
-## 📄 设计文档
-
-- [PRD & 设计规划 (Plan.md)](./Plan.md)
-- [开发规范（3M / 敏捷 / 低耦合）(DEVELOPMENT.md)](./DEVELOPMENT.md)
-
-## ✅ 质量检查（推荐）
+## 质量检查
 
 ```bash
 npm -C apps/web run check
 ```
 
-## 🤝 贡献
+## 文档
 
-本项目处于早期开发阶段 (v0.1 MVP)。
+- `llmdoc/index.md`
+- `llmdoc/overview/project-overview.md`
+- `llmdoc/guides/how-to-deploy-with-docker.md`
+- `DEVELOPMENT.md`
+
+## 发布到公开仓库前的默认约定
+
+- 本地数据库文件不应提交到仓库
+- `.env` 仅保留 `.env.example`
+- 机器人 token、Webhook、邮箱密码等配置必须通过环境变量或系统设置注入
+
+## 当前状态
+
+当前仓库已经具备公开发布的基础条件，适合作为一个可运行、可自托管、功能完整的个人提醒管理项目继续演进。

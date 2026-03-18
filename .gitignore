@@ -19,6 +19,9 @@ Plan.md
 
 # local sqlite/data dirs
 **/data/
+**/*.db
+**/*.sqlite
+**/*.sqlite3
 
 *.sql
 !**/drizzle/*.sql
