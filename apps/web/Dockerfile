@@ -17,7 +17,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY next.config.ts ./
-COPY tsconfig.json next-env.d.ts postcss.config.mjs eslint.config.mjs ./
+COPY tsconfig.json postcss.config.mjs eslint.config.mjs ./
 COPY public ./public
 COPY src ./src
 COPY drizzle ./drizzle
