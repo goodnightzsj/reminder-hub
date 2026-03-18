@@ -44,7 +44,7 @@ apps/web/src/
 - [Project Overview](overview/project-overview.md) - Purpose, features, structure
 
 ### Architecture
-- [Database Schema](architecture/database-schema.md) - 8 tables, relationships
+- [Database Schema](architecture/database-schema.md) - 10 tables, relationships
 - [Todo Module](architecture/todo-module.md) - Priorities, subtasks, recurrence
 - [Subscription Module](architecture/subscription-module.md) - Billing cycles, renewals
 - [Anniversary Module](architecture/anniversary-module.md) - Solar/lunar calendar
@@ -63,6 +63,7 @@ apps/web/src/
 - [How to Add Subscription](guides/how-to-add-subscription.md)
 - [How to Add Anniversary](guides/how-to-add-anniversary.md)
 - [How to Add Notification Channels](guides/how-to-add-notification-channels.md)
+- [How to Deploy with Docker](guides/how-to-deploy-with-docker.md)
 
 ### Reference
 - [Coding Conventions](reference/coding-conventions.md)

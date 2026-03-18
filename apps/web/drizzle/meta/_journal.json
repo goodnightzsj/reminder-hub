@@ -141,6 +141,27 @@
       "when": 1739174400000,
       "tag": "0019_add_performance_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1773722932788,
+      "tag": "0020_sharp_whizzer",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1773736786507,
+      "tag": "0021_parallel_famine",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1773740541549,
+      "tag": "0022_legal_patch",
+      "breakpoints": true
     }
   ]
 }

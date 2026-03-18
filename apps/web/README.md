@@ -13,6 +13,16 @@ npm run db:migrate
 npm run dev
 ```
 
+## Docker 部署
+
+推荐使用仓库根目录的 `docker-compose.yml` 一键部署：
+
+```bash
+docker compose up -d --build
+```
+
+更多说明见：`llmdoc/guides/how-to-deploy-with-docker.md`
+
 生产构建（默认使用 Webpack）：
 
 ```bash

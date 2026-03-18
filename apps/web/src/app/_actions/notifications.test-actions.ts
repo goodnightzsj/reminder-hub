@@ -49,6 +49,10 @@ export async function sendTestWecom() {
   await sendTestForChannel(NOTIFICATION_CHANNEL.WECOM);
 }
 
+export async function sendTestFeishu() {
+  await sendTestForChannel(NOTIFICATION_CHANNEL.FEISHU);
+}
+
 export async function sendTestEmail() {
   await sendTestForChannel(NOTIFICATION_CHANNEL.EMAIL);
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
@@ -8,8 +9,8 @@ type ChannelStatus = "bound" | "unbound" | "disabled";
 type NotificationChannelCardPropsBase = {
     /** 渠道名称 */
     name: string;
-    /** Iconify 图标 ID */
-    icon: string;
+    /** Iconify 图标 ID 或自定义 SVG */
+    icon: string | ReactNode;
     /** 品牌色 (用于图标) */
     brandColor: string;
     /** 绑定状态 */
@@ -34,6 +35,7 @@ export function NotificationChannelCard({
     const { name, icon, brandColor, status, statusText, actionLabel } = props;
     const isBound = status === "bound";
     const isDisabled = status === "disabled";
+    const fallbackLetter = name.charAt(0).toUpperCase();
 
     return (
         <div className="group relative flex items-center justify-between gap-4 rounded-xl border border-default bg-elevated p-4 shadow-sm transition-all duration-200 hover:border-brand-primary/30 hover:shadow-md hover:shadow-brand-primary/5">
@@ -44,10 +46,16 @@ export function NotificationChannelCard({
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface"
                     style={{ color: brandColor }}
                 >
-                    {icon ? (
-                        <Icon icon={icon} className="h-6 w-6" />
+                    {!icon ? (
+                        <span className="text-sm font-bold">{fallbackLetter}</span>
+                    ) : typeof icon === "string" ? (
+                        <Icon
+                            icon={icon}
+                            className="h-6 w-6"
+                            fallback={<span className="text-sm font-bold">{fallbackLetter}</span>}
+                        />
                     ) : (
-                        <span className="text-sm font-bold">{name.charAt(0).toUpperCase()}</span>
+                        icon
                     )}
                 </div>
 

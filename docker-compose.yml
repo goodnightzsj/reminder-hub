@@ -1,0 +1,22 @@
+services:
+  todo-list:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    image: todo-list:latest
+    container_name: todo-list
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Persist SQLite to the mounted volume.
+      DATABASE_FILE_PATH: /app/data/app.db
+      # Optional: protect POST /api/cron/notify
+      NOTIFY_CRON_SECRET: ${NOTIFY_CRON_SECRET-}
+      # Optional: set to "1" to disable auto-migrate on boot (then run migrations manually).
+      SKIP_DB_MIGRATIONS: ${SKIP_DB_MIGRATIONS-0}
+    volumes:
+      - todo_list_data:/app/data
+
+volumes:
+  todo_list_data:

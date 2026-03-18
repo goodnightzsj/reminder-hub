@@ -3,6 +3,10 @@
 ## Overview
 Next.js API routes for cron jobs and data export.
 
+## Scheduling Options
+- **External cron**: Any scheduler that periodically calls these routes (recommended for serverless deployments).
+- **Internal scheduler**: When self-hosting with a long-running Node server, enable Settings → 系统内定时任务 to run jobs in-process (no external cron).
+
 ## Routes
 
 ### POST/GET `/api/cron/notify`
@@ -37,6 +41,38 @@ Triggers notification delivery for all enabled channels.
 
 #### Usage
 External cron service calls this endpoint periodically (e.g., every 5 minutes).
+
+---
+
+### POST/GET `/api/cron/digest/weekly`
+**Location**: `src/app/api/cron/digest/weekly/route.ts`
+
+Sends weekly digest to all enabled channels:
+- **上周总结**（上周一 ~ 周日）
+- **本周计划**（本周一 ~ 周日）
+
+#### Authentication
+Same as `/api/cron/notify`:
+- `NOTIFY_CRON_SECRET` env variable (optional)
+- `Authorization: Bearer {secret}` or `?token={secret}`
+
+#### Idempotency
+Uses `digest_deliveries` table to avoid duplicate sends per `{channel, periodStart}`.
+
+---
+
+### POST/GET `/api/cron/digest/monthly`
+**Location**: `src/app/api/cron/digest/monthly/route.ts`
+
+Sends monthly digest to all enabled channels:
+- **上月总结**
+- **本月计划**
+
+#### Authentication
+Same as `/api/cron/notify` (`NOTIFY_CRON_SECRET`)
+
+#### Idempotency
+Uses `digest_deliveries` table to avoid duplicate sends per `{channel, periodStart}`.
 
 ---
 

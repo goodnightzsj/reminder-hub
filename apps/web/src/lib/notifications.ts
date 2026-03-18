@@ -2,6 +2,7 @@ export const notificationChannelValues = [
   "telegram",
   "webhook",
   "wecom",
+  "feishu",
   "email",
 ] as const;
 export type NotificationChannel = (typeof notificationChannelValues)[number];
@@ -10,6 +11,7 @@ export const NOTIFICATION_CHANNEL = {
   TELEGRAM: "telegram",
   WEBHOOK: "webhook",
   WECOM: "wecom",
+  FEISHU: "feishu",
   EMAIL: "email",
 } as const satisfies Record<string, NotificationChannel>;
 

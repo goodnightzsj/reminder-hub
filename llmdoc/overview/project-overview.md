@@ -16,7 +16,8 @@ A modern personal reminder management platform integrating todo management, anni
 2. **Anniversaries**: Solar/lunar calendar support, yearly repetition, advance reminders
 3. **Subscriptions**: Monthly/yearly billing cycles, expiration reminders, manual/auto renewal
 4. **Dashboard**: Aggregated today tasks, upcoming subscriptions, anniversaries
-5. **Notifications**: Multi-channel (Telegram, Webhook, WeCom, Email)
+5. **Notifications**: Multi-channel (Telegram, Webhook, WeCom, Feishu, Email)
+6. **Reports**: Weekly/monthly digests + annual review pages (`/review` for year picker, `/review/{year}` for KPI/节奏/分类统计/完成详情)
 
 ## Project Structure
 ```
@@ -32,6 +33,7 @@ apps/web/
 │   │   ├── dashboard/          # Dashboard pages
 │   │   ├── search/             # Search pages
 │   │   ├── settings/           # Settings pages
+│   │   ├── review/             # Annual review pages
 │   │   └── api/                # API routes (cron, backup)
 │   ├── lib/                    # Shared utilities & type definitions
 │   │   └── validation/         # Zod schemas

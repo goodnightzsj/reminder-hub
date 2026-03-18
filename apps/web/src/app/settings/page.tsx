@@ -9,6 +9,7 @@ import type { AppSettings as NotificationSettings } from "@/app/_components/sett
 import { importBackupMerge, importBackupOverwrite } from "../_actions/backup";
 import { clearAllData } from "../_actions/settings";
 import { DateReminderForm } from "../_components/settings/DateReminderForm";
+import { InternalSchedulerForm, type InternalSchedulerSettings } from "../_components/settings/InternalSchedulerForm";
 import { ThemeSwitcher } from "../_components/ThemeSwitcher";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,9 @@ export default async function SettingsPage() {
     webhookUrl: settings.webhookUrl,
     wecomEnabled: settings.wecomEnabled,
     wecomWebhookUrl: settings.wecomWebhookUrl,
+    feishuEnabled: settings.feishuEnabled,
+    feishuWebhookUrl: settings.feishuWebhookUrl,
+    feishuHasSignSecret: !!settings.feishuSignSecret,
     emailEnabled: settings.emailEnabled,
     smtpHost: settings.smtpHost,
     smtpPort: settings.smtpPort,
@@ -31,6 +35,14 @@ export default async function SettingsPage() {
     smtpHasPass: !!settings.smtpPass,
     smtpFrom: settings.smtpFrom,
     smtpTo: settings.smtpTo,
+  };
+  const internalSchedulerSettings: InternalSchedulerSettings = {
+    internalSchedulerEnabled: settings.internalSchedulerEnabled,
+    internalNotifyEnabled: settings.internalNotifyEnabled,
+    internalNotifyIntervalSeconds: settings.internalNotifyIntervalSeconds,
+    internalWeeklyDigestEnabled: settings.internalWeeklyDigestEnabled,
+    internalMonthlyDigestEnabled: settings.internalMonthlyDigestEnabled,
+    internalDigestTime: settings.internalDigestTime,
   };
 
   return (
@@ -77,7 +89,16 @@ export default async function SettingsPage() {
             <NotificationSettingsSection settings={notificationSettings} />
           </div>
 
-          {/* 4. 备份与恢复 (占满两列) */}
+          {/* 4. 系统内定时任务 (占满两列) */}
+          <section className="lg:col-span-2 rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-4">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-primary to-brand-secondary" />
+              <span className="text-sm font-semibold">系统内定时任务</span>
+            </div>
+            <InternalSchedulerForm initial={internalSchedulerSettings} />
+          </section>
+
+          {/* 5. 备份与恢复 (占满两列) */}
           <section className="lg:col-span-2 rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-4">
             <div className="flex items-center gap-2 mb-4">
               <div className="h-4 w-1 rounded-full bg-gradient-to-b from-brand-primary to-brand-secondary" />
@@ -134,7 +155,7 @@ export default async function SettingsPage() {
             </div>
           </section>
 
-          {/* 5. 危险区域 */}
+          {/* 6. 危险区域 */}
           <section className="lg:col-span-2 mt-4 rounded-2xl border border-danger/20 bg-danger/5 p-6 animate-slide-up stagger-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>

@@ -13,6 +13,10 @@ export type NotificationSettings = {
   wecomEnabled: boolean;
   wecomWebhookUrl: string | null;
 
+  feishuEnabled: boolean;
+  feishuWebhookUrl: string | null;
+  feishuHasSignSecret: boolean;
+
   emailEnabled: boolean;
   smtpHost: string | null;
   smtpPort: number | null;

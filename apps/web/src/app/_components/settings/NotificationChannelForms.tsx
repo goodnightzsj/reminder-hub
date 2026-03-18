@@ -3,16 +3,19 @@
 import { Input } from "@/app/_components/ui/Input";
 import {
   runEmailNotifications,
+  runFeishuNotifications,
   runTelegramNotifications,
   runWebhookNotifications,
   runWecomNotifications,
   updateEmailSettings,
+  updateFeishuSettings,
   updateTelegramSettings,
   updateWebhookSettings,
   updateWecomSettings,
 } from "@/app/_actions/notifications";
 import {
   sendTestEmail,
+  sendTestFeishu,
   sendTestTelegram,
   sendTestWebhook,
   sendTestWecom,
@@ -122,6 +125,45 @@ export function WeComForm({ settings }: { settings: AppSettings }) {
         channel={NOTIFICATION_CHANNEL.WECOM}
         onTest={sendTestWecom}
         onRun={runWecomNotifications}
+      />
+    </div>
+  );
+}
+
+export function FeishuForm({ settings }: { settings: AppSettings }) {
+  return (
+    <div className="space-y-6">
+      <form action={updateFeishuSettings} className="flex flex-col gap-4">
+        <ChannelEnabledToggle
+          name="feishuEnabled"
+          defaultChecked={settings.feishuEnabled}
+          label="启用飞书群机器人"
+        />
+
+        <div className="space-y-1.5">
+          <span className="text-xs font-medium text-secondary">Webhook URL</span>
+          <Input
+            name="feishuWebhookUrl"
+            placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/..."
+            defaultValue={settings.feishuWebhookUrl ?? ""}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-secondary">加签 Secret (可选)</span>
+            {settings.feishuHasSignSecret && <span className="text-[10px] text-success">已保存</span>}
+          </div>
+          <Input type="password" name="feishuSignSecret" placeholder="选填：加签 Secret" />
+        </div>
+
+        <SaveConfigButton />
+      </form>
+
+      <ActionButtons
+        channel={NOTIFICATION_CHANNEL.FEISHU}
+        onTest={sendTestFeishu}
+        onRun={runFeishuNotifications}
       />
     </div>
   );

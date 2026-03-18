@@ -4,6 +4,7 @@
 - Telegram
 - Webhook
 - WeCom (企业微信)
+- Feishu (飞书)
 - Email (SMTP)
 
 ## Configuration
@@ -37,6 +38,14 @@ Navigate to `/settings` → Notification Settings section.
 2. Enter URL
 3. Enable toggle
 
+### Feishu Setup
+1. Create group bot in Feishu (群机器人)
+2. Copy the bot Webhook URL
+3. (Optional) Enable signature and copy the "Secret"
+4. Enter URL/Secret in settings
+5. Enable toggle
+6. Default message template is an interactive card (see `src/server/notification-senders.ts`)
+
 ### Email Setup
 1. Configure SMTP:
    - Host
@@ -48,6 +57,9 @@ Navigate to `/settings` → Notification Settings section.
 ## Settings Storage
 **Table**: `app_settings` (singleton)
 **Location**: `src/server/db/schema.ts:91-124`
+
+## Migrations
+Drizzle migrations in `drizzle/*.sql` are applied automatically on server start by `src/server/db/index.ts`. Set `SKIP_DB_MIGRATIONS=1` to disable auto-migrate (then run `npm run db:migrate` manually).
 
 ## Testing
 Each channel has a "Test" button that calls:

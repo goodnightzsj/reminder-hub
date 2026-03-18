@@ -19,6 +19,7 @@ import { FLASH_TOAST_QUERY_KEY, FLASH_FLAG_VALUE_TRUE } from "@/lib/flash";
 
 import {
   emailSettingsSchema,
+  feishuSettingsSchema,
   notificationClearSchema,
   telegramSettingsSchema,
   webhookSettingsSchema,
@@ -123,6 +124,26 @@ export async function updateWecomSettings(formData: FormData) {
   });
 }
 
+export async function updateFeishuSettings(formData: FormData) {
+  await validateAndUpsertSettings(formData, async (data, existing) => {
+    const parsed = await feishuSettingsSchema.parseAsync(data);
+    const { feishuEnabled: enabled, feishuWebhookUrl, feishuSignSecret } = parsed;
+
+    const rawUrl = data.get("feishuWebhookUrl")?.toString().trim();
+
+    if (enabled && !feishuWebhookUrl && !existing.feishuWebhookUrl) redirectSettingsError("missing-feishu-webhook-url");
+    if (rawUrl && !feishuWebhookUrl) redirectSettingsError("invalid-feishu-webhook-url");
+
+    const set: AppSettingsUpdate = { feishuEnabled: enabled };
+    if (feishuWebhookUrl) set.feishuWebhookUrl = feishuWebhookUrl;
+
+    const secret = feishuSignSecret?.trim();
+    if (secret) set.feishuSignSecret = secret;
+
+    return set;
+  });
+}
+
 export async function updateEmailSettings(formData: FormData) {
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await emailSettingsSchema.parseAsync(data);
@@ -201,6 +222,10 @@ export async function runWebhookNotifications() {
 
 export async function runWecomNotifications() {
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.WECOM);
+}
+
+export async function runFeishuNotifications() {
+  await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.FEISHU);
 }
 
 export async function runEmailNotifications() {

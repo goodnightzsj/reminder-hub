@@ -20,6 +20,7 @@ export function NotificationSettingsSection({ settings }: NotificationSettingsSe
         telegram: settings.telegramEnabled,
         webhook: settings.webhookEnabled,
         wecom: settings.wecomEnabled,
+        feishu: settings.feishuEnabled,
         email: settings.emailEnabled,
     };
 

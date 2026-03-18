@@ -27,11 +27,23 @@ async function ensureAppSettingsRow() {
 }
 
 export async function getAppSettings() {
-  const existing = await db
-    .select()
-    .from(appSettings)
-    .where(eq(appSettings.id, SETTINGS_ID))
-    .get();
+  let existing: typeof appSettings.$inferSelect | undefined;
+  try {
+    existing = await db
+      .select()
+      .from(appSettings)
+      .where(eq(appSettings.id, SETTINGS_ID))
+      .get();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.toLowerCase().includes("no such column")) {
+      throw new Error(
+        `Database schema is out-of-date. Run \`cd apps/web && npm run db:migrate\` and restart the server. Original error: ${message}`,
+        { cause: err instanceof Error ? err : undefined },
+      );
+    }
+    throw err;
+  }
 
   if (existing) return existing;
 

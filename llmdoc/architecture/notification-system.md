@@ -7,6 +7,7 @@ Multi-channel notification system for todos, subscriptions, and anniversaries.
 - **Telegram**: Bot-based notifications
 - **Webhook**: HTTP POST to custom URL
 - **WeCom** (企业微信): Enterprise messaging
+- **Feishu** (飞书): Group bot webhook (optional signature)
 - **Email**: SMTP-based emails
 
 **Definition**: `src/lib/notifications.ts:1-22`
@@ -64,7 +65,13 @@ Internal sender functions per channel:
 - `sendTelegramMessage({ botToken, chatId, text })`
 - `sendWebhookMessage({ webhookUrl, payload })`
 - `sendWecomWebhookMessage({ webhookUrl, text })`
+- `sendFeishuWebhookMessage({ webhookUrl, payload, signSecret })`
 - `sendEmailMessage({ host, port, secure, user, pass, from, to, subject, text })`
+
+Feishu default payload uses interactive card templates:
+- `buildFeishuTestCard()` / `buildFeishuCandidateCard()` in `src/server/notification-senders.ts`
+- Optional signature: request body includes `timestamp` (seconds) + `sign` (HMAC-SHA256 + base64) when `signSecret` is configured.
+- Card fields (default): item title, offset label, scheduled reminder time, event label/time (due/renew date), time zone, and item path.
 
 ## Settings Storage
 **Table**: `app_settings`
@@ -78,6 +85,28 @@ Per-channel configuration:
 **Location**: `src/app/api/cron/notify/route.ts`
 
 Called by external cron to trigger notification processing.
+
+## Internal Scheduler (Optional)
+When self-hosting with a long-running Node server, you can enable in-process scheduled jobs in:
+- Settings → 系统内定时任务
+
+Jobs:
+- Due notifications (interval)
+- Weekly/monthly digests (daily at configured time, idempotent via `digest_deliveries`)
+
+Startup hook: `src/instrumentation.ts` calls `ensureInternalSchedulerStarted()`.
+
+## Digest Reports (Weekly/Monthly)
+Digest endpoints send summary + plan messages to **all enabled channels**:
+- Weekly: `/api/cron/digest/weekly`
+- Monthly: `/api/cron/digest/monthly`
+
+Core files:
+- `src/server/digests.ts` - Builds digest content + channel payloads
+- `src/server/digest-runner.ts` - Sends digests per channel + logs delivery
+
+Delivery tracking:
+- Table `digest_deliveries` (prevents duplicates per channel + period)
 
 ## Server Actions
 **Location**: `src/app/_actions/notifications.ts`

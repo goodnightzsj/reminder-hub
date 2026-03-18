@@ -38,6 +38,37 @@
 npm -C apps/web install
 ```
 
+## 🐳 Docker 部署（推荐）
+
+> 适合 NAS / VPS / 服务器长期运行。SQLite 数据会持久化到 `/app/data`（Compose 默认使用数据卷）。
+
+### 方式 A：Docker Compose（推荐）
+
+在仓库根目录执行：
+
+```bash
+docker compose up -d --build
+```
+
+访问 `http://localhost:3000`。
+
+可选：在仓库根目录创建 `.env`，用于给容器注入配置：
+
+```env
+NOTIFY_CRON_SECRET=
+SKIP_DB_MIGRATIONS=0
+```
+
+### 方式 B：docker run
+
+```bash
+docker build -t todo-list:latest ./apps/web
+docker volume create todo_list_data
+docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data todo-list:latest
+```
+
+> 更完整说明请查看：`llmdoc/guides/how-to-deploy-with-docker.md`
+
 ### 2. 环境变量配置
 
 复制示例环境变量文件：

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { Portal } from "@/app/_components/ui/Portal";
@@ -24,6 +25,8 @@ export function NotificationChannelModal({
 
     if (!channel) return null;
     const { modalTitle: title, icon, color, Form } = NOTIFICATION_CHANNEL_META[channel];
+    const iconNode: ReactNode =
+        typeof icon === "string" ? <Icon icon={icon} className="h-5 w-5" /> : icon;
 
     return (
         <Portal>
@@ -51,7 +54,7 @@ export function NotificationChannelModal({
                                 <div className="flex items-center justify-between border-b border-divider px-6 py-4 bg-surface/50">
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface border border-divider" style={{ color }}>
-                                            <Icon icon={icon} className="h-5 w-5" />
+                                            {iconNode}
                                         </div>
                                         <h2 className="text-lg font-semibold">{title}</h2>
                                     </div>

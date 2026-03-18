@@ -34,6 +34,13 @@ export const wecomSettingsSchema = zfd.formData({
     wecomWebhookUrl: zfd.text(z.string().transform(urlTransformer).optional()),
 });
 
+// Feishu
+export const feishuSettingsSchema = zfd.formData({
+    feishuEnabled: looseCheckbox(),
+    feishuWebhookUrl: zfd.text(z.string().transform(urlTransformer).optional()),
+    feishuSignSecret: zfd.text(z.string().optional()),
+});
+
 // Email
 export const emailSettingsSchema = zfd.formData({
     emailEnabled: looseCheckbox(),

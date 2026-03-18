@@ -47,12 +47,17 @@ export const FLASH_ERROR_MESSAGES = {
   "wecom-disabled": "企业微信未开启",
   "missing-wecom-webhook-url": "企业微信 Webhook URL 未填写",
   "invalid-wecom-webhook-url": "企业微信 Webhook URL 无效",
+  "feishu-disabled": "飞书未开启",
+  "missing-feishu-webhook-url": "飞书 Webhook URL 未填写",
+  "invalid-feishu-webhook-url": "飞书 Webhook URL 无效",
   "email-disabled": "邮件未开启",
   "missing-smtp-host": "SMTP Host 未填写",
   "missing-smtp-from": "SMTP 发件人未填写",
   "missing-smtp-to": "SMTP 收件人未填写",
   "missing-smtp-auth": "SMTP 账号/密码不完整",
   "invalid-smtp-port": "SMTP Port 无效",
+  "invalid-internal-notify-interval": "通知扫描间隔无效",
+  "invalid-internal-digest-time": "汇总发送时间无效",
   "validation-failed": "请检查填写内容",
 } as const;
 

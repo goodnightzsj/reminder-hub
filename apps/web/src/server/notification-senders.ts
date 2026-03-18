@@ -1,16 +1,20 @@
 import "server-only";
 
 import { createRequire } from "node:module";
+import { createHmac } from "node:crypto";
 
 import {
   buildEmailSubject,
   buildWebhookPayload,
   formatNotificationText,
+  type NotificationItemType,
   type NotificationCandidate,
   type NotificationChannel,
 } from "@/server/notifications";
+import { NOTIFICATION_ITEM_TYPE_LABEL } from "@/server/notifications.utils";
 import { fetchWithTimeout } from "@/server/fetch";
 import { NOTIFICATION_CHANNEL } from "@/lib/notifications";
+import { formatDateTime } from "@/lib/format";
 
 import type { getAppSettings } from "@/server/db/settings";
 
@@ -21,7 +25,7 @@ const require = createRequire(import.meta.url);
 type TestSender = (nowIso: string) => Promise<void>;
 type CandidateSender = (candidate: NotificationCandidate) => Promise<void>;
 
-async function sendTelegramMessage(args: { botToken: string; chatId: string; text: string }) {
+export async function sendTelegramMessage(args: { botToken: string; chatId: string; text: string }) {
   const res = await fetchWithTimeout(`https://api.telegram.org/bot${args.botToken}/sendMessage`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -56,7 +60,7 @@ async function sendTelegramMessage(args: { botToken: string; chatId: string; tex
   }
 }
 
-async function sendWebhookMessage(args: { webhookUrl: string; payload: unknown }) {
+export async function sendWebhookMessage(args: { webhookUrl: string; payload: unknown }) {
   const res = await fetchWithTimeout(args.webhookUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -67,7 +71,7 @@ async function sendWebhookMessage(args: { webhookUrl: string; payload: unknown }
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
-async function sendWecomWebhookMessage(args: { webhookUrl: string; text: string }) {
+export async function sendWecomWebhookMessage(args: { webhookUrl: string; text: string }) {
   const res = await fetchWithTimeout(args.webhookUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -98,7 +102,176 @@ async function sendWecomWebhookMessage(args: { webhookUrl: string; text: string 
   }
 }
 
-async function sendEmailMessage(args: {
+type FeishuCardHeaderTemplate =
+  | "blue"
+  | "wathet"
+  | "turquoise"
+  | "green"
+  | "yellow"
+  | "orange"
+  | "red"
+  | "carmine"
+  | "violet"
+  | "purple"
+  | "indigo"
+  | "grey";
+
+function getFeishuCardTemplate(itemType: NotificationItemType): FeishuCardHeaderTemplate {
+  switch (itemType) {
+    case "todo":
+      return "blue";
+    case "anniversary":
+      return "orange";
+    case "subscription":
+      return "green";
+  }
+}
+
+function buildFeishuSign(secret: string, timestampSeconds: string): string {
+  const stringToSign = `${timestampSeconds}\n${secret}`;
+  return createHmac("sha256", secret).update(stringToSign).digest("base64");
+}
+
+function buildFeishuTestCard(args: { nowIso: string; timeZone: string }): Record<string, unknown> {
+  return {
+    msg_type: "interactive",
+    card: {
+      config: { wide_screen_mode: true, enable_forward: true },
+      header: {
+        template: "green",
+        title: { tag: "plain_text", content: "飞书通知已连通" },
+      },
+      elements: [
+        {
+          tag: "div",
+          text: {
+            tag: "lark_md",
+            content: [
+              "**todo-list**",
+              "",
+              "已成功向该群机器人发送测试消息。",
+              "如果你开启了「加签」，也说明签名校验配置正确。",
+            ].join("\n"),
+          },
+        },
+        {
+          tag: "div",
+          fields: [
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**时间**\n${args.nowIso}` },
+            },
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**时区**\n${args.timeZone}` },
+            },
+          ],
+        },
+        {
+          tag: "note",
+          elements: [{ tag: "plain_text", content: "todo-list" }],
+        },
+      ],
+    },
+  };
+}
+
+function buildFeishuCandidateCard(candidate: NotificationCandidate, timeZone: string): Record<string, unknown> {
+  const prefix = NOTIFICATION_ITEM_TYPE_LABEL[candidate.itemType];
+  const template = getFeishuCardTemplate(candidate.itemType);
+
+  const scheduledAtText = formatDateTime(candidate.scheduledAt, timeZone);
+  const eventAtText = formatDateTime(candidate.eventAt, timeZone);
+
+  return {
+    msg_type: "interactive",
+    card: {
+      config: { wide_screen_mode: true, enable_forward: true },
+      header: {
+        template,
+        title: { tag: "plain_text", content: `提醒 · ${prefix}` },
+      },
+      elements: [
+        { tag: "div", text: { tag: "lark_md", content: `**${candidate.itemTitle}**` } },
+        { tag: "hr" },
+        {
+          tag: "div",
+          fields: [
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**${candidate.eventLabel}**\n${eventAtText}` },
+            },
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**提醒时间**\n${scheduledAtText}` },
+            },
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**提前**\n${candidate.offsetLabel}` },
+            },
+            {
+              is_short: true,
+              text: { tag: "lark_md", content: `**时区**\n${timeZone}` },
+            },
+          ],
+        },
+        {
+          tag: "note",
+          elements: [
+            { tag: "plain_text", content: "todo-list" },
+            { tag: "plain_text", content: candidate.path },
+          ],
+        },
+      ],
+    },
+  };
+}
+
+export async function sendFeishuWebhookMessage(args: { webhookUrl: string; payload: Record<string, unknown>; signSecret: string | null }) {
+  const body: Record<string, unknown> = { ...args.payload };
+  if (args.signSecret) {
+    const timestampSeconds = Math.floor(Date.now() / 1000).toString();
+    body.timestamp = timestampSeconds;
+    body.sign = buildFeishuSign(args.signSecret, timestampSeconds);
+  }
+
+  const res = await fetchWithTimeout(args.webhookUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+    timeoutMs: 10_000,
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  let payload: unknown = null;
+  try {
+    payload = await res.json();
+  } catch {
+    // Ignore json parse errors; some proxies may not return JSON.
+    return;
+  }
+  if (!payload || typeof payload !== "object") return;
+
+  if ("StatusCode" in payload && typeof (payload as { StatusCode?: unknown }).StatusCode === "number") {
+    const code = (payload as { StatusCode: number }).StatusCode;
+    if (code !== 0) {
+      const message = (payload as { StatusMessage?: unknown }).StatusMessage;
+      throw new Error(`StatusCode ${code}${typeof message === "string" ? `: ${message}` : ""}`);
+    }
+    return;
+  }
+
+  if ("code" in payload && typeof (payload as { code?: unknown }).code === "number") {
+    const code = (payload as { code: number }).code;
+    if (code !== 0) {
+      const message = (payload as { msg?: unknown }).msg;
+      throw new Error(`code ${code}${typeof message === "string" ? `: ${message}` : ""}`);
+    }
+  }
+}
+
+export async function sendEmailMessage(args: {
   host: string;
   port: number;
   secure: boolean;
@@ -180,6 +353,26 @@ export function createSenders(
           await sendWecomWebhookMessage({
             webhookUrl,
             text: formatNotificationText(candidate, settings.timeZone),
+          });
+        },
+      };
+    }
+    case NOTIFICATION_CHANNEL.FEISHU: {
+      const webhookUrl = settings.feishuWebhookUrl ?? "";
+      const signSecret = settings.feishuSignSecret ?? null;
+      return {
+        sendTest: async (nowIso: string) => {
+          await sendFeishuWebhookMessage({
+            webhookUrl,
+            signSecret,
+            payload: buildFeishuTestCard({ nowIso, timeZone: settings.timeZone }),
+          });
+        },
+        sendCandidate: async (candidate: NotificationCandidate) => {
+          await sendFeishuWebhookMessage({
+            webhookUrl,
+            signSecret,
+            payload: buildFeishuCandidateCard(candidate, settings.timeZone),
           });
         },
       };

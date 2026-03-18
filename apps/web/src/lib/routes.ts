@@ -1,6 +1,7 @@
 export const ROUTES = {
   home: "/",
   dashboard: "/dashboard",
+  review: "/review",
   todo: "/todo",
   anniversaries: "/anniversaries",
   subscriptions: "/subscriptions",
@@ -8,4 +9,3 @@ export const ROUTES = {
   search: "/search",
   settings: "/settings",
 } as const;
-

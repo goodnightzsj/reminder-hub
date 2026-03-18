@@ -11,17 +11,10 @@ import { db } from "@/server/db";
 import { getAppSettings } from "@/server/db/settings";
 import { notificationDeliveries } from "@/server/db/schema";
 import { createSenders } from "@/server/notification-senders";
-import { NOTIFICATION_CHANNEL, NOTIFICATION_DELIVERY_STATUS } from "@/lib/notifications";
-import type { FlashErrorCode } from "@/lib/flash";
+import { NOTIFICATION_DELIVERY_STATUS } from "@/lib/notifications";
+import { assertNotificationChannelConfig, NotificationConfigError } from "@/server/notification-channel-config";
 
-export class NotificationConfigError extends Error {
-  readonly code: FlashErrorCode;
-
-  constructor(code: FlashErrorCode) {
-    super(code);
-    this.code = code;
-  }
-}
+export { NotificationConfigError } from "@/server/notification-channel-config";
 
 export type RunOptions = {
   now?: Date;
@@ -48,31 +41,7 @@ function assertConfig(
   settings: AppSettings,
   channel: NotificationChannel,
 ) {
-  if (channel === NOTIFICATION_CHANNEL.TELEGRAM) {
-    if (!settings.telegramEnabled) throw new NotificationConfigError("telegram-disabled");
-    if (!settings.telegramBotToken) throw new NotificationConfigError("missing-telegram-token");
-    if (!settings.telegramChatId) throw new NotificationConfigError("missing-telegram-chat-id");
-    return;
-  }
-
-  if (channel === NOTIFICATION_CHANNEL.WEBHOOK) {
-    if (!settings.webhookEnabled) throw new NotificationConfigError("webhook-disabled");
-    if (!settings.webhookUrl) throw new NotificationConfigError("missing-webhook-url");
-    return;
-  }
-
-  if (channel === NOTIFICATION_CHANNEL.WECOM) {
-    if (!settings.wecomEnabled) throw new NotificationConfigError("wecom-disabled");
-    if (!settings.wecomWebhookUrl) throw new NotificationConfigError("missing-wecom-webhook-url");
-    return;
-  }
-
-  if (channel === NOTIFICATION_CHANNEL.EMAIL) {
-    if (!settings.emailEnabled) throw new NotificationConfigError("email-disabled");
-    if (!settings.smtpHost) throw new NotificationConfigError("missing-smtp-host");
-    if (!settings.smtpFrom) throw new NotificationConfigError("missing-smtp-from");
-    if (!settings.smtpTo) throw new NotificationConfigError("missing-smtp-to");
-  }
+  assertNotificationChannelConfig(settings, channel);
 }
 
 export async function sendTestNotification(channel: NotificationChannel): Promise<void> {

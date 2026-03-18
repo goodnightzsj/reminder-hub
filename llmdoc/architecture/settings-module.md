@@ -32,20 +32,30 @@ Sets default notification time for date-based reminders (anniversaries, subscrip
 ### 3. Notification Channels
 **Component**: `NotificationSettingsSection`
 
-Configures 4 notification channels:
+Configures 5 notification channels:
 - Telegram (bot token, chat ID)
 - Webhook (URL)
 - WeCom (webhook URL)
+- Feishu (webhook URL, optional secret)
 - Email (SMTP settings)
 
-### 4. Backup & Restore
+### 4. Internal Scheduler
+**Component**: `InternalSchedulerForm`
+
+Configures in-process scheduled jobs (no external cron):
+- Enable/disable internal scheduler
+- Due notification scan interval (seconds)
+- Weekly/monthly digest send time (HH:mm, in app time zone)
+- Enable/disable: due notifications, weekly digest, monthly digest
+
+### 5. Backup & Restore
 Two import modes:
 - **Overwrite**: Clears all data, imports backup
 - **Merge**: Adds new records, skips existing IDs
 
 Export via `/api/backup/export`
 
-### 5. Danger Zone
+### 6. Danger Zone
 **Action**: `clearAllData`
 
 Permanently deletes all data (todos, anniversaries, subscriptions, items, notifications).
@@ -65,3 +75,4 @@ Permanently deletes all data (todos, anniversaries, subscriptions, items, notifi
 - **Theme Switcher**: `src/app/_components/ThemeSwitcher.tsx`
 - **Date Reminder Form**: `src/app/_components/settings/DateReminderForm.tsx`
 - **Notification Section**: `src/app/_components/settings/NotificationSettingsSection.tsx`
+- **Internal Scheduler Form**: `src/app/_components/settings/InternalSchedulerForm.tsx`
