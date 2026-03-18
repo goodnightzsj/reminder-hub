@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import ts from "typescript";
 
 const projectRootPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRootPath = path.join(projectRootPath, "src");
@@ -74,3 +75,36 @@ export async function resolve(specifier, context, defaultResolve) {
   return defaultResolve(specifier, context, defaultResolve);
 }
 
+export async function load(url, context, defaultLoad) {
+  if (
+    url.startsWith("file:") &&
+    !url.endsWith(".d.ts") &&
+    (url.endsWith(".ts") || url.endsWith(".tsx") || url.endsWith(".mts"))
+  ) {
+    const filePath = fileURLToPath(url);
+    const sourceText = fs.readFileSync(filePath, "utf8");
+    const transpiled = ts.transpileModule(sourceText, {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2022,
+        jsx: ts.JsxEmit.ReactJSX,
+        moduleResolution: ts.ModuleResolutionKind.Bundler,
+        esModuleInterop: true,
+        resolveJsonModule: true,
+        allowJs: true,
+        isolatedModules: true,
+        sourceMap: false,
+        inlineSourceMap: false,
+      },
+      fileName: filePath,
+    });
+
+    return {
+      format: "module",
+      source: transpiled.outputText,
+      shortCircuit: true,
+    };
+  }
+
+  return defaultLoad(url, context, defaultLoad);
+}
