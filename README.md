@@ -104,10 +104,11 @@ npm -C apps/web run dev
 ### 自动构建多架构镜像
 
 - 已配置 GitHub Actions：推送到 `main`、打 `v*` 标签或手动触发时自动构建 Docker 镜像
-- 默认发布到 Docker Hub：`goodnightzsj/reminder-hub`
+- 默认发布到 Docker Hub：`<DOCKERHUB_USERNAME>/<DOCKERHUB_IMAGE_NAME 或 GitHub 仓库名>`
 - 当前构建平台：`linux/amd64`、`linux/arm64`
 - Pull Request 只校验构建，不推送镜像
 - 需要在 GitHub 仓库 Secrets 中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN`
+- 可选在 GitHub 仓库 Variables 中配置 `DOCKERHUB_IMAGE_NAME`；未配置时默认使用当前 GitHub 仓库名
 
 ### 方式 A：Docker Compose（推荐）
 
@@ -128,9 +129,9 @@ docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_lis
 如果直接使用 GitHub Actions 产出的镜像，也可以：
 
 ```bash
-docker pull goodnightzsj/reminder-hub:latest
+docker pull <你的 Docker Hub 用户名>/<镜像名>:latest
 docker volume create todo_list_data
-docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data goodnightzsj/reminder-hub:latest
+docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data <你的 Docker Hub 用户名>/<镜像名>:latest
 ```
 
 更完整说明见 `llmdoc/guides/how-to-deploy-with-docker.md`。

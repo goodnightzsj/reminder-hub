@@ -7,10 +7,11 @@ This project is a long-running Node.js server (SQLite + internal scheduler). Doc
 - Workflow file: `.github/workflows/docker-publish.yml`
 - Trigger: push to `main`, push tag `v*`, pull request to `main`, or manual dispatch
 - Validation: runs `npm -C apps/web run check` before building Docker image
-- Registry: Docker Hub (`goodnightzsj/reminder-hub`)
+- Registry: Docker Hub (`<DOCKERHUB_USERNAME>/<DOCKERHUB_IMAGE_NAME or GitHub repo name>`)
 - Platforms: `linux/amd64`, `linux/arm64`
 - Pull requests only build-verify; `main`/tag/manual runs push images
 - Required GitHub Actions secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+- Optional GitHub Actions variable: `DOCKERHUB_IMAGE_NAME` (defaults to current GitHub repository name)
 
 ### Published tags
 - `latest` on default branch
@@ -19,7 +20,7 @@ This project is a long-running Node.js server (SQLite + internal scheduler). Doc
 - short SHA tag on each build
 
 ### Pull published image
-- `docker pull goodnightzsj/reminder-hub:latest`
+- `docker pull <your-dockerhub-username>/<image-name>:latest`
 
 ## Option A: Docker Compose (recommended)
 
