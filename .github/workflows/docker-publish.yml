@@ -57,12 +57,36 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
-          DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME_VAR:-${DOCKERHUB_USERNAME_SECRET:-}}"
+          trim_single_line() {
+            printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//'
+          }
+
+          DOCKERHUB_USERNAME="$(trim_single_line "${DOCKERHUB_USERNAME_VAR:-${DOCKERHUB_USERNAME_SECRET:-}}")"
+          IMAGE_NAME_CLEAN="$(trim_single_line "${IMAGE_NAME}")"
 
           test -n "${DOCKERHUB_USERNAME}" || {
             echo "Missing Docker Hub username. Set Actions Variable DOCKERHUB_USERNAME (preferred) or Secret DOCKERHUB_USERNAME."
             exit 1
           }
+
+          test -n "${IMAGE_NAME_CLEAN}" || {
+            echo "Missing Docker image name. Set Actions Variable DOCKERHUB_IMAGE_NAME or use a non-empty GitHub repository name."
+            exit 1
+          }
+
+          case "${DOCKERHUB_USERNAME}" in
+            */*|*:*|*" "*)
+              echo "Invalid Docker Hub username: must be a single namespace without spaces, slash, or colon."
+              exit 1
+              ;;
+          esac
+
+          case "${IMAGE_NAME_CLEAN}" in
+            */*|*:*|*" "*)
+              echo "Invalid Docker image name: must not contain spaces, slash, or colon."
+              exit 1
+              ;;
+          esac
 
           if [ "${GITHUB_EVENT_NAME}" != "pull_request" ]; then
             test -n "${DOCKERHUB_TOKEN}" || {
@@ -71,7 +95,7 @@ jobs:
             }
           fi
 
-          IMAGE_REPOSITORY="${DOCKERHUB_USERNAME}/${IMAGE_NAME}"
+          IMAGE_REPOSITORY="${DOCKERHUB_USERNAME}/${IMAGE_NAME_CLEAN}"
           echo "dockerhub_username=${DOCKERHUB_USERNAME}" >> "$GITHUB_OUTPUT"
           echo "image_repository=${IMAGE_REPOSITORY}" >> "$GITHUB_OUTPUT"
           echo "Resolved Docker image repository: ${IMAGE_REPOSITORY}"
