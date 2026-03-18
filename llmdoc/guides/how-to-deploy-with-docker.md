@@ -10,8 +10,10 @@ This project is a long-running Node.js server (SQLite + internal scheduler). Doc
 - Registry: Docker Hub (`<DOCKERHUB_USERNAME>/<DOCKERHUB_IMAGE_NAME or GitHub repo name>`)
 - Platforms: `linux/amd64`, `linux/arm64`
 - Pull requests only build-verify; `main`/tag/manual runs push images
-- Required GitHub Actions secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+- Recommended GitHub Actions variable: `DOCKERHUB_USERNAME`
+- Required GitHub Actions secret: `DOCKERHUB_TOKEN`
 - Optional GitHub Actions variable: `DOCKERHUB_IMAGE_NAME` (defaults to current GitHub repository name)
+- For backward compatibility, `DOCKERHUB_USERNAME` may also be set in Secrets, but Variables take precedence
 
 ### Published tags
 - `latest` on default branch

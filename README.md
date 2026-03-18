@@ -107,8 +107,10 @@ npm -C apps/web run dev
 - 默认发布到 Docker Hub：`<DOCKERHUB_USERNAME>/<DOCKERHUB_IMAGE_NAME 或 GitHub 仓库名>`
 - 当前构建平台：`linux/amd64`、`linux/arm64`
 - Pull Request 只校验构建，不推送镜像
-- 需要在 GitHub 仓库 Secrets 中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN`
+- 推荐在 GitHub 仓库 Variables 中配置 `DOCKERHUB_USERNAME`
+- 需要在 GitHub 仓库 Secrets 中配置 `DOCKERHUB_TOKEN`
 - 可选在 GitHub 仓库 Variables 中配置 `DOCKERHUB_IMAGE_NAME`；未配置时默认使用当前 GitHub 仓库名
+- 为兼容旧配置，workflow 也接受 `DOCKERHUB_USERNAME` 放在 Secrets 中，但优先读取 Variables
 
 ### 方式 A：Docker Compose（推荐）
 
