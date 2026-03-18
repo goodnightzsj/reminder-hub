@@ -101,6 +101,14 @@ npm -C apps/web run dev
 
 适合 NAS / VPS / 长期运行服务器。容器内 SQLite 默认持久化到 `/app/data`。
 
+### 自动构建多架构镜像
+
+- 已配置 GitHub Actions：推送到 `main`、打 `v*` 标签或手动触发时自动构建 Docker 镜像
+- 默认发布到 Docker Hub：`goodnightzsj/reminder-hub`
+- 当前构建平台：`linux/amd64`、`linux/arm64`
+- Pull Request 只校验构建，不推送镜像
+- 需要在 GitHub 仓库 Secrets 中配置 `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN`
+
 ### 方式 A：Docker Compose（推荐）
 
 在仓库根目录执行：
@@ -115,6 +123,14 @@ docker compose up -d --build
 docker build -t todo-list:latest ./apps/web
 docker volume create todo_list_data
 docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data todo-list:latest
+```
+
+如果直接使用 GitHub Actions 产出的镜像，也可以：
+
+```bash
+docker pull goodnightzsj/reminder-hub:latest
+docker volume create todo_list_data
+docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data goodnightzsj/reminder-hub:latest
 ```
 
 更完整说明见 `llmdoc/guides/how-to-deploy-with-docker.md`。

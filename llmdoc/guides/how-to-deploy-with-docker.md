@@ -2,6 +2,25 @@
 
 This project is a long-running Node.js server (SQLite + internal scheduler). Docker deployment must persist `/app/data` and keep the container running.
 
+## GitHub Actions image publishing
+
+- Workflow file: `.github/workflows/docker-publish.yml`
+- Trigger: push to `main`, push tag `v*`, pull request to `main`, or manual dispatch
+- Validation: runs `npm -C apps/web run check` before building Docker image
+- Registry: Docker Hub (`goodnightzsj/reminder-hub`)
+- Platforms: `linux/amd64`, `linux/arm64`
+- Pull requests only build-verify; `main`/tag/manual runs push images
+- Required GitHub Actions secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+
+### Published tags
+- `latest` on default branch
+- branch name tag on branch push
+- git tag name on tag push
+- short SHA tag on each build
+
+### Pull published image
+- `docker pull goodnightzsj/reminder-hub:latest`
+
 ## Option A: Docker Compose (recommended)
 
 1) From repo root, build and start:
