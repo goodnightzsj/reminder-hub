@@ -1,1 +1,1 @@
-SELECT 1;
+ALTER TABLE `items` ADD `deleted_at` integer;
