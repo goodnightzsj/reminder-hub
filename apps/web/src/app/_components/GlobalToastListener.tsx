@@ -159,11 +159,13 @@ function buildBackupStats(
 ): string {
     const get = (key: string) => params.get(key) || "0";
     return [
+        `系统设置 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_SETTINGS)}`,
         `${options.todoLabel} ${get(FLASH_TOAST_QUERY_KEY.BACKUP_TODOS)}`,
         `子任务 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_SUBTASKS)}`,
         `纪念日 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_ANNIVERSARIES)}`,
         `订阅 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_SUBSCRIPTIONS)}`,
         `物品 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_ITEMS)}`,
         `通知记录 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_DELIVERIES)}`,
+        `摘要记录 ${get(FLASH_TOAST_QUERY_KEY.BACKUP_DIGEST_DELIVERIES)}`,
     ].join(" · ");
 }

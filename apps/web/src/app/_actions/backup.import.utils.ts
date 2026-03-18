@@ -6,8 +6,12 @@ import { redirect } from "next/navigation";
 import { isValidTimeOfDay, isValidTimeZone } from "@/server/datetime";
 import {
   anniversaries,
+  appSettings,
+  brandMetadata,
+  digestDeliveries,
   items,
   notificationDeliveries,
+  serviceIcons,
   subscriptions,
   todoSubtasks,
   todos,
@@ -17,14 +21,18 @@ import { FLASH_FLAG_VALUE_TRUE, FLASH_TOAST_QUERY_KEY, type FlashErrorCode } fro
 import { withSearchParams } from "./redirect-url";
 import {
   isRecord,
+  parseAppSettingsRow,
   parseAnniversaryRow,
-  parseBackupV1,
+  parseBackup,
+  parseBrandMetadataRow,
+  parseDigestDeliveryRow,
   parseItemRow,
   parseNotificationDeliveryRow,
+  parseServiceIconRow,
   parseSubscriptionRow,
   parseTodoRow,
   parseTodoSubtaskRow,
-  type BackupV1,
+  type BackupFile,
 } from "@/server/backup/backup-parser";
 import { revalidateBackupPaths } from "./backup.utils";
 import { SETTINGS_PATH, redirectSettingsError } from "./settings.utils";
@@ -50,21 +58,27 @@ export function redirectBackupErrorWithMessage(error: FlashErrorCode, err: unkno
 }
 
 export type ParsedBackupRows = {
+  appSettingsRow: typeof appSettings.$inferInsert | null;
   todoRows: Array<typeof todos.$inferInsert>;
   subtaskRows: Array<typeof todoSubtasks.$inferInsert>;
   anniversaryRows: Array<typeof anniversaries.$inferInsert>;
   subscriptionRows: Array<typeof subscriptions.$inferInsert>;
   itemRows: Array<typeof items.$inferInsert>;
   deliveryRows: Array<typeof notificationDeliveries.$inferInsert>;
+  digestDeliveryRows: Array<typeof digestDeliveries.$inferInsert>;
+  serviceIconRows: Array<typeof serviceIcons.$inferInsert>;
+  brandMetadataRows: Array<typeof brandMetadata.$inferInsert>;
 };
 
 export type BackupImportToastStats = {
+  backupSettings: number;
   backupTodos: number;
   backupSubtasks: number;
   backupAnniversaries: number;
   backupSubscriptions: number;
   backupItems: number;
   backupDeliveries: number;
+  backupDigestDeliveries: number;
 };
 
 export function redirectBackupImported(stats: BackupImportToastStats): never {
@@ -77,7 +91,7 @@ export function redirectBackupMerged(stats: BackupImportToastStats): never {
   redirect(withSearchParams(SETTINGS_PATH, { [FLASH_TOAST_QUERY_KEY.BACKUP_MERGED]: FLASH_FLAG_VALUE_TRUE, ...stats }));
 }
 
-export async function parseBackupUploadOrRedirect(formData: FormData): Promise<BackupV1> {
+export async function parseBackupUploadOrRedirect(formData: FormData): Promise<BackupFile> {
   const result = backupUploadSchema.safeParse(formData);
   if (!result.success) {
     redirectSettingsError("backup-missing-file");
@@ -96,14 +110,14 @@ export async function parseBackupUploadOrRedirect(formData: FormData): Promise<B
     redirectSettingsError("backup-invalid-json");
   }
 
-  const backup = parseBackupV1(parsed);
+  const backup = parseBackup(parsed);
   if (!backup) redirectSettingsError("backup-invalid-format");
   if (!isValidTimeZone(backup.app.timeZone)) redirectSettingsError("backup-invalid-timezone");
 
   return backup;
 }
 
-export function parseBackupDateReminderTimeOrRedirect(backup: BackupV1): string | null {
+export function parseBackupDateReminderTimeOrRedirect(backup: BackupFile): string | null {
   const dateReminderTime =
     typeof backup.app.dateReminderTime === "string"
       ? backup.app.dateReminderTime.trim()
@@ -116,8 +130,24 @@ export function parseBackupDateReminderTimeOrRedirect(backup: BackupV1): string 
   return dateReminderTime;
 }
 
-export function parseBackupRowsOrRedirect(backup: BackupV1): ParsedBackupRows {
+export function parseBackupRowsOrRedirect(backup: BackupFile): ParsedBackupRows {
   try {
+    let appSettingsRow: typeof appSettings.$inferInsert | null = null;
+    if (backup.schemaVersion === 2 && backup.app.settings) {
+      appSettingsRow = parseAppSettingsRow(backup.app.settings);
+
+      if (appSettingsRow.timeZone !== backup.app.timeZone) {
+        throw new Error("app.settings.timeZone must match app.timeZone");
+      }
+
+      if (
+        typeof backup.app.dateReminderTime === "string" &&
+        appSettingsRow.dateReminderTime !== backup.app.dateReminderTime.trim()
+      ) {
+        throw new Error("app.settings.dateReminderTime must match app.dateReminderTime");
+      }
+    }
+
     const todoRows = backup.data.todos.map((raw, i) => {
       if (!isRecord(raw)) throw new Error(`todos[${i}] is not an object`);
       return parseTodoRow(raw, i);
@@ -148,6 +178,30 @@ export function parseBackupRowsOrRedirect(backup: BackupV1): ParsedBackupRows {
       return parseNotificationDeliveryRow(raw, i);
     });
 
+    const digestDeliveryRows =
+      backup.schemaVersion === 2
+        ? backup.data.digestDeliveries.map((raw, i) => {
+            if (!isRecord(raw)) throw new Error(`digestDeliveries[${i}] is not an object`);
+            return parseDigestDeliveryRow(raw, i);
+          })
+        : [];
+
+    const serviceIconRows =
+      backup.schemaVersion === 2
+        ? backup.data.serviceIcons.map((raw, i) => {
+            if (!isRecord(raw)) throw new Error(`serviceIcons[${i}] is not an object`);
+            return parseServiceIconRow(raw, i);
+          })
+        : [];
+
+    const brandMetadataRows =
+      backup.schemaVersion === 2
+        ? backup.data.brandMetadata.map((raw, i) => {
+            if (!isRecord(raw)) throw new Error(`brandMetadata[${i}] is not an object`);
+            return parseBrandMetadataRow(raw, i);
+          })
+        : [];
+
     const todoIds = new Set(todoRows.map((r) => r.id));
     for (const subtask of subtaskRows) {
       if (!todoIds.has(subtask.todoId)) {
@@ -156,12 +210,16 @@ export function parseBackupRowsOrRedirect(backup: BackupV1): ParsedBackupRows {
     }
 
     return {
+      appSettingsRow,
       todoRows,
       subtaskRows,
       anniversaryRows,
       subscriptionRows,
       itemRows,
       deliveryRows,
+      digestDeliveryRows,
+      serviceIconRows,
+      brandMetadataRows,
     };
   } catch (err) {
     redirectBackupErrorWithMessage("backup-invalid-format", err, "Invalid backup data");

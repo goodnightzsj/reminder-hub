@@ -27,6 +27,12 @@ export function parseSubscriptionRow(
     insert.description = parsed;
   }
 
+  if (hasOwn(row, "category")) {
+    const value = row.category;
+    if (typeof value !== "string") throw new Error(`subscriptions[${index}].category must be string`);
+    insert.category = value;
+  }
+
   if (hasOwn(row, "priceCents")) {
     const value = row.priceCents;
     if (value === null) {
@@ -73,6 +79,22 @@ export function parseSubscriptionRow(
     insert.remindOffsetsDays = value;
   }
 
+  if (hasOwn(row, "icon")) {
+    const value = asString(row.icon);
+    if (row.icon !== null && value === null) {
+      throw new Error(`subscriptions[${index}].icon must be string|null`);
+    }
+    insert.icon = value;
+  }
+
+  if (hasOwn(row, "color")) {
+    const value = asString(row.color);
+    if (row.color !== null && value === null) {
+      throw new Error(`subscriptions[${index}].color must be string|null`);
+    }
+    insert.color = value;
+  }
+
   if (hasOwn(row, "isArchived")) {
     const value = asBoolean(row.isArchived);
     if (value === null) throw new Error(`subscriptions[${index}].isArchived must be boolean`);
@@ -87,6 +109,17 @@ export function parseSubscriptionRow(
       const dateValue = asDateFromMs(value);
       if (!dateValue) throw new Error(`subscriptions[${index}].archivedAt must be ms timestamp|null`);
       insert.archivedAt = dateValue;
+    }
+  }
+
+  if (hasOwn(row, "deletedAt")) {
+    const value = row.deletedAt;
+    if (value === null) {
+      insert.deletedAt = null;
+    } else {
+      const dateValue = asDateFromMs(value);
+      if (!dateValue) throw new Error(`subscriptions[${index}].deletedAt must be ms timestamp|null`);
+      insert.deletedAt = dateValue;
     }
   }
 

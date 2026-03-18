@@ -4,12 +4,17 @@ import { db } from "@/server/db";
 import { setAppDateReminderTime, setAppTimeZone } from "@/server/db/settings";
 import {
   anniversaries,
+  appSettings,
+  brandMetadata,
+  digestDeliveries,
   items,
   notificationDeliveries,
+  serviceIcons,
   subscriptions,
   todoSubtasks,
   todos,
 } from "@/server/db/schema";
+import { syncInternalScheduler } from "@/server/internal-scheduler";
 import {
   parseBackupDateReminderTimeOrRedirect,
   parseBackupRowsOrRedirect,
@@ -24,11 +29,28 @@ export async function importBackupOverwrite(formData: FormData) {
   const backup = await parseBackupUploadOrRedirect(formData);
   const dateReminderTime = parseBackupDateReminderTimeOrRedirect(backup);
 
-  const { todoRows, subtaskRows, anniversaryRows, subscriptionRows, itemRows, deliveryRows } =
+  const {
+    appSettingsRow,
+    todoRows,
+    subtaskRows,
+    anniversaryRows,
+    subscriptionRows,
+    itemRows,
+    deliveryRows,
+    digestDeliveryRows,
+    serviceIconRows,
+    brandMetadataRows,
+  } =
     parseBackupRowsOrRedirect(backup);
 
   try {
     db.transaction((tx) => {
+      if (backup.schemaVersion === 2) {
+        if (appSettingsRow) tx.delete(appSettings).run();
+        tx.delete(brandMetadata).run();
+        tx.delete(serviceIcons).run();
+        tx.delete(digestDeliveries).run();
+      }
       tx.delete(notificationDeliveries).run();
       tx.delete(todoSubtasks).run();
       tx.delete(todos).run();
@@ -54,27 +76,55 @@ export async function importBackupOverwrite(formData: FormData) {
       forEachChunk(deliveryRows, (chunk) => {
         tx.insert(notificationDeliveries).values(chunk).run();
       });
+      forEachChunk(digestDeliveryRows, (chunk) => {
+        tx.insert(digestDeliveries).values(chunk).run();
+      });
+      forEachChunk(serviceIconRows, (chunk) => {
+        tx.insert(serviceIcons).values(chunk).run();
+      });
+      forEachChunk(brandMetadataRows, (chunk) => {
+        tx.insert(brandMetadata).values(chunk).run();
+      });
+      if (appSettingsRow) {
+        tx.insert(appSettings).values(appSettingsRow).run();
+      }
     });
   } catch (err) {
     redirectBackupErrorWithMessage("backup-import-failed", err, "Unknown error");
   }
 
-  await setAppTimeZone(backup.app.timeZone);
-  if (dateReminderTime) await setAppDateReminderTime(dateReminderTime);
+  if (appSettingsRow) {
+    await syncInternalScheduler();
+  } else {
+    await setAppTimeZone(backup.app.timeZone);
+    if (dateReminderTime) await setAppDateReminderTime(dateReminderTime);
+  }
 
   redirectBackupImported({
+    backupSettings: appSettingsRow ? 1 : 0,
     backupTodos: todoRows.length,
     backupSubtasks: subtaskRows.length,
     backupAnniversaries: anniversaryRows.length,
     backupSubscriptions: subscriptionRows.length,
     backupItems: itemRows.length,
     backupDeliveries: deliveryRows.length,
+    backupDigestDeliveries: digestDeliveryRows.length,
   });
 }
 
 export async function importBackupMerge(formData: FormData) {
   const backup = await parseBackupUploadOrRedirect(formData);
-  const { todoRows, subtaskRows, anniversaryRows, subscriptionRows, itemRows, deliveryRows } =
+  const {
+    todoRows,
+    subtaskRows,
+    anniversaryRows,
+    subscriptionRows,
+    itemRows,
+    deliveryRows,
+    digestDeliveryRows,
+    serviceIconRows,
+    brandMetadataRows,
+  } =
     parseBackupRowsOrRedirect(backup);
 
   let insertedTodos = 0;
@@ -83,6 +133,7 @@ export async function importBackupMerge(formData: FormData) {
   let insertedSubscriptions = 0;
   let insertedItems = 0;
   let insertedDeliveries = 0;
+  let insertedDigestDeliveries = 0;
 
   try {
     db.transaction((tx) => {
@@ -139,17 +190,36 @@ export async function importBackupMerge(formData: FormData) {
           .run();
         insertedDeliveries += getRunChanges(r);
       });
+
+      forEachChunk(digestDeliveryRows, (chunk) => {
+        const r = tx
+          .insert(digestDeliveries)
+          .values(chunk)
+          .onConflictDoNothing()
+          .run();
+        insertedDigestDeliveries += getRunChanges(r);
+      });
+
+      forEachChunk(serviceIconRows, (chunk) => {
+        tx.insert(serviceIcons).values(chunk).onConflictDoNothing().run();
+      });
+
+      forEachChunk(brandMetadataRows, (chunk) => {
+        tx.insert(brandMetadata).values(chunk).onConflictDoNothing().run();
+      });
     });
   } catch (err) {
     redirectBackupErrorWithMessage("backup-import-failed", err, "Unknown error");
   }
 
   redirectBackupMerged({
+    backupSettings: 0,
     backupTodos: insertedTodos,
     backupSubtasks: insertedSubtasks,
     backupAnniversaries: insertedAnniversaries,
     backupSubscriptions: insertedSubscriptions,
     backupItems: insertedItems,
     backupDeliveries: insertedDeliveries,
+    backupDigestDeliveries: insertedDigestDeliveries,
   });
 }

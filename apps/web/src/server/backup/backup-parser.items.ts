@@ -77,6 +77,17 @@ export function parseItemRow(row: Record<string, unknown>, index: number): typeo
     }
   }
 
+  if (hasOwn(row, "deletedAt")) {
+    const value = row.deletedAt;
+    if (value === null) {
+      insert.deletedAt = null;
+    } else {
+      const dateValue = asDateFromMs(value);
+      if (!dateValue) throw new Error(`items[${index}].deletedAt must be ms timestamp|null`);
+      insert.deletedAt = dateValue;
+    }
+  }
+
   if (hasOwn(row, "createdAt")) {
     const dateValue = asDateFromMs(row.createdAt);
     if (!dateValue) throw new Error(`items[${index}].createdAt must be ms timestamp`);

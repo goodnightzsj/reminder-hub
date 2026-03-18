@@ -123,6 +123,17 @@ export function parseTodoRow(row: Record<string, unknown>, index: number): typeo
     }
   }
 
+  if (hasOwn(row, "deletedAt")) {
+    const value = row.deletedAt;
+    if (value === null) {
+      insert.deletedAt = null;
+    } else {
+      const date = asDateFromMs(value);
+      if (!date) throw new Error(`todos[${index}].deletedAt must be ms timestamp|null`);
+      insert.deletedAt = date;
+    }
+  }
+
   if (hasOwn(row, "createdAt")) {
     const date = asDateFromMs(row.createdAt);
     if (!date) throw new Error(`todos[${index}].createdAt must be ms timestamp`);

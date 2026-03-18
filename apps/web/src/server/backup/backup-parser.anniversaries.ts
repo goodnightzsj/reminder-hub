@@ -64,6 +64,17 @@ export function parseAnniversaryRow(
     }
   }
 
+  if (hasOwn(row, "deletedAt")) {
+    const value = row.deletedAt;
+    if (value === null) {
+      insert.deletedAt = null;
+    } else {
+      const dateValue = asDateFromMs(value);
+      if (!dateValue) throw new Error(`anniversaries[${index}].deletedAt must be ms timestamp|null`);
+      insert.deletedAt = dateValue;
+    }
+  }
+
   if (hasOwn(row, "createdAt")) {
     const dateValue = asDateFromMs(row.createdAt);
     if (!dateValue) throw new Error(`anniversaries[${index}].createdAt must be ms timestamp`);

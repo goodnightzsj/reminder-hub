@@ -108,7 +108,9 @@ export default async function SettingsPage() {
             <div className="flex flex-col xl:flex-row xl:items-center gap-6">
               {/* 导出 */}
               <div className="shrink-0">
-                <p className="text-xs text-secondary mb-2">保存当前数据快照</p>
+                <p className="text-xs text-secondary mb-2">
+                  保存完整数据快照，包含通知渠道配置与系统内定时任务设置
+                </p>
                 <a
                   href="/api/backup/export"
                   className="inline-flex h-10 w-full xl:w-auto items-center justify-center gap-2 rounded-lg border border-default bg-surface px-4 text-sm font-medium hover:bg-interactive-hover transition-colors active-press"
@@ -123,7 +125,9 @@ export default async function SettingsPage() {
 
               {/* 导入 */}
               <div className="flex-1">
-                <p className="text-xs text-secondary mb-2">从备份文件恢复</p>
+                <p className="text-xs text-secondary mb-2">
+                  覆盖导入会恢复系统设置与发送记录；合并导入仅追加数据，不覆盖当前设置
+                </p>
                 <form className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
                   <input
                     type="file"

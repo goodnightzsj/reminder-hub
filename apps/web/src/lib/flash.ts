@@ -84,12 +84,14 @@ export const FLASH_TOAST_QUERY_KEY = {
   BACKUP_IMPORTED: "backupImported",
   BACKUP_MERGED: "backupMerged",
   BACKUP_MESSAGE: "backupMessage",
+  BACKUP_SETTINGS: "backupSettings",
   BACKUP_TODOS: "backupTodos",
   BACKUP_SUBTASKS: "backupSubtasks",
   BACKUP_ANNIVERSARIES: "backupAnniversaries",
   BACKUP_SUBSCRIPTIONS: "backupSubscriptions",
   BACKUP_ITEMS: "backupItems",
   BACKUP_DELIVERIES: "backupDeliveries",
+  BACKUP_DIGEST_DELIVERIES: "backupDigestDeliveries",
 
   // Notifications
   NOTIFY_SENT: "notifySent",

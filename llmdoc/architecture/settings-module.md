@@ -50,8 +50,8 @@ Configures in-process scheduled jobs (no external cron):
 
 ### 5. Backup & Restore
 Two import modes:
-- **Overwrite**: Clears all data, imports backup
-- **Merge**: Adds new records, skips existing IDs
+- **Overwrite**: Restores backup-covered tables; when backup is `schemaVersion = 2`, also restores notification channel settings and internal scheduler settings
+- **Merge**: Adds new records, skips existing IDs, and preserves current deployment settings
 
 Export via `/api/backup/export`
 

@@ -82,24 +82,19 @@ Uses `digest_deliveries` table to avoid duplicate sends per `{channel, periodSta
 Downloads complete data backup as JSON file.
 
 #### Exported Data
-```json
-{
-  "schemaVersion": 1,
-  "exportedAt": "2024-01-01T00:00:00Z",
-  "app": {
-    "timeZone": "...",
-    "dateReminderTime": "..."
-  },
-  "data": {
-    "todos": [...],
-    "todoSubtasks": [...],
-    "anniversaries": [...],
-    "subscriptions": [...],
-    "items": [...],
-    "notificationDeliveries": [...]
-  }
-}
-```
+- `schemaVersion = 2`
+- `app.timeZone`
+- `app.dateReminderTime`
+- `app.settings`：完整 `app_settings` 快照
+- `data.todos`
+- `data.todoSubtasks`
+- `data.anniversaries`
+- `data.subscriptions`
+- `data.items`
+- `data.notificationDeliveries`
+- `data.digestDeliveries`
+- `data.serviceIcons`
+- `data.brandMetadata`
 
 #### Response Headers
 - `Content-Type`: `application/json; charset=utf-8`
