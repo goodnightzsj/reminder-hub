@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AppHeader } from "../_components/layout/AppHeader";
@@ -18,6 +19,10 @@ import { parseSearchQuery, querySearchRows } from "./_lib/search-results";
 import { getItemStatusBadgeVariant, todoPriorityBadgeConfig } from "./_lib/search-ui";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "搜索",
+  description: "跨待办、纪念日、订阅与物品进行统一搜索。",
+};
 
 type SearchPageProps = {
   searchParams?: Promise<SearchParams>;

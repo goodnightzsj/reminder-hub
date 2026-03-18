@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AppHeader } from "../_components/layout/AppHeader";
@@ -14,6 +15,10 @@ import { SUBSCRIPTION_FILTER, parseSubscriptionFilter } from "./_lib/subscriptio
 import { getSubscriptionsPageData } from "./_lib/subscriptions-page-data";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "订阅",
+  description: "跟踪订阅到期、费用、自动续费状态与提醒计划。",
+};
 
 type SubscriptionsPageProps = {
   searchParams?: Promise<SearchParams>;

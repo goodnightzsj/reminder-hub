@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AppHeader } from "../_components/layout/AppHeader";
 import { BentoCard } from "../_components/shared/BentoCard";
 import { IconCalendar, IconCalendarClock, IconCheckCircle, IconCheckSquare, IconCreditCard } from "../_components/Icons";
@@ -9,6 +10,10 @@ import { TodayFocusCard } from "./_components/TodayFocusCard";
 import { getDashboardPageData } from "./_lib/dashboard-page-data";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "仪表盘",
+  description: "集中查看今天待办、即将到来的纪念日、订阅与关键统计。",
+};
 
 export default async function DashboardPage() {
   const {

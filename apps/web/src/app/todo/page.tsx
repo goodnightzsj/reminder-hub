@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import Link from "next/link";
 
@@ -35,6 +36,10 @@ import { buildTodoStatusPredicates } from "./_lib/todo-query";
 import { computeTagsSorted, filterTodoItemsByTag, getTodoEmptyState, toTodoItemData } from "./_lib/todo-ui";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "待办",
+  description: "查看、筛选并管理待办事项、子任务、提醒与循环任务。",
+};
 
 // Used for server component props
 type HomePageProps = {

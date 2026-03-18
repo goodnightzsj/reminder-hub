@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AppHeader } from "../_components/layout/AppHeader";
@@ -13,6 +14,10 @@ import { ITEM_FILTER, parseItemFilter } from "./_lib/item-filters";
 import { getItemsPageData } from "./_lib/items-page-data";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "物品",
+  description: "记录物品状态、使用频次、成本表现与分类信息。",
+};
 
 type ItemsPageProps = {
   searchParams?: Promise<SearchParams>;

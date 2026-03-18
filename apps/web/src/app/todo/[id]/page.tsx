@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,6 +26,20 @@ const todoPriorityBadgeVariantByPriority: Record<TodoPriority, "danger" | "warni
 type TodoPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: TodoPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const data = await getTodoDetailPageData(id);
+
+  if (!data) {
+    return { title: "Todo 不存在" };
+  }
+
+  return {
+    title: `Todo · ${data.todo.title}`,
+    description: "查看并编辑待办详情、子任务、提醒与循环规则。",
+  };
+}
 
 export default async function TodoPage({ params }: TodoPageProps) {
   const { id } = await params;

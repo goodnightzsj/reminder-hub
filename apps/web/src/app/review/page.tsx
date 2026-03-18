@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
@@ -8,6 +9,10 @@ import { cn } from "@/lib/utils";
 import { getReviewAvailableYears } from "./[year]/_lib/review-page-data";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "年度回顾",
+  description: "按年份查看年度概览、完成统计、分类汇总与清单预览。",
+};
 
 function GlassPanel(props: { children: React.ReactNode; className?: string }) {
   return (

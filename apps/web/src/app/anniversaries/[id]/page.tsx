@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,6 +26,20 @@ export const dynamic = "force-dynamic";
 type AnniversaryDetailPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: AnniversaryDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const data = await getAnniversaryDetailPageData(id);
+
+  if (!data) {
+    return { title: "纪念日不存在" };
+  }
+
+  return {
+    title: `纪念日 · ${data.item.title}`,
+    description: "查看并编辑纪念日日期、提醒与归档状态。",
+  };
+}
 
 export default async function AnniversaryDetailPage({
   params,

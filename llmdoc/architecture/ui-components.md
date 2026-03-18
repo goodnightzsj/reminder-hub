@@ -88,6 +88,12 @@ Page transition animations.
 ### PageBackgroundDecoration
 Background decorative elements.
 
+## Route Metadata
+
+- Global metadata is defined in `src/app/layout.tsx`
+- Major list pages export static `metadata`
+- Detail pages and annual review pages use `generateMetadata` to build route-specific titles
+
 ## Smart Input Components
 
 ### SmartDateInput (`SmartDateInput.tsx`)

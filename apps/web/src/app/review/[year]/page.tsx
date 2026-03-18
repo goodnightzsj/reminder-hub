@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,6 +15,19 @@ import { getTodoPriorityLabel } from "@/lib/todo";
 import { getYearReviewPageData } from "./_lib/review-page-data";
 
 export const dynamic = "force-dynamic";
+
+type ReviewYearPageProps = {
+  params: Promise<{ year: string }>;
+};
+
+export async function generateMetadata({ params }: ReviewYearPageProps): Promise<Metadata> {
+  const { year } = await params;
+
+  return {
+    title: `${year} 年度回顾`,
+    description: `查看 ${year} 年的年度概览、完成统计、分类汇总与完成详情。`,
+  };
+}
 
 function parseYearParam(value: string): number | null {
   if (!/^\d{4}$/.test(value)) return null;
@@ -222,7 +236,7 @@ function TodoDetailRow(props: { title: string; href: string; meta: ReactNode }) 
   );
 }
 
-export default async function YearReviewPage({ params }: { params: Promise<{ year: string }> }) {
+export default async function YearReviewPage({ params }: ReviewYearPageProps) {
   const { year: yearRaw } = await params;
   const year = parseYearParam(yearRaw);
   if (!year) notFound();

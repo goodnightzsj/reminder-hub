@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -23,6 +24,20 @@ export const dynamic = "force-dynamic";
 type SubscriptionDetailPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: SubscriptionDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const data = await getSubscriptionDetailPageData(id);
+
+  if (!data) {
+    return { title: "订阅不存在" };
+  }
+
+  return {
+    title: `订阅 · ${data.item.name}`,
+    description: "查看并编辑订阅费用、到期时间、续期方式与提醒设置。",
+  };
+}
 
 export default async function SubscriptionDetailPage({
   params,

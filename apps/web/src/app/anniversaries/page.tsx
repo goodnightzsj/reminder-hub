@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AppHeader } from "../_components/layout/AppHeader";
@@ -14,6 +15,10 @@ import { ANNIVERSARY_FILTER, parseAnniversaryFilter } from "./_lib/anniversary-f
 import { getAnniversariesPageData } from "./_lib/anniversaries-page-data";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "纪念日",
+  description: "管理公历与农历纪念日，查看下一次到来时间与提醒设置。",
+};
 
 type AnniversariesPageProps = {
   searchParams?: Promise<SearchParams>;

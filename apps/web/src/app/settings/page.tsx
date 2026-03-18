@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Icon } from "@iconify/react";
 
 import { ConfirmSubmitButton } from "@/app/_components/ConfirmSubmitButton";
@@ -13,6 +14,10 @@ import { InternalSchedulerForm, type InternalSchedulerSettings } from "../_compo
 import { ThemeSwitcher } from "../_components/ThemeSwitcher";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "设置",
+  description: "管理外观主题、通知渠道、系统内定时任务与备份恢复。",
+};
 
 export default async function SettingsPage() {
   const settings = await getAppSettings();

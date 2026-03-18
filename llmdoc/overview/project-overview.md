@@ -50,3 +50,4 @@ apps/web/
 - **Archive**: Separate `isArchived` + `archivedAt` for archiving
 - **Path Revalidation**: Uses `revalidatePath` after mutations
 - **Flash Messages**: Query param based toast notifications (`?action=updated`)
+- **Page Metadata**: `src/app/layout.tsx` defines the global title template, and major routes export `metadata` or `generateMetadata` for browser titles and descriptions

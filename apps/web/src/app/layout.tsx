@@ -8,8 +8,12 @@ import "./themes.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "综合提醒管理平台",
-  description: "统一管理 Todo、纪念日、订阅与物品的个人管理面板。",
+  title: {
+    default: "Reminder Hub",
+    template: "%s · Reminder Hub",
+  },
+  applicationName: "Reminder Hub",
+  description: "统一管理待办、纪念日、订阅、物品与通知摘要的个人提醒中心。",
 };
 
 export default function RootLayout({

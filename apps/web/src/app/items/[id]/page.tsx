@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -29,6 +30,20 @@ export const dynamic = "force-dynamic";
 type ItemDetailPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export async function generateMetadata({ params }: ItemDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const data = await getItemDetailPageData(id);
+
+  if (!data) {
+    return { title: "物品不存在" };
+  }
+
+  return {
+    title: `物品 · ${data.item.name}`,
+    description: "查看并编辑物品状态、成本信息、使用情况与分类。",
+  };
+}
 
 export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
   const { id } = await params;
