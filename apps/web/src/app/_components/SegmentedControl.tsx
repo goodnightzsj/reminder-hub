@@ -40,7 +40,7 @@ export function SegmentedControl<T extends string>({
                         href={opt.href}
                         role="tab"
                         aria-selected={isActive}
-                        className={`relative z-10 rounded-lg px-3.5 py-2 text-xs font-medium transition-colors duration-200 ${isActive
+                        className={`relative z-10 inline-flex min-h-[36px] items-center rounded-lg px-3.5 py-2 text-xs font-medium transition-colors duration-200 ${isActive
                             ? "text-primary"
                             : "text-secondary hover:text-primary"
                             }`}
@@ -48,7 +48,7 @@ export function SegmentedControl<T extends string>({
                         {isActive && (
                             <motion.span
                                 layoutId={layoutId}
-                                className="absolute inset-0 z-[-1] rounded-lg bg-white dark:bg-white/10 shadow-sm"
+                                className="absolute inset-0 z-[-1] rounded-lg bg-elevated shadow-sm ring-1 ring-black/5 dark:bg-white/10 dark:ring-white/5"
                                 transition={{
                                     type: "spring",
                                     stiffness: 450,

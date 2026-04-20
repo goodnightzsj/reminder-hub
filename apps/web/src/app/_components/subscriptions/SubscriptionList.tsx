@@ -16,10 +16,12 @@ type SubscriptionListProps = {
 };
 
 export function SubscriptionList({ items, filter }: SubscriptionListProps) {
+  // 首屏空态下由页面的 EmptyState 教学化引导，这里不再重复"新建"入口避免噪音
+  const showCreateCard = filter === SUBSCRIPTION_FILTER.ACTIVE && items.length > 0;
   return (
     <div className="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence mode="popLayout" initial={false}>
-        {filter === SUBSCRIPTION_FILTER.ACTIVE && (
+        {showCreateCard && (
           <CreateCard
             key="create-card"
             href={buildCreateModalHref(ROUTES.subscriptions)}

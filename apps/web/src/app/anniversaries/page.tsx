@@ -9,7 +9,8 @@ import { AnniversaryCreateForm } from "@/app/_components/anniversary/Anniversary
 import { AnniversaryList } from "@/app/_components/anniversary/AnniversaryList";
 import { canonicalizeAnniversaryCategory, getAnniversaryCategoryLabel } from "@/lib/anniversary";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
-import { buildAnniversariesHref as buildHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { buildAnniversariesHref as buildHref, buildCreateModalHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { ROUTES } from "@/lib/routes";
 
 import { ANNIVERSARY_FILTER, parseAnniversaryFilter } from "./_lib/anniversary-filters";
 import { getAnniversariesPageData } from "./_lib/anniversaries-page-data";
@@ -97,9 +98,26 @@ export default async function AnniversariesPage({ searchParams }: AnniversariesP
 
           <AnniversaryList filter={filter} items={items} />
 
-          {items.length === 0 && filter === ANNIVERSARY_FILTER.TRASH && (
+          {items.length === 0 && (
             <div className="border-t border-divider">
-              <EmptyState title="回收站为空" description="你的回收站很干净。" />
+              <EmptyState
+                title={filter === ANNIVERSARY_FILTER.TRASH ? "回收站为空" : "记录第一个纪念日"}
+                description={
+                  filter === ANNIVERSARY_FILTER.TRASH
+                    ? "你的回收站很干净。"
+                    : "生日、结婚、重要节日…公历或农历都可以；每年自动计算下一次、按需提前提醒。"
+                }
+                action={
+                  filter === ANNIVERSARY_FILTER.TRASH ? undefined : (
+                    <Link
+                      href={buildCreateModalHref(ROUTES.anniversaries)}
+                      className="inline-flex h-10 items-center rounded-lg bg-brand-primary px-4 text-sm font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+                    >
+                      添加纪念日
+                    </Link>
+                  )
+                }
+              />
             </div>
           )}
         </section>

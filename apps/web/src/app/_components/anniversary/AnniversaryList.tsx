@@ -16,10 +16,11 @@ type AnniversaryListProps = {
 };
 
 export function AnniversaryList({ items, filter }: AnniversaryListProps) {
+  const showCreateCard = filter === ANNIVERSARY_FILTER.ACTIVE && items.length > 0;
   return (
     <div className="p-4 grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence mode="popLayout" initial={false}>
-        {filter === ANNIVERSARY_FILTER.ACTIVE && (
+        {showCreateCard && (
           <CreateCard
             key="create-card"
             href={buildCreateModalHref(ROUTES.anniversaries)}

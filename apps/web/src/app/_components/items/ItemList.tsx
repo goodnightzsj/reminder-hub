@@ -13,10 +13,11 @@ type ItemListProps = {
 };
 
 export function ItemList({ items, filter }: ItemListProps) {
+  const showCreateCard = filter === ITEM_FILTER.USING && items.length > 0;
   return (
     <div className="mt-4 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <AnimatePresence mode="popLayout" initial={false}>
-        {filter === ITEM_FILTER.USING && (
+        {showCreateCard && (
           <CreateCard
             key="create-card"
             href={buildCreateModalHref(ROUTES.items)}

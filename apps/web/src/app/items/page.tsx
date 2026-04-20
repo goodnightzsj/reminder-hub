@@ -8,7 +8,8 @@ import { SegmentedControl } from "@/app/_components/SegmentedControl";
 import { ItemCreateForm } from "@/app/_components/items/ItemCreateForm";
 import { ItemList } from "@/app/_components/items/ItemList";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
-import { buildItemsHref as buildHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { buildItemsHref as buildHref, buildCreateModalHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { ROUTES } from "@/lib/routes";
 
 import { ITEM_FILTER, parseItemFilter } from "./_lib/item-filters";
 import { getItemsPageData } from "./_lib/items-page-data";
@@ -100,21 +101,40 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
 
           <ItemList items={items} filter={filter} />
 
-          {items.length === 0 &&
-            (filter === ITEM_FILTER.TRASH || filter === ITEM_FILTER.RETIRED || filter === ITEM_FILTER.IDLE) && (
-              <div className="mt-4">
-                <EmptyState
-                  title={
-                    filter === ITEM_FILTER.TRASH
-                      ? "回收站为空"
-                      : filter === ITEM_FILTER.RETIRED
-                        ? "暂无淘汰记录"
-                        : "还没有闲置物品"
-                  }
-                  description={filter === ITEM_FILTER.TRASH ? "你的回收站很干净。" : "这里空空如也。"}
-                />
-              </div>
-            )}
+          {items.length === 0 && (
+            <div className="mt-4">
+              <EmptyState
+                title={
+                  filter === ITEM_FILTER.TRASH
+                    ? "回收站为空"
+                    : filter === ITEM_FILTER.RETIRED
+                      ? "暂无淘汰记录"
+                      : filter === ITEM_FILTER.IDLE
+                        ? "没有闲置物品"
+                        : "登记第一件物品"
+                }
+                description={
+                  filter === ITEM_FILTER.TRASH
+                    ? "你的回收站很干净。"
+                    : filter === ITEM_FILTER.RETIRED
+                      ? "已淘汰的物品会出现在这里。"
+                      : filter === ITEM_FILTER.IDLE
+                        ? "切换到\"使用中\"看看正在用的物品。"
+                        : "记录购入价格与使用次数，自动算出日均成本，帮你评估每件东西真正值不值。"
+                }
+                action={
+                  filter === ITEM_FILTER.USING ? (
+                    <Link
+                      href={buildCreateModalHref(ROUTES.items)}
+                      className="inline-flex h-10 items-center rounded-lg bg-brand-primary px-4 text-sm font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+                    >
+                      添加物品
+                    </Link>
+                  ) : undefined
+                }
+              />
+            </div>
+          )}
         </section>
       </main>
     </div>

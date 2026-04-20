@@ -22,7 +22,7 @@ export function DashboardStatCard({
   cardDelay,
 }: DashboardStatCardProps) {
   return (
-    <TiltCard className="col-span-1 lg:col-span-1" maxRotation={15}>
+    <TiltCard className="col-span-1 lg:col-span-1" maxRotation={6}>
       <BentoCard className="h-full" delay={cardDelay}>
         <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
           <div className={iconWrapperClassName}>{icon}</div>

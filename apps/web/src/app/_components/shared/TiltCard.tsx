@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 
 interface TiltCardProps {
     children: React.ReactNode;
@@ -18,6 +18,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     perspective = 1000,
     scale = 1.02,
 }) => {
+    const prefersReducedMotion = useReducedMotion();
     const ref = useRef<HTMLDivElement>(null);
 
     // Mouse position inside the card (0 to 1)
@@ -65,6 +66,17 @@ export const TiltCard: React.FC<TiltCardProps> = ({
         glareOpacity.set(0);
     };
 
+    // 眩光背景的 transform 必须在条件分支外调用，否则违反 rules-of-hooks
+    const glareBackground = useTransform(
+        [glareX, glareY],
+        ([gx, gy]) => `radial-gradient(circle at ${gx} ${gy}, rgba(255,255,255,0.25) 0%, transparent 60%)`
+    );
+
+    // prefers-reduced-motion：静态容器，不附加 rotate / glare / whileHover scale
+    if (prefersReducedMotion) {
+        return <div className={`relative h-full w-full ${className}`}>{children}</div>;
+    }
+
     return (
         <motion.div
             ref={ref}
@@ -89,11 +101,7 @@ export const TiltCard: React.FC<TiltCardProps> = ({
                 className="pointer-events-none absolute inset-0 z-50 rounded-[inherit]"
                 style={{
                     opacity: glareOpacity,
-                    background: useTransform(
-                        [glareX, glareY],
-                        ([gx, gy]) =>
-                            `radial-gradient(circle at ${gx} ${gy}, rgba(255,255,255,0.25) 0%, transparent 60%)`
-                    ),
+                    background: glareBackground,
                 }}
             />
         </motion.div>
