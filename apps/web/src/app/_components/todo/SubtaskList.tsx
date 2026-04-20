@@ -23,11 +23,31 @@ type SubtaskListProps = {
 export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
     const subtaskDoneCount = subtasks.filter((s) => s.isDone).length;
     const progress = subtasks.length === 0 ? 0 : Math.round((subtaskDoneCount / subtasks.length) * 100);
-    const { success } = useToast();
+    const { success, error } = useToast();
 
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
-        success("已复制到剪贴板");
+    const handleCopy = async (text: string) => {
+        try {
+            if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                // 回退：非安全上下文 / 老浏览器 / WebView
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.setAttribute("readonly", "");
+                ta.style.position = "fixed";
+                ta.style.top = "-1000px";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, text.length);
+                const ok = document.execCommand("copy");
+                document.body.removeChild(ta);
+                if (!ok) throw new Error("execCommand copy failed");
+            }
+            success("已复制到剪贴板");
+        } catch {
+            error("复制失败，请手动选择文本");
+        }
     };
 
     return (

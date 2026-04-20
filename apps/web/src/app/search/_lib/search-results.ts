@@ -1,6 +1,6 @@
 import "server-only";
 
-import { desc, eq, like } from "drizzle-orm";
+import { and, desc, eq, isNull, like, or } from "drizzle-orm";
 
 import { db } from "@/server/db";
 import { anniversaries, items, serviceIcons, subscriptions, todos } from "@/server/db/schema";
@@ -17,6 +17,7 @@ async function querySearchRowsNonEmpty(q: string) {
 
   return Promise.all(
     [
+      // Todo：扩展到 description + tags(JSON 字符串)；过滤软删除。
       db
         .select({
           id: todos.id,
@@ -28,7 +29,16 @@ async function querySearchRowsNonEmpty(q: string) {
           priority: todos.priority,
         })
         .from(todos)
-        .where(like(todos.title, pattern))
+        .where(
+          and(
+            isNull(todos.deletedAt),
+            or(
+              like(todos.title, pattern),
+              like(todos.description, pattern),
+              like(todos.tags, pattern),
+            ),
+          ),
+        )
         .orderBy(desc(todos.createdAt))
         .limit(SEARCH_LIMIT),
       db
@@ -41,9 +51,15 @@ async function querySearchRowsNonEmpty(q: string) {
           createdAt: anniversaries.createdAt,
         })
         .from(anniversaries)
-        .where(like(anniversaries.title, pattern))
+        .where(
+          and(
+            isNull(anniversaries.deletedAt),
+            like(anniversaries.title, pattern),
+          ),
+        )
         .orderBy(desc(anniversaries.createdAt))
         .limit(SEARCH_LIMIT),
+      // Subscription：扩展到 description；过滤软删除。
       db
         .select({
           id: subscriptions.id,
@@ -56,7 +72,15 @@ async function querySearchRowsNonEmpty(q: string) {
         })
         .from(subscriptions)
         .leftJoin(serviceIcons, eq(subscriptions.name, serviceIcons.name))
-        .where(like(subscriptions.name, pattern))
+        .where(
+          and(
+            isNull(subscriptions.deletedAt),
+            or(
+              like(subscriptions.name, pattern),
+              like(subscriptions.description, pattern),
+            ),
+          ),
+        )
         .orderBy(desc(subscriptions.createdAt))
         .limit(SEARCH_LIMIT),
       db
@@ -68,7 +92,12 @@ async function querySearchRowsNonEmpty(q: string) {
           createdAt: items.createdAt,
         })
         .from(items)
-        .where(like(items.name, pattern))
+        .where(
+          and(
+            isNull(items.deletedAt),
+            like(items.name, pattern),
+          ),
+        )
         .orderBy(desc(items.createdAt))
         .limit(SEARCH_LIMIT),
     ] as const,
