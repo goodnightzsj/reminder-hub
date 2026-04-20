@@ -16,15 +16,19 @@ const itemVariants = {
     visible: { opacity: 1, y: 0 },
 };
 
+// 列表节奏：去掉"万物卡片"的边框 + 发光堆叠，改用：
+// - 透明底 + 下分隔线形成节奏
+// - 左侧 2px accent bar 表达优先级（overdue > high > medium）
+// - 仅在 overdue 时叠一层极淡背景色强化识别
 const todoItemBaseClassName =
-    "group relative overflow-hidden rounded-xl border transition-all";
+    "group relative overflow-hidden transition-colors border-b border-divider/50 last:border-b-0";
 const todoItemOverdueClassName =
-    "bg-red-500/10 border-red-500 shadow-[0_0_20px_-5px_rgba(239,68,68,0.6)] hover:bg-red-500/20 dark:bg-red-900/20 dark:border-red-400";
-const todoItemDefaultClassName = "bg-elevated border-transparent hover:bg-muted/30";
+    "bg-[hsl(var(--destructive)/0.05)] hover:bg-[hsl(var(--destructive)/0.09)] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[hsl(var(--destructive))]";
+const todoItemDefaultClassName = "hover:bg-muted/30";
 const todoItemHighPriorityShadowClassName =
-    "shadow-[0_0_15px_-3px_rgba(239,68,68,0.15)] hover:shadow-[0_0_20px_-3px_rgba(239,68,68,0.25)] dark:shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)]";
+    "before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[hsl(var(--destructive)/0.7)]";
 const todoItemMediumPriorityShadowClassName =
-    "shadow-[0_0_15px_-3px_rgba(245,158,11,0.1)] hover:shadow-[0_0_20px_-3px_rgba(245,158,11,0.2)]";
+    "before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-[hsl(var(--warning)/0.7)]";
 
 function getTodoItemContainerClassName(options: {
     isOverdue: boolean;

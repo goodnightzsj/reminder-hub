@@ -97,13 +97,13 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                     <div className="flex items-baseline gap-1">
                         {dailyCents !== null ? (
                             <>
-                                <span className="font-outfit text-2xl font-bold text-brand-primary">
+                                <span className="font-display text-2xl font-bold text-brand-primary">
                                     {formatCurrencyCents(dailyCents, item.currency)}
                                 </span>
                                 <span className="text-xs text-muted-foreground">/天</span>
                             </>
                         ) : (
-                            <span className="font-outfit text-xl text-muted-foreground">--</span>
+                            <span className="font-display text-xl text-muted-foreground">--</span>
                         )}
                     </div>
                 </div>
@@ -113,7 +113,7 @@ export function ItemCard({ item, daysUsed, dailyCents }: ItemCardProps) {
                         已陪伴
                     </span>
                     <div className="flex items-baseline gap-1">
-                        <span className="font-outfit text-lg font-medium text-primary">
+                        <span className="font-display text-lg font-medium text-primary">
                             {daysUsed || 0}
                         </span>
                         <span className="text-xs text-muted-foreground">天</span>

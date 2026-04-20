@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { usePrefersReducedMotion } from "./hooks/usePrefersReducedMotion";
+
 type ConfettiPiece = {
     id: number;
     x: number;
@@ -42,8 +44,17 @@ type ConfettiProps = {
 
 export function Confetti({ trigger, onComplete }: ConfettiProps) {
     const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
+    const prefersReducedMotion = usePrefersReducedMotion();
 
     useEffect(() => {
+        if (!trigger) return;
+
+        // prefers-reduced-motion：跳过粒子动画，立即回调通知完成
+        if (prefersReducedMotion) {
+            onComplete?.();
+            return;
+        }
+
         if (trigger) {
             const newPieces = Array.from({ length: 50 }, (_, i) => createPiece(i));
             setPieces(newPieces);
@@ -73,7 +84,7 @@ export function Confetti({ trigger, onComplete }: ConfettiProps) {
 
             return () => clearInterval(interval);
         }
-    }, [trigger, onComplete]);
+    }, [trigger, onComplete, prefersReducedMotion]);
 
     if (pieces.length === 0) return null;
 

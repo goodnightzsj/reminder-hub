@@ -45,6 +45,10 @@
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
 
+  /* Font families — 可作为 Tailwind 的 font-body / font-display 工具类使用 */
+  --font-body: "Geist", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Geist", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+
   /* Fluid Typography System */
   --font-size-xs: clamp(0.7rem, 0.65rem + 0.25vw, 0.8rem);
   --font-size-sm: clamp(0.8rem, 0.75rem + 0.25vw, 0.95rem);
@@ -74,34 +78,41 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-size: var(--font-size-base);
-  /* Use Outfit as primary font for modern look, fallback to Inter/system */
-  font-family: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.015em;
+  /* Body: Geist（含 CJK 回落由 --font-body 提供） */
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11", "cv02";
+}
+
+/* 标题使用 Display 字体（Space Grotesk），几何感更强 */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
 }
 
 h1 {
   font-size: inherit;
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  letter-spacing: -0.035em;
 }
 
 h2 {
   font-size: var(--font-size-2xl);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 h3 {
   font-size: var(--font-size-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 h4 {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -215,24 +226,24 @@ small {
     border-color: hsl(var(--border) / 0.5);
   }
 
-  /* === Glassmorphism v3.0 (Pro Max) === */
+  /* === Glass ===
+     饱和度从 190% 降到 140%，避免过度“AI 糖果色”；内高光由 40% 收到 22%。 */
   .bg-glass {
-    background-color: hsl(var(--card) / 0.65);
-    backdrop-filter: blur(20px) saturate(190%);
-    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    background-color: hsl(var(--card) / 0.72);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
     border: 1px solid hsl(var(--border) / 0.3);
     box-shadow:
-      0 8px 32px -4px rgba(0, 0, 0, 0.08),
-      inset 0 0 0 1.5px rgba(255, 255, 255, 0.4);
-    /* Pronounced inner highlight */
+      0 8px 28px -6px rgba(0, 0, 0, 0.06),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.22);
   }
 
   .dark .bg-glass {
-    background-color: hsl(var(--card) / 0.55);
+    background-color: hsl(var(--card) / 0.58);
     background-image: radial-gradient(at 0% 0%, hsla(var(--brand-primary), 0.05) 0, transparent 50%);
     border: 1px solid hsl(var(--border) / 0.4);
     box-shadow:
-      0 10px 40px -6px rgba(0, 0, 0, 0.4),
+      0 10px 36px -8px rgba(0, 0, 0, 0.38),
       inset 0 0 0 1px rgba(255, 255, 255, 0.03);
   }
 }
@@ -247,13 +258,14 @@ small {
   opacity: 0.05;
 }
 
-/* === Theme-Aware Mesh Gradients (Pro Max) === */
+/* === Theme-Aware Mesh Gradients ===
+   饱和度/亮度放大会出“AI slop”感，收敛到接近 1。 */
 @utility bg-mesh-gradient {
   background-image:
     radial-gradient(at 0% 0%, var(--theme-brand-primary) 0, transparent 55%),
     radial-gradient(at 100% 0%, var(--theme-brand-secondary) 0, transparent 55%),
     radial-gradient(at 50% 100%, var(--theme-brand-primary) 0, transparent 55%);
-  filter: saturate(1.2) brightness(1.05);
+  filter: saturate(1.05) brightness(1.02);
 }
 
 .dark .bg-mesh-gradient {
@@ -486,6 +498,15 @@ small {
 input[type="checkbox"],
 input[type="radio"] {
   @apply transition-transform active:scale-90 cursor-pointer accent-[hsl(var(--brand-primary))];
+}
+
+/* === Unified focus-visible ring ===
+   键盘用户可见、点击用户不打扰；颜色绑定到品牌 token。 */
+:where(button, a, [role="button"], [tabindex="0"]):focus-visible,
+:where(input, select, textarea):focus-visible {
+  outline: 2px solid hsl(var(--brand-primary) / 0.6);
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 /* === Accessibility: Reduced Motion === */

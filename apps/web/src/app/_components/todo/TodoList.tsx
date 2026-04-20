@@ -25,12 +25,12 @@ export function TodoList({ items, timeZone, emptyTitle, emptyDescription }: Todo
     }
 
     return (
-        <ul className="relative flex flex-col gap-3 px-4 pb-4 pt-2">
+        <ul className="relative flex flex-col px-2 pb-4 pt-1 sm:px-4">
             <motion.div
                 initial="hidden"
                 animate="visible"
                 variants={{
-                    visible: { transition: { staggerChildren: 0.05 } }
+                    visible: { transition: { staggerChildren: 0.04 } }
                 }}
                 className="contents"
             >

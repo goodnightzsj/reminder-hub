@@ -140,7 +140,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                     <div className="flex flex-col">
                         <span className="text-[10px] uppercase text-muted-foreground font-medium tracking-wider">日均成本</span>
                         <div className="flex items-baseline gap-1">
-                            <span className="font-outfit text-2xl font-bold text-brand-primary">
+                            <span className="font-display text-2xl font-bold text-brand-primary">
                                 {formatCurrencyCents(dailyPriceCents, item.currency)}
                             </span>
                             <span className="text-xs text-muted-foreground leading-none">/天</span>
@@ -170,7 +170,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                         <div className="flex items-center gap-2">
                             <IconWallet className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className="text-xs text-secondary">
-                                续费总计: <span className="font-outfit font-bold text-primary">{formatCurrencyCents(item.priceCents ?? 0, item.currency)}</span>
+                                续费总计: <span className="font-display font-bold text-primary">{formatCurrencyCents(item.priceCents ?? 0, item.currency)}</span>
                             </span>
                         </div>
 

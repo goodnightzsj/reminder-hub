@@ -26,18 +26,27 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Body: Geist（干净、非 Inter）；Display: Space Grotesk（几何感，个性化）。
+            CJK 自动回落系统字体（PingFang/Microsoft YaHei/Noto Sans SC）。 */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Outfit:wght@100..900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Space+Grotesk:wght@400..700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body
         className="antialiased pb-20 sm:pb-0 font-sans bg-base text-primary"
       >
+        {/* 键盘用户跳过顶部装饰、导航，直达主内容 */}
+        <a
+          href="#main-content"
+          className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-[9999] focus-visible:rounded-md focus-visible:bg-brand-primary focus-visible:px-3 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:text-white focus-visible:shadow-lg"
+        >
+          跳到主内容
+        </a>
         <div className="fixed inset-0 z-[-1] bg-mesh-gradient opacity-60 pointer-events-none" />
         <div className="fixed inset-0 z-[-1] bg-noise pointer-events-none" />
         <Providers>
-          <div id="main-content" className="transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+          <div id="main-content" tabIndex={-1} className="transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
             {children}
             <Suspense fallback={null}>
               <GlobalToastListener />

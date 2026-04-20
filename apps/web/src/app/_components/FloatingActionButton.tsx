@@ -44,6 +44,8 @@ export function FloatingActionButton() {
                     {actions.map((action) => (
                         <button
                             key={action.href}
+                            type="button"
+                            aria-label={`新建${action.label}`}
                             onClick={() => {
                                 setIsOpen(false);
                                 router.push(action.href);
@@ -64,10 +66,11 @@ export function FloatingActionButton() {
             {/* Main FAB Button */}
             <Magnetic strength={0.2} className="pointer-events-auto">
                 <button
+                    type="button"
                     onClick={handleClick}
                     onContextMenu={(e) => {
                         e.preventDefault();
-                        if (currentAction) setIsOpen(!isOpen); // Long press to force menu?
+                        if (currentAction) setIsOpen(!isOpen);
                     }}
                     className={[
                         "relative flex h-14 w-14 items-center justify-center rounded-2xl shadow-xl shadow-brand-primary/20",

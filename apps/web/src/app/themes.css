@@ -5,8 +5,8 @@
 
 /* Base layout colors (shared by all themes in light mode) */
 :root {
-  --font-inter: "Inter";
-  --font-outfit: "Outfit";
+  /* font-body / font-display 已在 globals.css @theme 中定义（带 CJK 回落），
+     这里仅保留主题共用的 layout color 变量。 */
 
   /* Modern Clean Light Mode */
   --background: 240 10% 98%;

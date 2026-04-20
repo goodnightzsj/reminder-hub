@@ -35,18 +35,18 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
     const isUrgent = daysLeft !== null && daysLeft <= 3 && daysLeft > 0;
     const isNear = daysLeft !== null && daysLeft <= 7 && daysLeft > 3;
 
-    // Dynamic styles based on urgency
+    // 用主题 token 替代硬编码红/橙，换主题时紧迫度色自动跟随。
     let cardBorderClass = "border-default";
     let daysEndColorClass = "text-primary";
     let bgClass = "bg-elevated";
 
     if (isToday) {
-        cardBorderClass = "border-red-500/50";
-        bgClass = "bg-gradient-to-br from-red-500/10 to-elevated";
-        daysEndColorClass = "text-red-500";
+        cardBorderClass = "border-[hsl(var(--destructive)/0.5)]";
+        bgClass = "bg-gradient-to-br from-[hsl(var(--destructive)/0.1)] to-[hsl(var(--bg-elevated))]";
+        daysEndColorClass = "text-[hsl(var(--destructive))]";
     } else if (isUrgent) {
-        cardBorderClass = "border-orange-500/40";
-        daysEndColorClass = "text-orange-500";
+        cardBorderClass = "border-[hsl(var(--warning)/0.4)]";
+        daysEndColorClass = "text-[hsl(var(--warning))]";
     } else if (isNear) {
         cardBorderClass = "border-brand-primary/40";
         daysEndColorClass = "text-brand-primary";
@@ -94,12 +94,12 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                     <div className="text-center">
                         {isToday ? (
                             <div className="flex flex-col items-center animate-bounce-gentle">
-                                <span className="font-outfit text-4xl font-bold text-red-500">TODAY</span>
-                                <span className="text-sm font-medium text-red-500/80">今天</span>
+                                <span className="font-display text-4xl font-bold text-[hsl(var(--destructive))] tracking-tight">TODAY</span>
+                                <span className="text-sm font-medium text-[hsl(var(--destructive)/0.85)]">今天</span>
                             </div>
                         ) : (
                             <>
-                                <span className={`font-outfit text-5xl font-bold tracking-tight ${daysEndColorClass}`}>
+                                <span className={`font-display text-5xl font-bold tracking-tight tabular-nums ${daysEndColorClass}`}>
                                     {daysLeft}
                                 </span>
                                 <span className="text-xs font-medium text-muted-foreground mt-1 block">天后</span>
@@ -129,8 +129,18 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
                     </div>
                 </div>
 
-            {/* Hover Actions Overlay */}
-            <div className="absolute inset-0 z-10 flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 backdrop-blur-sm p-4">
+            {/* 移动端常驻操作入口：右上角 "编辑" 图标直达详情页，触屏无 hover 也能操作。
+                桌面端 lg 及以上保留悬浮覆盖层完整操作。 */}
+            <Link
+                href={`/anniversaries/${item.id}`}
+                aria-label="编辑或删除"
+                className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-surface/80 text-secondary backdrop-blur-sm border border-divider/60 hover:text-brand-primary hover:bg-surface active:scale-95 transition-all lg:hidden"
+            >
+                <IconEdit className="h-4 w-4" />
+            </Link>
+
+            {/* Hover Actions Overlay（桌面专享：hover 或 focus-within 均可触发） */}
+            <div className="absolute inset-0 z-10 hidden lg:flex items-center justify-center gap-4 bg-elevated/95 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100 backdrop-blur-sm p-4">
                 {item.deletedAt ? (
                     <>
                         <Tooltip content="查看详情">

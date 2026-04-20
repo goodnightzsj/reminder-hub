@@ -26,7 +26,7 @@ export function MainNav() {
 
     return (
         <>
-            <nav className="hidden items-center gap-1 md:flex">
+            <nav aria-label="主导航" className="hidden items-center gap-1 md:flex">
                 {links.map(({ href, label }) => {
                     const isActive = pathname.startsWith(href);
 
@@ -34,6 +34,7 @@ export function MainNav() {
                         <Magnetic key={href} strength={0.2}>
                             <Link
                                 href={href}
+                                aria-current={isActive ? "page" : undefined}
                                 className={cn(
                                     "relative whitespace-nowrap px-3 py-1.5 text-xs font-medium transition-all duration-300",
                                     "rounded-full hover:bg-surface/80 active:scale-95",
@@ -57,11 +58,13 @@ export function MainNav() {
 
                 <Magnetic strength={0.4}>
                     <button
+                        type="button"
                         onClick={() => setIsSearchOpen(true)}
                         className="group flex items-center justify-center rounded-lg p-2 text-secondary hover:bg-interactive-hover hover:text-primary active-press"
                         title="搜索 (Cmd+K)"
+                        aria-label="打开搜索（Cmd+K）"
                     >
-                        <IconSearch className="h-[18px] w-[18px] transition-transform group-hover:scale-110" />
+                        <IconSearch aria-hidden="true" className="h-[18px] w-[18px] transition-transform group-hover:scale-110" />
                     </button>
                 </Magnetic>
             </nav>

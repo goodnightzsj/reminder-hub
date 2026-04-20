@@ -79,7 +79,10 @@ export default async function ReviewIndexPage() {
                     <div className="absolute inset-0 bg-noise pointer-events-none opacity-[0.03] dark:opacity-[0.05]" />
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className={cn("text-lg font-semibold tracking-tight", isCurrent && "text-gradient-brand")}>{y}</div>
+                        <div className={cn("flex items-baseline gap-2 text-lg font-semibold tracking-tight", isCurrent && "text-brand-primary")}>
+                          {isCurrent && <span aria-hidden className="h-1.5 w-1.5 translate-y-[-3px] rounded-full bg-brand-primary" />}
+                          {y}
+                        </div>
                         <div className="mt-1 text-xs text-muted">年度回顾</div>
                       </div>
                       <div

@@ -184,7 +184,7 @@ function PillLink(props: { href: string; label: string; active?: boolean }) {
       {props.active && (
         <span className="absolute inset-0 rounded-full bg-gradient-to-tr from-brand-primary/10 to-brand-secondary/5 opacity-60 pointer-events-none" />
       )}
-      <span className={cn("relative z-10", props.active && "text-gradient-brand font-semibold")}>{props.label}</span>
+      <span className={cn("relative z-10", props.active && "text-brand-primary font-semibold")}>{props.label}</span>
     </Link>
   );
 }

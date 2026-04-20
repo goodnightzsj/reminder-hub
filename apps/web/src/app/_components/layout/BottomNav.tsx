@@ -18,7 +18,10 @@ export function BottomNav() {
     ];
 
     return (
-        <div className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-center justify-around border-t border-white/10 bg-glass px-2 pb-safe md:hidden transition-all duration-500">
+        <nav
+            aria-label="底部导航"
+            className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-center justify-around border-t border-white/10 bg-glass px-2 pb-safe md:hidden transition-all duration-500"
+        >
             {links.map((link) => {
                 const isActive = pathname.startsWith(link.href);
 
@@ -26,6 +29,7 @@ export function BottomNav() {
                     <Magnetic key={link.href} strength={0.3} className="flex-1">
                         <Link
                             href={link.href}
+                            aria-current={isActive ? "page" : undefined}
                             className={`group flex flex-col items-center justify-center gap-1 py-1 transition-all duration-300 active:scale-90 ${isActive ? "text-gradient-brand" : "text-muted hover:text-secondary"
                                 }`}
                         >
@@ -43,6 +47,6 @@ export function BottomNav() {
                     </Magnetic>
                 );
             })}
-        </div>
+        </nav>
     );
 }
