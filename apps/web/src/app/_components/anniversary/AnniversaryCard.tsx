@@ -134,9 +134,9 @@ export function AnniversaryCard({ item, daysLeft, nextDate }: AnniversaryCardPro
             <Link
                 href={`/anniversaries/${item.id}`}
                 aria-label="编辑或删除"
-                className="absolute right-2 top-2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-surface/80 text-secondary backdrop-blur-sm border border-divider/60 hover:text-brand-primary hover:bg-surface active:scale-95 transition-all lg:hidden"
+                className="absolute right-2 top-2 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-surface/80 text-secondary backdrop-blur-sm border border-divider/60 hover:text-brand-primary hover:bg-surface active:scale-95 transition-all lg:hidden"
             >
-                <IconEdit className="h-4 w-4" />
+                <IconEdit aria-hidden="true" className="h-4 w-4" />
             </Link>
 
             {/* Hover Actions Overlay（桌面专享：hover 或 focus-within 均可触发） */}

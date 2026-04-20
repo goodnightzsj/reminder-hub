@@ -137,9 +137,10 @@ export function SubtaskList({ todoId, subtasks }: SubtaskListProps) {
                                 >
                                     <input type="hidden" name="id" value={s.id} />
                                     <input type="hidden" name="todoId" value={todoId} />
+                                    {/* Tap 区 ≥ 44x44（移动端 a11y），视觉保留 8x8 hover 块 */}
                                     <ConfirmSubmitButton
                                         confirmMessage="删除子任务？"
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-muted transition-colors hover:bg-danger/10 hover:text-danger sm:h-8 sm:w-8"
                                     >
                                         <IconTrash className="h-4 w-4" />
                                     </ConfirmSubmitButton>

@@ -71,15 +71,15 @@ export function getTodoEmptyState(
     filter === TODO_FILTER.TRASH
       ? "废纸篓为空"
       : totalItems === 0
-        ? "还没有待办"
-        : "没有匹配的待办";
+        ? "从第一条待办开始"
+        : "当前筛选没有结果";
 
   const emptyDescription =
     filter === TODO_FILTER.TRASH
       ? "你的废纸篓很干净。"
       : totalItems === 0
-        ? "先添加一条，开始高效的一天。"
-        : "尝试调整筛选条件。";
+        ? "写下一件想推进的小事 —— 支持截止时间、多重提醒、子任务与循环。"
+        : "换一个筛选条件或标签再试试。";
 
   return { emptyTitle, emptyDescription };
 }

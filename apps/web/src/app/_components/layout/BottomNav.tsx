@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { IconBox, IconCalendar, IconCreditCard, IconDashboard, IconTodo } from "../Icons";
 import { Magnetic } from "../shared/Magnetic";
 import { ROUTES } from "../../../lib/routes";
@@ -20,7 +21,7 @@ export function BottomNav() {
     return (
         <nav
             aria-label="底部导航"
-            className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-center justify-around border-t border-white/10 bg-glass px-2 pb-safe md:hidden transition-all duration-500"
+            className="fixed bottom-0 inset-x-0 z-50 flex h-20 items-stretch justify-around border-t border-white/10 bg-glass px-2 pb-safe md:hidden"
         >
             {links.map((link) => {
                 const isActive = pathname.startsWith(link.href);
@@ -30,17 +31,29 @@ export function BottomNav() {
                         <Link
                             href={link.href}
                             aria-current={isActive ? "page" : undefined}
-                            className={`group flex flex-col items-center justify-center gap-1 py-1 transition-all duration-300 active:scale-90 ${isActive ? "text-gradient-brand" : "text-muted hover:text-secondary"
-                                }`}
+                            className={`group relative flex h-full min-h-[44px] flex-col items-center justify-center gap-1 py-1 transition-colors duration-200 active:scale-95 ${
+                                isActive ? "text-brand-primary" : "text-muted hover:text-secondary"
+                            }`}
                         >
-                            <div className={`relative p-1.5 transition-transform duration-300 ${isActive ? "-translate-y-1" : ""}`}>
-                                <link.icon className={`h-6 w-6 transition-all duration-300 ${isActive ? "stroke-[2.5px]" : "stroke-2"}`} />
-                                {isActive && (
-                                    <span className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-brand-primary shadow-[0_0_8px_currentColor]" />
-                                )}
+                            {/* 顶部活跃指示条：pill 形态，用 layoutId 在路由间平滑迁移 */}
+                            {isActive && (
+                                <motion.span
+                                    layoutId="bottom-nav-indicator"
+                                    className="absolute left-4 right-4 top-1 h-[3px] rounded-full bg-brand-primary"
+                                    transition={{ type: "spring", stiffness: 420, damping: 36 }}
+                                />
+                            )}
+                            <div className={`relative p-1.5 transition-transform duration-300 ${isActive ? "-translate-y-0.5" : ""}`}>
+                                <link.icon
+                                    aria-hidden="true"
+                                    className={`h-6 w-6 transition-all duration-200 ${isActive ? "stroke-[2.25px]" : "stroke-2"}`}
+                                />
                             </div>
-                            <span className={`text-[10px] font-medium transition-all duration-300 ${isActive ? "opacity-100 translate-y-0" : "opacity-70 translate-y-0.5"
-                                }`}>
+                            <span
+                                className={`text-[10px] font-medium transition-opacity ${
+                                    isActive ? "opacity-100" : "opacity-70"
+                                }`}
+                            >
                                 {link.label}
                             </span>
                         </Link>

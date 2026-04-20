@@ -248,6 +248,7 @@ export default async function Home({ searchParams }: HomePageProps) {
             timeZone={timeZone}
             emptyTitle={emptyTitle}
             emptyDescription={emptyDescription}
+            emptyShowCreateCta={items.length === 0 && filter !== TODO_FILTER.TRASH}
           />
         </section>
       </main>

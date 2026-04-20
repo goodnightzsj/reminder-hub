@@ -9,7 +9,8 @@ import { getSmartColorStyle } from "../_components/shared/SmartCategoryBadge";
 import { SubscriptionCreateForm } from "@/app/_components/subscriptions/SubscriptionCreateForm";
 import { SubscriptionList } from "@/app/_components/subscriptions/SubscriptionList";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
-import { buildSubscriptionsHref as buildHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { buildCreateModalHref, buildSubscriptionsHref as buildHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
+import { ROUTES } from "@/lib/routes";
 
 import { SUBSCRIPTION_FILTER, parseSubscriptionFilter } from "./_lib/subscription-filters";
 import { getSubscriptionsPageData } from "./_lib/subscriptions-page-data";
@@ -103,11 +104,21 @@ export default async function SubscriptionsPage({ searchParams }: SubscriptionsP
           {items.length === 0 && (
             <div className="border-t border-divider">
               <EmptyState
-                title={filter === SUBSCRIPTION_FILTER.TRASH ? "回收站为空" : "还没有订阅"}
+                title={filter === SUBSCRIPTION_FILTER.TRASH ? "回收站为空" : "记录第一个订阅"}
                 description={
                   filter === SUBSCRIPTION_FILTER.TRASH
                     ? "你的回收站很干净。"
-                    : "记录你的周期性订阅，在续期日提前提醒。"
+                    : "Netflix、iCloud、域名…把周期性扣费放进来，到期前自动提醒，不再忘记续费或漏退。"
+                }
+                action={
+                  filter === SUBSCRIPTION_FILTER.TRASH ? undefined : (
+                    <Link
+                      href={buildCreateModalHref(ROUTES.subscriptions)}
+                      className="inline-flex h-10 items-center rounded-lg bg-brand-primary px-4 text-sm font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+                    >
+                      添加订阅
+                    </Link>
+                  )
                 }
               />
             </div>
