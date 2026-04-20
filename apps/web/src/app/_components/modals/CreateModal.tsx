@@ -6,6 +6,7 @@ import { IconX } from "../Icons";
 import { useCreateModal } from "../hooks/useCreateModal";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useEscapeKey } from "../hooks/useEscapeKey";
+import { useFocusScrollIntoView } from "../hooks/useFocusScrollIntoView";
 import { Portal } from "../ui/Portal";
 
 type CreateModalProps = {
@@ -26,6 +27,7 @@ export function CreateModal({ children, title }: CreateModalProps) {
 
     useBodyScrollLock(isOpen);
     useEscapeKey(close, isOpen);
+    useFocusScrollIntoView(isOpen);
 
     const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         if (info.offset.y > DISMISS_THRESHOLD_OFFSET || info.velocity.y > DISMISS_THRESHOLD_VELOCITY) {

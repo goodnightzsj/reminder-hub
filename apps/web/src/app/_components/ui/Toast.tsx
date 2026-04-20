@@ -133,7 +133,8 @@ function ToastContainer({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss:
 
     return (
         <Portal>
-            <div className="fixed bottom-4 right-4 z-[100] flex flex-col items-end pointer-events-none sm:bottom-8 sm:right-8">
+            {/* 移动端：托起到 BottomNav 上方 + 安全区；桌面端无 BottomNav，回到 bottom-8 */}
+            <div className="fixed right-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px)+0.5rem)] z-[100] flex flex-col items-end pointer-events-none sm:right-8 sm:bottom-8">
                 <AnimatePresence mode="popLayout">
                     {visibleToasts.map((t, index) => {
                         // Calculate offset and scale for stacking effect
