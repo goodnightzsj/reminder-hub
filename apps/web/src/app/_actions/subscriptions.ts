@@ -20,24 +20,15 @@ import {
 import { subscriptions } from "@/server/db/schema";
 import { getOrFetchServiceIcon } from "@/server/lib/icon-fetcher";
 import { ROUTES } from "@/lib/routes";
-import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 
 import {
   subscriptionArchiveSchema,
   subscriptionIdSchema,
   subscriptionUpsertSchema,
 } from "@/lib/validation/subscription";
-import { withAction, withSearchParams } from "./redirect-url";
+import { redirectFlashAction, redirectFlashError } from "./redirect-url";
 
 const SUBSCRIPTIONS_PATH = ROUTES.subscriptions;
-
-function redirectWithSubscriptionAction(path: string, action: FlashAction): never {
-  redirect(withAction(path, action));
-}
-
-function redirectWithSubscriptionError(path: string): never {
-  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
-}
 
 
 
@@ -48,7 +39,7 @@ function revalidateSubscriptionDetailAndList(id: string) {
 
 export async function createSubscription(formData: FormData) {
   const result = await subscriptionUpsertSchema.safeParseAsync(formData);
-  if (!result.success) redirectWithSubscriptionError(SUBSCRIPTIONS_PATH);
+  if (!result.success) redirectFlashError(SUBSCRIPTIONS_PATH);
   const data = result.data;
 
   // Ensure icon is available in shared service_icons table
@@ -76,7 +67,7 @@ export async function createSubscription(formData: FormData) {
 
 export async function updateSubscription(formData: FormData) {
     const result = await subscriptionUpsertSchema.safeParseAsync(formData);
-    if (!result.success) redirectWithSubscriptionError(SUBSCRIPTIONS_PATH);
+    if (!result.success) redirectFlashError(SUBSCRIPTIONS_PATH);
     const data = result.data;
 
     if (!data.id) return;
@@ -103,7 +94,7 @@ export async function updateSubscription(formData: FormData) {
     .where(eq(subscriptions.id, data.id));
 
   revalidateSubscriptionDetailAndList(data.id);
-  redirectWithSubscriptionAction(SUBSCRIPTIONS_PATH, "updated");
+  redirectFlashAction(SUBSCRIPTIONS_PATH, "updated");
 }
 
 export async function setSubscriptionArchived(formData: FormData) {
@@ -188,7 +179,7 @@ export async function deleteSubscription(formData: FormData) {
   }
 
   revalidateSubscriptionDetailAndList(id);
-  if (redirectTo) redirectWithSubscriptionAction(redirectTo, "deleted");
+  if (redirectTo) redirectFlashAction(redirectTo, "deleted");
 }
 
 export async function restoreSubscription(formData: FormData) {
@@ -204,5 +195,5 @@ export async function restoreSubscription(formData: FormData) {
 
   revalidateSubscriptionDetailAndList(id);
 
-  if (redirectTo) redirectWithSubscriptionAction(redirectTo, "restored");
+  if (redirectTo) redirectFlashAction(redirectTo, "restored");
 }

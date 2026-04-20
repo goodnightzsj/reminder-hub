@@ -1,14 +1,10 @@
 import "server-only";
 
-import { redirect } from "next/navigation";
-import type { FlashAction } from "@/lib/flash";
-import { withAction } from "./redirect-url";
 import { ROUTES } from "@/lib/routes";
 import { revalidatePaths } from "./revalidate";
 
-export function redirectWithTodoAction(path: string, action: FlashAction): never {
-  redirect(withAction(path, action));
-}
+// 历史别名保留，底层改用共享的 redirectFlashAction。
+export { redirectFlashAction as redirectWithTodoAction } from "./redirect-url";
 
 export function revalidateTodoDetailAndHome(todoId: string) {
   revalidatePaths([ROUTES.home, `${ROUTES.todo}/${todoId}`]);

@@ -94,6 +94,7 @@ export async function runNotificationsForChannel(
       // Most likely a duplicate ID collision (already inserted by another run).
       if (!isSqliteConstraintError(err)) throw err;
       skipped += 1;
+      console.warn("[notify] delivery deduped", { channel, deliveryId, itemId: candidate.itemId });
       continue;
     }
 
@@ -114,6 +115,7 @@ export async function runNotificationsForChannel(
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       const failedAt = new Date();
+      console.warn("[notify] delivery failed", { channel, deliveryId, itemId: candidate.itemId, message });
       await db
         .update(notificationDeliveries)
         .set({

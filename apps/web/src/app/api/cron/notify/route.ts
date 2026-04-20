@@ -2,26 +2,11 @@ import { NextResponse } from "next/server";
 
 import { NotificationConfigError, runNotificationsForChannel } from "@/server/notification-runner";
 import { NOTIFICATION_CHANNELS, type NotificationChannel } from "@/server/notifications";
+import { isCronAuthorized, withCronTimeout } from "@/server/cron-auth";
 
 export const dynamic = "force-dynamic";
 
 const CHANNEL_ORDER: readonly NotificationChannel[] = NOTIFICATION_CHANNELS;
-
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.NOTIFY_CRON_SECRET;
-  if (!secret) return true;
-
-  const auth = request.headers.get("authorization");
-  if (auth?.startsWith("Bearer ") && auth.slice("Bearer ".length) === secret) {
-    return true;
-  }
-
-  const url = new URL(request.url);
-  const token = url.searchParams.get("token");
-  if (token && token === secret) return true;
-
-  return false;
-}
 
 async function runAllChannels() {
   const results: Array<{
@@ -43,6 +28,7 @@ async function runAllChannels() {
         continue;
       }
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.warn("[cron:notify] channel failed", { channel, message });
       results.push({ channel, sent: 0, failed: 1, skipped: 0, status: "error", message });
     }
   }
@@ -51,14 +37,14 @@ async function runAllChannels() {
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isCronAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
   const startedAt = new Date();
 
   try {
-    const results = await runAllChannels();
+    const results = await withCronTimeout(runAllChannels());
     return NextResponse.json({
       ok: true,
       startedAt: startedAt.toISOString(),
@@ -67,9 +53,11 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    const isTimeout = message.startsWith("cron_timeout:");
+    console.warn("[cron:notify] top-level failure", { message });
     return NextResponse.json(
-      { ok: false, error: "internal_error", message },
-      { status: 500 },
+      { ok: false, error: isTimeout ? "timeout" : "internal_error", message },
+      { status: isTimeout ? 504 : 500 },
     );
   }
 }

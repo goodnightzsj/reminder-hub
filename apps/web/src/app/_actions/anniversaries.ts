@@ -4,29 +4,19 @@ import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
 import { anniversaries } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 import {
   anniversaryArchiveSchema,
   anniversaryCreateSchema,
   anniversaryIdSchema,
   anniversaryUpdateSchema,
 } from "@/lib/validation/anniversary";
-import { withAction, withSearchParams } from "./redirect-url";
+import { redirectFlashAction, redirectFlashError } from "./redirect-url";
 
 const ANNIVERSARIES_PATH = ROUTES.anniversaries;
-
-function redirectWithAnniversaryAction(path: string, action: FlashAction): never {
-  redirect(withAction(path, action));
-}
-
-function redirectWithAnniversaryError(path: string): never {
-  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
-}
 
 function revalidateAnniversaryDetailAndList(id: string) {
   revalidatePath(ANNIVERSARIES_PATH);
@@ -37,7 +27,7 @@ export async function createAnniversary(formData: FormData) {
   const result = anniversaryCreateSchema.safeParse(formData);
   
   if (!result.success) {
-    redirectWithAnniversaryError(ANNIVERSARIES_PATH);
+    redirectFlashError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;
 
@@ -61,7 +51,7 @@ export async function updateAnniversary(formData: FormData) {
   const result = anniversaryUpdateSchema.safeParse(formData);
   
   if (!result.success) {
-      redirectWithAnniversaryError(ANNIVERSARIES_PATH);
+      redirectFlashError(ANNIVERSARIES_PATH);
   }
   const parsed = result.data;
   const { id } = parsed;
@@ -82,7 +72,7 @@ export async function updateAnniversary(formData: FormData) {
     .where(eq(anniversaries.id, id));
 
   revalidateAnniversaryDetailAndList(id);
-  redirectWithAnniversaryAction(ANNIVERSARIES_PATH, "updated");
+  redirectFlashAction(ANNIVERSARIES_PATH, "updated");
 }
 
 
@@ -127,7 +117,7 @@ export async function deleteAnniversary(formData: FormData) {
   }
 
   revalidateAnniversaryDetailAndList(id);
-  if (redirectTo) redirectWithAnniversaryAction(redirectTo, "deleted");
+  if (redirectTo) redirectFlashAction(redirectTo, "deleted");
 }
 
 export async function restoreAnniversary(formData: FormData) {
@@ -143,5 +133,5 @@ export async function restoreAnniversary(formData: FormData) {
 
   revalidateAnniversaryDetailAndList(id);
 
-  if (redirectTo) redirectWithAnniversaryAction(redirectTo, "restored");
+  if (redirectTo) redirectFlashAction(redirectTo, "restored");
 }

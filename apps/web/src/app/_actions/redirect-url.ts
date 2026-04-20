@@ -1,5 +1,7 @@
 import "server-only";
 
+import { redirect } from "next/navigation";
+
 import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 
 export function withSearchParam(path: string, key: string, value: string): string {
@@ -28,4 +30,20 @@ export function withSearchParams(
     result = withSearchParam(result, key, String(value));
   }
   return result;
+}
+
+/** 执行带 flash action 参数的重定向（成功提示类场景）。 */
+export function redirectFlashAction(path: string, action: FlashAction): never {
+  redirect(withAction(path, action));
+}
+
+/**
+ * 执行带 flash error 参数的重定向（校验失败、业务错误场景）。
+ * 默认 errorCode = "validation-failed"，与历史行为一致。
+ */
+export function redirectFlashError(
+  path: string,
+  errorCode: string = "validation-failed",
+): never {
+  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: errorCode }));
 }

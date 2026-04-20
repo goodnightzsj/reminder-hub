@@ -10,24 +10,15 @@ import { db } from "@/server/db";
 import { type ItemStatus } from "@/lib/items";
 import { items } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
-import { FLASH_TOAST_QUERY_KEY, type FlashAction } from "@/lib/flash";
 
 import {
   itemIdSchema,
   itemStatusSchema,
   itemUpsertSchema,
 } from "@/lib/validation/item";
-import { withAction, withSearchParams } from "./redirect-url";
+import { redirectFlashAction, redirectFlashError } from "./redirect-url";
 
 const ITEMS_PATH = ROUTES.items;
-
-function redirectWithItemAction(path: string, action: FlashAction): never {
-  redirect(withAction(path, action));
-}
-
-function redirectWithItemError(path: string): never {
-  redirect(withSearchParams(path, { [FLASH_TOAST_QUERY_KEY.ERROR]: "validation-failed" }));
-}
 
 
 
@@ -38,7 +29,7 @@ function revalidateItemDetailAndList(id: string) {
 
 export async function createItem(formData: FormData) {
   const result = await itemUpsertSchema.safeParseAsync(formData);
-  if (!result.success) redirectWithItemError(ITEMS_PATH);
+  if (!result.success) redirectFlashError(ITEMS_PATH);
   const data = result.data;
 
   const now = new Date();
@@ -61,7 +52,7 @@ export async function createItem(formData: FormData) {
 
 export async function updateItem(formData: FormData) {
   const result = await itemUpsertSchema.safeParseAsync(formData);
-  if (!result.success) redirectWithItemError(ITEMS_PATH);
+  if (!result.success) redirectFlashError(ITEMS_PATH);
   const data = result.data;
 
   if (!data.id) return;
@@ -84,7 +75,7 @@ export async function updateItem(formData: FormData) {
     .where(eq(items.id, data.id));
 
   revalidateItemDetailAndList(data.id);
-  redirectWithItemAction(ITEMS_PATH, "updated");
+  redirectFlashAction(ITEMS_PATH, "updated");
 }
 
 export async function setItemStatus(formData: FormData) {
@@ -127,7 +118,7 @@ export async function deleteItem(formData: FormData) {
 
   revalidateItemDetailAndList(id);
 
-  if (redirectTo) redirectWithItemAction(redirectTo, "deleted");
+  if (redirectTo) redirectFlashAction(redirectTo, "deleted");
 }
 
 export async function restoreItem(formData: FormData) {
@@ -143,5 +134,5 @@ export async function restoreItem(formData: FormData) {
 
   revalidateItemDetailAndList(id);
 
-  if (redirectTo) redirectWithItemAction(redirectTo, "restored");
+  if (redirectTo) redirectFlashAction(redirectTo, "restored");
 }
