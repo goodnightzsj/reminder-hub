@@ -138,6 +138,13 @@ docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_lis
 
 更完整说明见 `llmdoc/guides/how-to-deploy-with-docker.md`。
 
+## systemd 直装部署（不经 Docker）
+
+如果希望在已有 Linux 主机上以原生进程方式运行（少一层容器、日志走 journald、反代用主机自带的 Nginx / Caddy），参考：
+
+- 指南：`llmdoc/guides/how-to-deploy-systemd.md`
+- 覆盖：专用 `reminder-hub` 系统用户、`/etc/systemd/system/reminder-hub.service` 沙箱、环境变量外置到 `/etc/reminder-hub.env`、Nginx 子域与 Cloudflare Authenticated Origin Pulls 对接、外部 cron 触发与升级流程。
+
 ## 目录结构
 
 - `apps/web`：Web 应用

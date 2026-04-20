@@ -64,6 +64,7 @@ apps/web/src/
 - [How to Add Anniversary](guides/how-to-add-anniversary.md)
 - [How to Add Notification Channels](guides/how-to-add-notification-channels.md)
 - [How to Deploy with Docker](guides/how-to-deploy-with-docker.md)
+- [How to Deploy as systemd Service](guides/how-to-deploy-systemd.md)
 - [How to Migrate Between Deployments](guides/how-to-migrate-between-deployments.md)
 
 ### Reference
