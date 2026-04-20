@@ -50,11 +50,12 @@ export function TodoList({ items, timeZone, emptyTitle, emptyDescription, emptyS
                 className="contents"
             >
                 <AnimatePresence mode="popLayout" initial={false}>
-                    {items.map((item) => (
+                    {items.map((item, index) => (
                         <TodoItem
                             key={item.id}
                             item={item}
                             timeZone={timeZone}
+                            showSwipeHint={index === 0}
                         />
                     ))}
                 </AnimatePresence>

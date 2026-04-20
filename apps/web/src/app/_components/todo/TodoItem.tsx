@@ -9,6 +9,7 @@ export type { TodoItemData } from "./TodoItem.types";
 type TodoItemProps = {
     item: TodoItemData;
     timeZone: string;
+    showSwipeHint?: boolean;
 };
 
 const itemVariants = {
@@ -57,7 +58,7 @@ function getTodoItemState(
     return { isDeleted, isOverdue, isPastDue };
 }
 
-export function TodoItem({ item, timeZone }: TodoItemProps) {
+export function TodoItem({ item, timeZone, showSwipeHint = false }: TodoItemProps) {
     const now = new Date();
     const { isDeleted, isOverdue, isPastDue } = getTodoItemState(item, now);
     const containerClassName = getTodoItemContainerClassName({
@@ -86,6 +87,7 @@ export function TodoItem({ item, timeZone }: TodoItemProps) {
                 isDeleted={isDeleted}
                 isOverdue={isOverdue}
                 isPastDue={isPastDue}
+                showSwipeHint={showSwipeHint}
             />
         </motion.li>
     );

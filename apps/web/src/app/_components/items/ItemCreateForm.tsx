@@ -19,6 +19,7 @@ import {
     itemStatusOptions,
 } from "@/lib/items";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { AdvancedOptions } from "@/app/_components/shared/AdvancedOptions";
 
 type ItemCreateFormProps = {
     className?: string; // Allow overriding styles
@@ -57,48 +58,22 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
     return (
         <form ref={formRef} action={handleSubmit} className={`flex flex-col gap-5 ${className}`}>
             <div key={formKey} className="contents">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                    <div className="flex-1">
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">物品名称</label>
-                        <Input
-                            name="name"
-                            placeholder="新增物品（如 键盘 / 咖啡机 / 跑鞋）"
-                            className="h-12 bg-surface"
-                            autoComplete="off"
-                            required
-                        />
-                    </div>
-                    <div className="w-full sm:w-40">
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">状态</label>
-                        <Select
-                            name="status"
-                            defaultValue={DEFAULT_ITEM_STATUS}
-                            className="h-12 bg-base/50"
-                        >
-                            {itemStatusOptions.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </Select>
-                    </div>
+                {/* 核心字段：名称 + 购入日期 + 价格 + 币种 */}
+                <div>
+                    <label className="mb-1.5 block text-xs font-medium text-secondary">物品名称</label>
+                    <Input
+                        name="name"
+                        placeholder="新增物品（如 键盘 / 咖啡机 / 跑鞋）"
+                        className="h-12 bg-surface"
+                        autoComplete="off"
+                        required
+                    />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                     <div className="sm:col-span-1">
                         <label className="mb-1.5 block text-xs font-medium text-secondary">购入日期</label>
                         <SmartDateInput type="date" name="purchasedDate" className="h-12 bg-base/50" />
-                    </div>
-
-                    <div className="sm:col-span-1 lg:col-span-1">
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">类别</label>
-                        <CustomSelect
-                            name="category"
-                            defaultValue={DEFAULT_ITEM_CATEGORY}
-                            placeholder="输入自定义类别..."
-                            className="h-12 bg-surface"
-                            options={itemCategoryOptions}
-                        />
                     </div>
 
                     <div className="sm:col-span-1">
@@ -125,6 +100,37 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                         />
                     </div>
                 </div>
+
+                {/* 高级字段：状态（默认使用中）+ 类别（默认通用） */}
+                <AdvancedOptions label="更多选项（状态、类别）">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">状态</label>
+                            <Select
+                                name="status"
+                                defaultValue={DEFAULT_ITEM_STATUS}
+                                className="h-12 bg-base/50"
+                            >
+                                {itemStatusOptions.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </Select>
+                        </div>
+
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">类别</label>
+                            <CustomSelect
+                                name="category"
+                                defaultValue={DEFAULT_ITEM_CATEGORY}
+                                placeholder="输入自定义类别..."
+                                className="h-12 bg-surface"
+                                options={itemCategoryOptions}
+                            />
+                        </div>
+                    </div>
+                </AdvancedOptions>
             </div>
 
             <div className="flex justify-end pt-2">

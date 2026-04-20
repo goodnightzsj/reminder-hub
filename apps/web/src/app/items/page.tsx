@@ -102,8 +102,7 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
           <ItemList items={items} filter={filter} />
 
           {items.length === 0 && (
-            <div className="mt-4">
-              <EmptyState
+            <EmptyState
                 title={
                   filter === ITEM_FILTER.TRASH
                     ? "回收站为空"
@@ -133,7 +132,6 @@ export default async function ItemsPage({ searchParams }: ItemsPageProps) {
                   ) : undefined
                 }
               />
-            </div>
           )}
         </section>
       </main>

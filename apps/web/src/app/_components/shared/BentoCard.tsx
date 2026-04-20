@@ -11,9 +11,11 @@ type BentoCardProps = {
     action?: ReactNode;
     glow?: boolean;
     delay?: number;
+    /** 紧凑模式：把内容内边距从 p-6 降到 p-3，用于 stat 卡等小单元 */
+    compact?: boolean;
 };
 
-export function BentoCard({ title, children, className = "", delay = 0, icon, action, glow = false }: BentoCardProps) {
+export function BentoCard({ title, children, className = "", delay = 0, icon, action, glow = false, compact = false }: BentoCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -39,7 +41,7 @@ export function BentoCard({ title, children, className = "", delay = 0, icon, ac
                         {action && <div>{action}</div>}
                     </div>
                 )}
-                <div className="flex-1 p-6">{children}</div>
+                <div className={`flex-1 ${compact ? "p-3" : "p-6"}`}>{children}</div>
             </div>
         </motion.div>
     );

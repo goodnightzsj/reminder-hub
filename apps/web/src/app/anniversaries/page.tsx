@@ -99,8 +99,7 @@ export default async function AnniversariesPage({ searchParams }: AnniversariesP
           <AnniversaryList filter={filter} items={items} />
 
           {items.length === 0 && (
-            <div className="border-t border-divider">
-              <EmptyState
+            <EmptyState
                 title={filter === ANNIVERSARY_FILTER.TRASH ? "回收站为空" : "记录第一个纪念日"}
                 description={
                   filter === ANNIVERSARY_FILTER.TRASH
@@ -118,7 +117,6 @@ export default async function AnniversariesPage({ searchParams }: AnniversariesP
                   )
                 }
               />
-            </div>
           )}
         </section>
       </main>

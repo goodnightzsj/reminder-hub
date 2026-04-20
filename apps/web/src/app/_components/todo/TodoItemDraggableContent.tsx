@@ -1,4 +1,7 @@
-import { motion } from "framer-motion";
+"use client";
+
+import { useEffect } from "react";
+import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { type TodoPriority } from "@/lib/todo";
 import { TodoItemActions } from "./TodoItemActions";
@@ -13,7 +16,11 @@ type TodoItemDraggableContentProps = {
     isDeleted: boolean;
     isOverdue: boolean;
     isPastDue: boolean;
+    /** 首访引导：触屏设备上自动左滑一小段再回弹，揭示"左滑删除"操作；只播一次 */
+    showSwipeHint?: boolean;
 };
+
+const SWIPE_HINT_STORAGE_KEY = "todo-swipe-hint-seen";
 
 const todoPriorityIndicatorClassNameByPriority: Record<TodoPriority, string> = {
     low: "bg-transparent",
@@ -32,6 +39,7 @@ export function TodoItemDraggableContent({
     isDeleted,
     isOverdue,
     isPastDue,
+    showSwipeHint = false,
 }: TodoItemDraggableContentProps) {
     const priorityIndicatorClassName =
         todoPriorityIndicatorClassNameByPriority[item.priority];
@@ -40,11 +48,50 @@ export function TodoItemDraggableContent({
         item.isDone ? todoTitleLinkDoneClassName : todoTitleLinkDefaultClassName,
     ].join(" ");
 
+    // 首访引导动画：仅触屏 + 非减动偏好 + 本次会话未显示过时触发一次
+    const controls = useAnimationControls();
+    const prefersReducedMotion = useReducedMotion();
+
+    useEffect(() => {
+        if (!showSwipeHint || prefersReducedMotion || isDeleted) return;
+        if (typeof window === "undefined") return;
+        const isTouch = window.matchMedia?.("(hover: none)").matches;
+        if (!isTouch) return;
+        try {
+            if (window.localStorage.getItem(SWIPE_HINT_STORAGE_KEY) === "1") return;
+        } catch {
+            // 隐身模式 localStorage 不可用，仍允许播放一次
+        }
+
+        let cancelled = false;
+        const timer = window.setTimeout(() => {
+            if (cancelled) return;
+            controls
+                .start({
+                    x: [0, -56, -32, -56, 0],
+                    transition: { duration: 1.2, times: [0, 0.25, 0.5, 0.75, 1], ease: "easeInOut" },
+                })
+                .then(() => {
+                    try {
+                        window.localStorage.setItem(SWIPE_HINT_STORAGE_KEY, "1");
+                    } catch {
+                        // ignore
+                    }
+                });
+        }, 650);
+
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [showSwipeHint, prefersReducedMotion, isDeleted, controls]);
+
     return (
         <motion.div
             drag={!isDeleted ? "x" : false}
             dragConstraints={{ left: -100, right: 0 }}
             dragElastic={0.05}
+            animate={controls}
             className="relative z-10 flex items-start gap-4 bg-elevated px-5 py-4"
             whileDrag={{ x: -50 }}
         >

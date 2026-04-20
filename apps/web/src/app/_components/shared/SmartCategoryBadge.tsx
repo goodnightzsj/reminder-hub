@@ -51,51 +51,64 @@ const SOLID_STYLES: Record<string, string> = {
     pink: "border-0 bg-gradient-to-b from-pink-500 to-pink-600 text-white shadow-sm shadow-pink-500/25",
 };
 
-function getHueFromLabel(label: string): number {
-    const normalized = label.trim();
-    const hash = getStableHashCode(normalized);
-    const mixed = mixHash32(hash);
-    return (mixed / 4294967296) * 360;
+/**
+ * 把 32 位 hash 映射到 [0, 360) 的 hue，但跳过视觉泥浊的"浅黄-浅绿"段（48°-72°）。
+ * 该段在浅色背景上对比度低、饱和后容易刺眼，移除后其余 ~335° 仍然是"近乎无限"的色相变化。
+ */
+function hashToHue(hash: number): number {
+    const t = hash / 0x100000000; // [0, 1)
+    const usable = 335; // 360 - 25 gap
+    const raw = t * usable;
+    return raw < 48 ? raw : raw + 25;
 }
 
-function mixHash32(input: number): number {
-    // MurmurHash3 finalizer-style mix to decorrelate short/nearby hashes (e.g. 2-char categories).
-    let value = input >>> 0;
-    value ^= value >>> 16;
-    value = Math.imul(value, 0x85ebca6b);
-    value ^= value >>> 13;
-    value = Math.imul(value, 0xc2b2ae35);
-    value ^= value >>> 16;
-    return value >>> 0;
+/** 饱和度从 hash 另一字节取，68-82 范围，保持足够鲜艳同时允许温和变化 */
+function hashToSaturation(hash: number): number {
+    return 68 + (((hash >>> 8) & 0xff) / 255) * 14;
+}
+
+/**
+ * 亮度 42-52 范围，并对冷/暖色做 ±2 的感知亮度补偿，避免红色看起来比蓝色"重"。
+ */
+function hashToLightness(hash: number, hue: number): number {
+    let l = 42 + (((hash >>> 16) & 0xff) / 255) * 10;
+    if (hue >= 190 && hue < 280) l += 2; // 冷色（蓝/靛）轻微提亮
+    if (hue >= 0 && hue < 25) l -= 2;    // 红色轻微压暗
+    return Math.max(38, Math.min(55, l));
+}
+
+/** 统一入口：给定 label 输出 {hue, s, l}。hash 基于升级后的 FNV-1a + Murmur finalizer */
+function getHslFromLabel(label: string): { hue: number; s: number; l: number } {
+    const normalized = label.trim();
+    const hash = getStableHashCode(normalized);
+    const hue = hashToHue(hash);
+    const s = hashToSaturation(hash);
+    const l = hashToLightness(hash, hue);
+    return { hue, s, l };
 }
 
 export function getSmartColorStyle(label: string, variant: SmartColorVariant = "glass"): React.CSSProperties {
-    const normalized = label.trim();
-    const hue = getHueFromLabel(normalized);
+    const { hue, s, l } = getHslFromLabel(label);
 
     if (variant === "solid") {
-        const saturation = 82;
-        const fromLightness = 55;
-        const toLightness = 45;
-        const shadowLightness = 42;
+        // 渐变上浅下深：以感知亮度 l 为锚点，上下各偏移 6 点
+        const fromLightness = Math.min(l + 8, 58);
+        const toLightness = Math.max(l - 4, 36);
+        const shadowLightness = Math.max(l - 6, 34);
 
         return {
             color: "white",
             borderWidth: 0,
-            backgroundImage: `linear-gradient(to bottom, hsl(${hue} ${saturation}% ${fromLightness}%), hsl(${hue} ${saturation}% ${toLightness}%))`,
-            boxShadow: `0 1px 2px 0 hsl(${hue} ${saturation}% ${shadowLightness}% / 0.25)`,
+            backgroundImage: `linear-gradient(to bottom, hsl(${hue} ${s}% ${fromLightness}%), hsl(${hue} ${s}% ${toLightness}%))`,
+            boxShadow: `0 1px 2px 0 hsl(${hue} ${s}% ${shadowLightness}% / 0.25)`,
         };
     }
 
-    const saturation = 82;
-    const textLightness = 45;
-    const surfaceLightness = 50;
-
     return {
-        color: `hsl(${hue} ${saturation}% ${textLightness}%)`,
-        backgroundColor: `hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.12)`,
-        borderColor: `hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.25)`,
-        boxShadow: `0 1px 2px 0 hsl(${hue} ${saturation}% ${surfaceLightness}% / 0.08)`,
+        color: `hsl(${hue} ${s}% ${l}%)`,
+        backgroundColor: `hsl(${hue} ${s}% ${l + 5}% / 0.12)`,
+        borderColor: `hsl(${hue} ${s}% ${l + 5}% / 0.25)`,
+        boxShadow: `0 1px 2px 0 hsl(${hue} ${s}% ${l + 5}% / 0.08)`,
     };
 }
 

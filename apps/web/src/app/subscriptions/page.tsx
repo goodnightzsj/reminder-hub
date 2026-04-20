@@ -102,8 +102,7 @@ export default async function SubscriptionsPage({ searchParams }: SubscriptionsP
           <SubscriptionList items={items} filter={filter} />
 
           {items.length === 0 && (
-            <div className="border-t border-divider">
-              <EmptyState
+            <EmptyState
                 title={filter === SUBSCRIPTION_FILTER.TRASH ? "回收站为空" : "记录第一个订阅"}
                 description={
                   filter === SUBSCRIPTION_FILTER.TRASH
@@ -121,7 +120,6 @@ export default async function SubscriptionsPage({ searchParams }: SubscriptionsP
                   )
                 }
               />
-            </div>
           )}
         </section>
       </main>

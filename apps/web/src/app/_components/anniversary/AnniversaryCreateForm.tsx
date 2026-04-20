@@ -11,6 +11,7 @@ import { useTimeouts } from "@/app/_components/hooks/useTimeouts";
 import { useCreateModal } from "../hooks/useCreateModal";
 import { DEFAULT_CREATE_FORM_ERROR_TOAST_MESSAGE, runCreateFormSuccess } from "@/app/_components/create-form.utils";
 import { anniversaryReminderOptionsDays } from "@/lib/reminder-options";
+import { AdvancedOptions } from "@/app/_components/shared/AdvancedOptions";
 import {
     ANNIVERSARY_DATE_TYPE,
     DEFAULT_ANNIVERSARY_DATE_TYPE,
@@ -119,27 +120,29 @@ export function AnniversaryCreateForm({
                     )}
                 </div>
 
-                <fieldset className="rounded-xl border border-dashed border-default p-4">
-                    <legend className="px-1 text-xs font-medium text-secondary">
-                        提醒设置 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
-                    </legend>
-                    <div className="flex flex-wrap gap-4 pt-2">
-                        {anniversaryReminderOptionsDays.map((opt) => (
-                            <label
-                                key={opt.days}
-                                className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
-                            >
-                                <input
-                                    type="checkbox"
-                                    name="remindOffsetsDays"
-                                    value={opt.days}
-                                    className="h-4 w-4 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
-                                />
-                                {opt.label}
-                            </label>
-                        ))}
-                    </div>
-                </fieldset>
+                <AdvancedOptions label="提醒设置（可选）">
+                    <fieldset className="rounded-xl border border-dashed border-default p-4">
+                        <legend className="px-1 text-xs font-medium text-secondary">
+                            提醒 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
+                        </legend>
+                        <div className="flex flex-wrap gap-4 pt-2">
+                            {anniversaryReminderOptionsDays.map((opt) => (
+                                <label
+                                    key={opt.days}
+                                    className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="remindOffsetsDays"
+                                        value={opt.days}
+                                        className="h-4 w-4 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
+                                    />
+                                    {opt.label}
+                                </label>
+                            ))}
+                        </div>
+                    </fieldset>
+                </AdvancedOptions>
             </div>
 
             <div className="flex justify-end pt-2">

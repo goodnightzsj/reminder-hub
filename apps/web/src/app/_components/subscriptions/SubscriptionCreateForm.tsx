@@ -20,6 +20,7 @@ import {
     subscriptionCycleUnitOptions,
 } from "@/lib/subscriptions";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { AdvancedOptions } from "@/app/_components/shared/AdvancedOptions";
 
 type SubscriptionCreateFormProps = {
     dateReminderTime: string;
@@ -101,6 +102,7 @@ export function SubscriptionCreateForm({
                     </div>
                 </div>
 
+                {/* 核心字段：到期日 + 周期单位 + 金额 + 币种 */}
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-wrap gap-4">
                         <div className="flex-1 min-w-[200px]">
@@ -124,83 +126,87 @@ export function SubscriptionCreateForm({
                     </div>
 
                     <div className="flex flex-wrap gap-4">
-                        <div className="w-32">
-                            <label className="mb-1.5 block text-xs font-medium text-secondary">周期间隔</label>
-                            <Input type="number" name="cycleInterval" defaultValue={1} min={1} className="h-12 bg-base/50" />
+                        <div className="flex-1 min-w-[140px]">
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">金额</label>
+                            <Input
+                                type="number"
+                                name="price"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                className="h-12 bg-surface"
+                            />
                         </div>
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="mb-1.5 block text-xs font-medium text-secondary">自动续费</label>
-                            <div className="flex h-12 items-center rounded-lg border border-default bg-surface px-3">
-                                <input
-                                    type="checkbox"
-                                    name="autoRenew"
-                                    value="1"
-                                    defaultChecked
-                                    className="h-5 w-5 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
-                                />
-                                <span className="ml-3 text-sm text-primary">是</span>
+                        <div className="w-32">
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">币种</label>
+                            <Select
+                                name="currency"
+                                defaultValue={DEFAULT_CURRENCY}
+                                className="h-12 bg-base/50"
+                            >
+                                <option value={DEFAULT_CURRENCY}>CNY ¥</option>
+                                <option value="USD">USD $</option>
+                                <option value="EUR">EUR €</option>
+                                <option value="GBP">GBP £</option>
+                                <option value="JPY">JPY ¥</option>
+                                <option value="HKD">HKD $</option>
+                                <option value="TWD">TWD $</option>
+                            </Select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 高级字段：周期间隔 / 自动续费 / 提醒 / 备注 */}
+                <AdvancedOptions label="更多选项（周期间隔、自动续费、提醒、备注）">
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-wrap gap-4">
+                            <div className="w-32">
+                                <label className="mb-1.5 block text-xs font-medium text-secondary">周期间隔</label>
+                                <Input type="number" name="cycleInterval" defaultValue={1} min={1} className="h-12 bg-base/50" />
+                            </div>
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="mb-1.5 block text-xs font-medium text-secondary">自动续费</label>
+                                <div className="flex h-12 items-center rounded-lg border border-default bg-surface px-3">
+                                    <input
+                                        type="checkbox"
+                                        name="autoRenew"
+                                        value="1"
+                                        defaultChecked
+                                        className="h-5 w-5 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
+                                    />
+                                    <span className="ml-3 text-sm text-primary">是</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <fieldset className="rounded-xl border border-dashed border-default p-4">
-                    <legend className="px-1 text-xs font-medium text-secondary">
-                        提醒设置 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
-                    </legend>
-                    <div className="flex flex-wrap gap-4 pt-2">
-                        {subscriptionReminderOptionsDays.map((opt) => (
-                            <label
-                                key={opt.days}
-                                className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
-                            >
-                                <input
-                                    type="checkbox"
-                                    name="remindOffsetsDays"
-                                    value={opt.days}
-                                    className="h-4 w-4 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
-                                />
-                                {opt.label}
-                            </label>
-                        ))}
-                    </div>
-                </fieldset>
+                        <fieldset className="rounded-xl border border-dashed border-default p-4">
+                            <legend className="px-1 text-xs font-medium text-secondary">
+                                提醒 <span className="text-muted font-normal">(默认 {dateReminderTime}, 时区 {timeZone})</span>
+                            </legend>
+                            <div className="flex flex-wrap gap-4 pt-2">
+                                {subscriptionReminderOptionsDays.map((opt) => (
+                                    <label
+                                        key={opt.days}
+                                        className="inline-flex cursor-pointer items-center gap-2 text-sm text-primary transition-colors hover:text-brand-primary"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="remindOffsetsDays"
+                                            value={opt.days}
+                                            className="h-4 w-4 rounded border-default text-brand-primary focus:ring-brand-primary/20 bg-transparent"
+                                        />
+                                        {opt.label}
+                                    </label>
+                                ))}
+                            </div>
+                        </fieldset>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div>
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">金额</label>
-                        <Input
-                            type="number"
-                            name="price"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            className="h-12 bg-surface"
-                        />
+                        <div>
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">备注</label>
+                            <Input name="description" placeholder="可选备注" className="h-12 bg-base/50" />
+                        </div>
                     </div>
-
-                    <div>
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">币种</label>
-                        <Select
-                            name="currency"
-                            defaultValue={DEFAULT_CURRENCY}
-                            className="h-12 bg-base/50"
-                        >
-                            <option value={DEFAULT_CURRENCY}>CNY ¥</option>
-                            <option value="USD">USD $</option>
-                            <option value="EUR">EUR €</option>
-                            <option value="GBP">GBP £</option>
-                            <option value="JPY">JPY ¥</option>
-                            <option value="HKD">HKD $</option>
-                            <option value="TWD">TWD $</option>
-                        </Select>
-                    </div>
-
-                    <div>
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">备注</label>
-                        <Input name="description" placeholder="可选备注" className="h-12 bg-base/50" />
-                    </div>
-                </div>
+                </AdvancedOptions>
             </div>
 
             <div className="flex justify-end pt-2">
