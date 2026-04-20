@@ -12,7 +12,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ title, description, children }: AppHeaderProps) {
     return (
-        <header className="sticky top-0 z-50 mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between animate-fade-in bg-background/80 backdrop-blur-md py-4 -mx-4 px-4 md:-mx-6 md:px-6">
+        <header className="sticky top-0 z-50 mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between animate-fade-in bg-background/80 backdrop-blur-md pt-safe pb-4 -mx-4 px-4 md:-mx-6 md:px-6 md:pt-4">
             <div className="flex-1 flex justify-between items-start gap-4">
                 <div className="space-y-1 min-w-0">
                     {/* Display 字体 + 1.5rem 主标题，建立清晰的页面级视觉锚点 */}

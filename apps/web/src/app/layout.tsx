@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Providers } from "./Providers";
 import { BottomNav } from "./_components/layout/BottomNav";
@@ -14,6 +14,17 @@ export const metadata: Metadata = {
   },
   applicationName: "Reminder Hub",
   description: "统一管理待办、纪念日、订阅、物品与通知摘要的个人提醒中心。",
+};
+
+// viewport-fit=cover 是 iPhone X+ 刘海/药丸/Home Indicator 生效 env(safe-area-inset-*) 的前提
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f5f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
 
 export default function RootLayout({
