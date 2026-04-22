@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, AnimatePresence, useAnimationControls, useDragControls, type PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, type PanInfo } from "framer-motion";
 import { IconX } from "../Icons";
 import { useCreateModal } from "../hooks/useCreateModal";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
@@ -20,8 +19,6 @@ const DISMISS_THRESHOLD_VELOCITY = 500;
 
 export function CreateModal({ children, title }: CreateModalProps) {
     const { isOpen, close } = useCreateModal();
-    const sheetRef = useRef<HTMLDivElement>(null);
-    const animation = useAnimationControls();
     // 拖拽只能从 grab bar/header 发起，不让表单内部控件触发拖拽
     const dragControls = useDragControls();
 
@@ -29,12 +26,12 @@ export function CreateModal({ children, title }: CreateModalProps) {
     useEscapeKey(close, isOpen);
     useFocusScrollIntoView(isOpen);
 
+    // 只负责判定"是否达到关闭阈值"；未达到阈值时 framer 的 dragConstraints + dragTransition
+    // 会自动把面板弹回 y=0，不需要手动 controls.start。
     const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         if (info.offset.y > DISMISS_THRESHOLD_OFFSET || info.velocity.y > DISMISS_THRESHOLD_VELOCITY) {
             close();
-            return;
         }
-        animation.start({ y: 0, transition: { type: "spring", stiffness: 400, damping: 30 } });
     };
 
     return (
@@ -53,16 +50,13 @@ export function CreateModal({ children, title }: CreateModalProps) {
 
                         {/* Modal Content */}
                         <motion.div
-                            ref={sheetRef}
                             role="dialog"
                             aria-modal="true"
                             aria-label={title}
                             initial={{ y: "100%", opacity: 0 }}
-                            animate={animation}
+                            animate={{ y: 0, opacity: 1 }}
                             exit={{ y: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-                            // 拖动入口由 handle 区的 onPointerDown 显式调用 dragControls.start()，
-                            // 表单字段不会被误触成拖拽。
                             drag="y"
                             dragControls={dragControls}
                             dragListener={false}

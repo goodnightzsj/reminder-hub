@@ -38,36 +38,34 @@ export function EmptyState({
     return (
         <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in select-none", className)}>
             <div className="relative mb-6">
-                {/* Glow Background with Breathing Animation */}
+                {/* 极弱呼吸 glow：scale 变化 ≤4%，opacity 0.12-0.20，不喧宾夺主 */}
                 <motion.div
                     animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.5, 0.3],
+                        scale: [1, 1.04, 1],
+                        opacity: [0.12, 0.2, 0.12],
                     }}
                     transition={{
-                        duration: 4,
+                        duration: 5,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                     }}
-                    className="absolute inset-0 -m-4 rounded-full bg-brand-primary/10 blur-2xl pointer-events-none"
+                    className="absolute inset-0 -m-4 rounded-full bg-brand-primary/30 blur-2xl pointer-events-none"
                 />
 
-                {/* Floating Icon Animation */}
+                {/* 极弱漂浮：y 幅度 ±2px，周期拉长到 4.5s，保持图标清晰可读 */}
                 <motion.div
-                    animate={{
-                        y: [0, -8, 0],
-                    }}
+                    animate={{ y: [0, -2, 0] }}
                     transition={{
-                        duration: 3,
+                        duration: 4.5,
                         repeat: Infinity,
-                        ease: "easeInOut"
+                        ease: "easeInOut",
                     }}
                 >
                     {icon ? (
-                        <div className="relative text-muted/50 scale-110">{icon}</div>
+                        <div className="relative text-secondary">{icon}</div>
                     ) : (
-                        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-surface/50 border border-white/10 shadow-lg backdrop-blur-sm dark:bg-zinc-800/50">
-                            <IconBox className="h-10 w-10 text-muted/80" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-surface/80 border border-default/60 shadow-sm backdrop-blur-sm dark:bg-zinc-800/60">
+                            <IconBox className="h-9 w-9 text-secondary/80" />
                         </div>
                     )}
                 </motion.div>
