@@ -12,9 +12,11 @@ import { db } from "@/server/db";
 import { todos } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
 import { type TodoPriority } from "@/lib/todo";
+import { BASE_TAGS_BY_DOMAIN } from "@/lib/cache-tags";
 import { todoUpsertSchema } from "@/lib/validation/todo";
 import { revalidateTodoDetailAndHome } from "./todos.helpers";
 import { redirectWithTodoAction } from "./todos.helpers";
+import { revalidateTags } from "./revalidate";
 
 export async function createTodo(formData: FormData) {
   const result = await todoUpsertSchema.safeParseAsync(formData);
@@ -45,6 +47,8 @@ export async function createTodo(formData: FormData) {
   });
 
   revalidatePath(ROUTES.home);
+  // dashboard + todo list tag 失效
+  revalidateTags(BASE_TAGS_BY_DOMAIN.todo);
 }
 
 export async function updateTodo(formData: FormData) {

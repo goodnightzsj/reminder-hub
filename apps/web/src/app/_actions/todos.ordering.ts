@@ -8,6 +8,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { todos } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
+import { BASE_TAGS_BY_DOMAIN } from "@/lib/cache-tags";
+import { revalidateTags } from "./revalidate";
 
 /**
  * 通过重写 `createdAt` 时间戳来实现排序。
@@ -41,6 +43,7 @@ export async function reorderTodos(ids: string[]) {
 
   revalidatePath(ROUTES.todo);
   revalidatePath(ROUTES.home);
+  revalidateTags(BASE_TAGS_BY_DOMAIN.todo);
 }
 
 async function moveTodoByOffset(id: string, offset: -1 | 1) {
@@ -82,6 +85,7 @@ async function moveTodoByOffset(id: string, offset: -1 | 1) {
 
   revalidatePath(ROUTES.todo);
   revalidatePath(ROUTES.dashboard);
+  revalidateTags(BASE_TAGS_BY_DOMAIN.todo);
 }
 
 /**

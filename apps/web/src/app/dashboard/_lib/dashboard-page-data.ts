@@ -1,10 +1,12 @@
 import "server-only";
 
 import { and, asc, desc, eq, gte, isNotNull, isNull, lt, ne, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 
 import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
 import { anniversaries, items, subscriptions, todos } from "@/server/db/schema";
+import { TAGS } from "@/lib/cache-tags";
 
 import {
   buildAnniversariesWithNext,
@@ -52,7 +54,7 @@ export type DashboardPageData = {
   lowestDailyCostItems: LowestDailyCostItem[];
 };
 
-export async function getDashboardPageData(now: Date = new Date()): Promise<DashboardPageData> {
+async function getDashboardPageDataUncached(now: Date): Promise<DashboardPageData> {
   const { timeZone, dateReminderTime } = await getAppTimeSettings();
 
   const greeting = getGreeting(timeZone, now);
@@ -234,4 +236,31 @@ export async function getDashboardPageData(now: Date = new Date()): Promise<Dash
     monthlySpendRows,
     lowestDailyCostItems,
   };
+}
+
+/**
+ * 对 Dashboard 数据做内存级缓存：命中则直接返回，不跑 12 条 SQL。
+ * - key 包含本地日期：跨天自动失效，避免"今日完成"这类字段显示昨天数据
+ * - tag TAGS.DASHBOARD：任何 todo/anniversary/subscription/item mutation 会调
+ *   revalidateTag 立即失效
+ * - 60s TTL：兜底，处理 server restart 后本地时间前移等极端情况
+ */
+function getLocalDateKey(now: Date): string {
+  // 用 ISO 本地日期（YYYY-MM-DD）作为 cache key 的一部分。用户时区不同一般差距最多 24h，
+  // 足以保证跨日自动刷新；精确到分钟反而让命中率接近 0。
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+export async function getDashboardPageData(now: Date = new Date()): Promise<DashboardPageData> {
+  const dateKey = getLocalDateKey(now);
+  // 将 Date 本身作为参数穿透 cache 边界会导致每毫秒都是新 key，必须只传稳定参数。
+  // 这里 cache 的闭包使用 `now` 做 greeting "上午/下午"，分钟粒度差异不敏感，可接受。
+  return unstable_cache(
+    async () => getDashboardPageDataUncached(now),
+    ["dashboard-page-data", dateKey],
+    { tags: [TAGS.DASHBOARD], revalidate: 60 },
+  )();
 }

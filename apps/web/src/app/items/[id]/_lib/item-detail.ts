@@ -1,6 +1,7 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 
 import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
@@ -8,6 +9,7 @@ import { items } from "@/server/db/schema";
 import { formatDateInTimeZone } from "@/server/date";
 import { computeDaysUsed } from "@/server/item-metrics";
 import { DEFAULT_ITEM_CATEGORY, DEFAULT_ITEM_STATUS, isItemStatus, type ItemStatus } from "@/lib/items";
+import { TAGS } from "@/lib/cache-tags";
 import { ROUTES } from "@/lib/routes";
 
 export type ItemDetailItemData = {
@@ -31,7 +33,7 @@ export type ItemDetailPageData = {
   targetReached: boolean;
 };
 
-export async function getItemDetailPageData(id: string): Promise<ItemDetailPageData | null> {
+async function getItemDetailPageDataUncached(id: string): Promise<ItemDetailPageData | null> {
   const { timeZone } = await getAppTimeSettings();
   const today = formatDateInTimeZone(new Date(), timeZone);
 
@@ -89,4 +91,15 @@ export async function getItemDetailPageData(id: string): Promise<ItemDetailPageD
     costPerUseCents,
     targetReached,
   };
+}
+
+/** 详情页数据缓存：日期为 key 的一部分，跨日自动失效（daysUsed 依赖 today）；10 分钟 TTL 兜底。 */
+export async function getItemDetailPageData(id: string): Promise<ItemDetailPageData | null> {
+  const { timeZone } = await getAppTimeSettings();
+  const todayKey = formatDateInTimeZone(new Date(), timeZone);
+  return unstable_cache(
+    async () => getItemDetailPageDataUncached(id),
+    ["item-detail", id, todayKey],
+    { tags: [TAGS.item(id)], revalidate: 600 },
+  )();
 }

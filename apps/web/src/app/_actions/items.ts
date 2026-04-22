@@ -3,13 +3,14 @@
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { db } from "@/server/db";
 import { type ItemStatus } from "@/lib/items";
 import { items } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
+import { BASE_TAGS_BY_DOMAIN, TAGS } from "@/lib/cache-tags";
 
 import {
   itemIdSchema,
@@ -20,11 +21,16 @@ import { redirectFlashAction, redirectFlashError } from "./redirect-url";
 
 const ITEMS_PATH = ROUTES.items;
 
-
-
 function revalidateItemDetailAndList(id: string) {
   revalidatePath(ITEMS_PATH);
   revalidatePath(`${ITEMS_PATH}/${id}`);
+  for (const tag of BASE_TAGS_BY_DOMAIN.item) updateTag(tag);
+  updateTag(TAGS.item(id));
+}
+
+function revalidateItemListOnly() {
+  revalidatePath(ITEMS_PATH);
+  for (const tag of BASE_TAGS_BY_DOMAIN.item) updateTag(tag);
 }
 
 export async function createItem(formData: FormData) {
@@ -47,7 +53,7 @@ export async function createItem(formData: FormData) {
     updatedAt: now,
   });
 
-  revalidatePath(ITEMS_PATH);
+  revalidateItemListOnly();
 }
 
 export async function updateItem(formData: FormData) {

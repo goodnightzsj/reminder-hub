@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
@@ -20,6 +20,7 @@ import {
 import { subscriptions } from "@/server/db/schema";
 import { getOrFetchServiceIcon } from "@/server/lib/icon-fetcher";
 import { ROUTES } from "@/lib/routes";
+import { BASE_TAGS_BY_DOMAIN, TAGS } from "@/lib/cache-tags";
 
 import {
   subscriptionArchiveSchema,
@@ -30,11 +31,16 @@ import { redirectFlashAction, redirectFlashError } from "./redirect-url";
 
 const SUBSCRIPTIONS_PATH = ROUTES.subscriptions;
 
-
-
 function revalidateSubscriptionDetailAndList(id: string) {
   revalidatePath(SUBSCRIPTIONS_PATH);
   revalidatePath(`${SUBSCRIPTIONS_PATH}/${id}`);
+  for (const tag of BASE_TAGS_BY_DOMAIN.subscription) updateTag(tag);
+  updateTag(TAGS.subscription(id));
+}
+
+function revalidateSubscriptionListOnly() {
+  revalidatePath(SUBSCRIPTIONS_PATH);
+  for (const tag of BASE_TAGS_BY_DOMAIN.subscription) updateTag(tag);
 }
 
 export async function createSubscription(formData: FormData) {
@@ -62,7 +68,7 @@ export async function createSubscription(formData: FormData) {
     updatedAt: now,
   });
 
-  revalidatePath(SUBSCRIPTIONS_PATH);
+  revalidateSubscriptionListOnly();
 }
 
 export async function updateSubscription(formData: FormData) {

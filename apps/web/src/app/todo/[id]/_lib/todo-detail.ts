@@ -1,6 +1,7 @@
 import "server-only";
 
 import { asc, eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 
 import { db } from "@/server/db";
 import { getAppTimeSettings } from "@/server/db/settings";
@@ -8,6 +9,7 @@ import { todos, todoSubtasks } from "@/server/db/schema";
 import { formatDateTimeLocal } from "@/server/datetime";
 import { parseRecurrenceRuleJson } from "@/server/recurrence";
 import { parseNumberArrayJson, parseStringArrayJson } from "@/lib/json";
+import { TAGS } from "@/lib/cache-tags";
 import type { TodoUpdateFormTodo } from "@/app/_components/todo/TodoUpdateForm.types";
 
 type TodoDetailNextTodo = {
@@ -34,7 +36,7 @@ export type TodoDetailPageData = {
   createdAtLabel: string;
 };
 
-export async function getTodoDetailPageData(
+async function getTodoDetailPageDataUncached(
   id: string,
 ): Promise<TodoDetailPageData | null> {
   const { timeZone } = await getAppTimeSettings();
@@ -112,5 +114,17 @@ export async function getTodoDetailPageData(
     dueAtLocalValue,
     createdAtLabel,
   };
+}
+
+/**
+ * 详情页数据缓存：每个 todo 独立 tag，写操作通过 revalidateTag 即时失效。
+ * 10 分钟 TTL 作为兜底，避免 cache key 泄漏后的长期错误。
+ */
+export async function getTodoDetailPageData(id: string): Promise<TodoDetailPageData | null> {
+  return unstable_cache(
+    async () => getTodoDetailPageDataUncached(id),
+    ["todo-detail", id],
+    { tags: [TAGS.todo(id)], revalidate: 600 },
+  )();
 }
 

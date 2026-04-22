@@ -1,8 +1,10 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 
 import { parseNumberArrayJson } from "@/lib/json";
+import { TAGS } from "@/lib/cache-tags";
 import {
   DEFAULT_SUBSCRIPTION_CYCLE_UNIT,
   SUBSCRIPTION_CYCLE_UNIT,
@@ -42,7 +44,7 @@ export type SubscriptionDetailPageData = {
   timeZone: string;
 };
 
-export async function getSubscriptionDetailPageData(
+async function getSubscriptionDetailPageDataUncached(
   id: string,
 ): Promise<SubscriptionDetailPageData | null> {
   const { timeZone, dateReminderTime } = await getAppTimeSettings();
@@ -103,4 +105,13 @@ export async function getSubscriptionDetailPageData(
     archiveToggle,
     timeZone,
   };
+}
+
+/** 详情页数据缓存，按单实体 tag 失效，10 分钟 TTL 兜底。 */
+export async function getSubscriptionDetailPageData(id: string): Promise<SubscriptionDetailPageData | null> {
+  return unstable_cache(
+    async () => getSubscriptionDetailPageDataUncached(id),
+    ["subscription-detail", id],
+    { tags: [TAGS.subscription(id)], revalidate: 600 },
+  )();
 }

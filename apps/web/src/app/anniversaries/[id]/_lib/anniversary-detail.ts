@@ -1,6 +1,9 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
+
+import { TAGS } from "@/lib/cache-tags";
 
 import {
   getNextLunarOccurrenceDateString,
@@ -42,7 +45,7 @@ export type AnniversaryDetailPageData = {
   defaultSolarDate: string | undefined;
 };
 
-export async function getAnniversaryDetailPageData(
+async function getAnniversaryDetailPageDataUncached(
   id: string,
 ): Promise<AnniversaryDetailPageData | null> {
   const { timeZone } = await getAppTimeSettings();
@@ -107,4 +110,19 @@ export async function getAnniversaryDetailPageData(
     archiveToggle,
     defaultSolarDate,
   };
+}
+
+
+/**
+ * 详情页数据缓存。按单实体 tag 失效，TTL 10 分钟兜底。
+ * 使用 today 作为 key 的一部分：跨天自动失效，避免"还剩 N 天"显示昨天的值。
+ */
+export async function getAnniversaryDetailPageData(id: string): Promise<AnniversaryDetailPageData | null> {
+  const { timeZone } = await getAppTimeSettings();
+  const todayKey = formatDateInTimeZone(new Date(), timeZone);
+  return unstable_cache(
+    async () => getAnniversaryDetailPageDataUncached(id),
+    ["anniversary-detail", id, todayKey],
+    { tags: [TAGS.anniversary(id)], revalidate: 600 },
+  )();
 }

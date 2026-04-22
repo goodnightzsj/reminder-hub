@@ -3,11 +3,12 @@
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { db } from "@/server/db";
 import { anniversaries } from "@/server/db/schema";
 import { ROUTES } from "@/lib/routes";
+import { BASE_TAGS_BY_DOMAIN, TAGS } from "@/lib/cache-tags";
 import {
   anniversaryArchiveSchema,
   anniversaryCreateSchema,
@@ -21,6 +22,14 @@ const ANNIVERSARIES_PATH = ROUTES.anniversaries;
 function revalidateAnniversaryDetailAndList(id: string) {
   revalidatePath(ANNIVERSARIES_PATH);
   revalidatePath(`${ANNIVERSARIES_PATH}/${id}`);
+  // 失效缓存 tag：列表 + dashboard 聚合 + 单实体详情
+  for (const tag of BASE_TAGS_BY_DOMAIN.anniversary) updateTag(tag);
+  updateTag(TAGS.anniversary(id));
+}
+
+function revalidateAnniversaryListOnly() {
+  revalidatePath(ANNIVERSARIES_PATH);
+  for (const tag of BASE_TAGS_BY_DOMAIN.anniversary) updateTag(tag);
 }
 
 export async function createAnniversary(formData: FormData) {
@@ -44,7 +53,7 @@ export async function createAnniversary(formData: FormData) {
     updatedAt: now,
   });
 
-  revalidatePath(ANNIVERSARIES_PATH);
+  revalidateAnniversaryListOnly();
 }
 
 export async function updateAnniversary(formData: FormData) {
