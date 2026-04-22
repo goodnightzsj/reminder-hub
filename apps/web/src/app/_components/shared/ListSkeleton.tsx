@@ -5,19 +5,19 @@ type ListSkeletonProps = {
 };
 
 /**
- * 列表类骨架：对齐 TodoItem / AnniversaryList 等用"分隔线 + 行"节奏的页面，
- * 避免骨架→真实内容跳变导致 CLS。
+ * 列表类骨架：对齐真实 TodoItem（无 border、rounded-lg、gap 形成节奏）。
+ * 原先的 border-b 在列表页切换时会"凭空冒出一圈线"，已移除。
  */
 export function ListSkeleton({ rows = 6, withAccent = false }: ListSkeletonProps) {
     return (
-        <ul className="flex flex-col px-2 pb-4 pt-1 sm:px-4">
+        <ul className="flex flex-col gap-0.5 px-2 pb-4 pt-1 sm:px-4">
             {Array.from({ length: rows }).map((_, i) => (
                 <li
                     key={i}
-                    className="relative flex items-center gap-3 border-b border-divider/50 py-3.5 px-1 last:border-b-0"
+                    className="relative flex items-center gap-3 rounded-lg py-3.5 pl-4 pr-2"
                 >
                     {withAccent && (
-                        <div className="absolute inset-y-0 left-0 w-[3px] bg-muted/30" />
+                        <div className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-muted/30" />
                     )}
                     <div className="h-5 w-5 shrink-0 rounded-[6px] skeleton-shimmer" />
                     <div className="flex-1 space-y-1.5">
