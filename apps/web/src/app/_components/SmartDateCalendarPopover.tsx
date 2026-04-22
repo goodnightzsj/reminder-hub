@@ -1,7 +1,19 @@
 "use client";
 
-import { ModernCalendar } from "./ui/ModernCalendar";
+import dynamic from "next/dynamic";
 import { Portal } from "./ui/Portal";
+
+// ModernCalendar 带 lunar-javascript (~300KB gzipped)，只在用户打开日期选择器时才需要。
+// next/dynamic + ssr:false 让它在点击触发前完全不进首屏 bundle。
+const ModernCalendar = dynamic(
+    () => import("./ui/ModernCalendar").then((m) => ({ default: m.ModernCalendar })),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="w-[320px] h-[360px] rounded-2xl bg-base/95 border border-default shadow-lg backdrop-blur-xl animate-pulse" />
+        ),
+    }
+);
 
 type SmartDateCalendarPopoverProps = {
   open: boolean;

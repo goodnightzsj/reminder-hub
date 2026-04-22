@@ -1,10 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/ui/Select";
 import { ANNIVERSARY_DATE_TYPE, isAnniversaryDateType, type AnniversaryDateType } from "@/lib/anniversary";
-import { LunarDateInput } from "./LunarDateInput";
+
+// 农历输入会引入 lunar-javascript，只有用户切到"农历"时才需要 — 延迟加载
+const LunarDateInput = dynamic(
+    () => import("./LunarDateInput").then((m) => ({ default: m.LunarDateInput })),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-12 w-full rounded-lg border border-default bg-surface/30 animate-pulse" />
+        ),
+    }
+);
 
 type AnniversaryDateFieldsProps = {
     defaultDateType: AnniversaryDateType;

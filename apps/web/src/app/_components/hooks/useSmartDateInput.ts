@@ -3,7 +3,7 @@
 import type { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { solarToLunar } from "../../../lib/lunar-utils";
+import type { LunarInfo } from "../../../lib/lunar-utils";
 import { ANNIVERSARY_DATE_TYPE, type AnniversaryDateType } from "../../../lib/anniversary";
 
 import {
@@ -41,13 +41,29 @@ export function useSmartDateInput({ type, dateType, defaultValue }: UseSmartDate
     const isDateTime = type === "datetime-local";
     const isLunar = dateType === ANNIVERSARY_DATE_TYPE.LUNAR;
 
-    const lunarInfo = useMemo(() => {
-        if (!isLunar || !parts.y || !parts.m || !parts.d) return null;
+    // 农历信息：lunar-utils 会 pull in ~300KB 的 lunar-javascript。
+    // 只在 isLunar 为真且日期有效时才动态加载；否则完全不触发 chunk 请求。
+    const [lunarInfo, setLunarInfo] = useState<LunarInfo | null>(null);
+    useEffect(() => {
+        if (!isLunar || !parts.y || !parts.m || !parts.d) {
+            setLunarInfo(null);
+            return;
+        }
         const year = parseInt(parts.y);
         const month = parseInt(parts.m);
         const day = parseInt(parts.d);
-        if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-        return solarToLunar(year, month, day);
+        if (isNaN(year) || isNaN(month) || isNaN(day)) {
+            setLunarInfo(null);
+            return;
+        }
+        let cancelled = false;
+        import("../../../lib/lunar-utils").then((mod) => {
+            if (cancelled) return;
+            setLunarInfo(mod.solarToLunar(year, month, day));
+        });
+        return () => {
+            cancelled = true;
+        };
     }, [isLunar, parts.y, parts.m, parts.d]);
 
     useEffect(() => {
