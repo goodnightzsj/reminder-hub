@@ -156,7 +156,9 @@ export default async function Home({ searchParams }: HomePageProps) {
           </CreateModal>
         )}
 
-        <section className="rounded-2xl border border-default bg-elevated shadow-sm overflow-hidden min-h-[600px]">
+        {/* 与纪念日/订阅/物品页对齐：去掉大 border 容器，避免跨页跳变出现一圈线框；
+            保留 bg-elevated + rounded-2xl 的轻柔分段，不画边 */}
+        <section className="rounded-2xl bg-elevated overflow-hidden min-h-[600px]">
           {/* Sticky Header with Glassmorphism */}
           <div className="sticky top-0 z-20 border-b border-divider bg-glass backdrop-blur-xl px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">

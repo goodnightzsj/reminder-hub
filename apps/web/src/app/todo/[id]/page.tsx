@@ -106,7 +106,8 @@ export default async function TodoPage({ params }: TodoPageProps) {
 
         <div className="p-4 sm:p-8 animate-slide-up stagger-2">
           {/* Main Card */}
-          <div className="overflow-hidden rounded-2xl border border-default bg-elevated/80 shadow-xl backdrop-blur-xl">
+          {/* 详情主卡：去掉 border，阴影也降级，避免与列表页切换时出现明显线框 */}
+          <div className="overflow-hidden rounded-2xl bg-elevated/80 shadow-sm backdrop-blur-xl">
             <div className="p-6 sm:p-10">
               <div className="flex items-center justify-between mb-8">
                 <div>

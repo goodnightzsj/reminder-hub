@@ -62,11 +62,11 @@ export function EmptyState({
                     }}
                 >
                     {icon ? (
-                        <div className="relative text-secondary">{icon}</div>
+                        // 自定义 icon 走 brand-primary，不同主题下都有足够对比
+                        <div className="relative text-brand-primary/80">{icon}</div>
                     ) : (
-                        <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-surface/80 border border-default/60 shadow-sm backdrop-blur-sm dark:bg-zinc-800/60">
-                            <IconBox className="h-9 w-9 text-secondary/80" />
-                        </div>
+                        // 默认 icon：无 frame 无 border，直接用大号 brand 色 SVG 作主角
+                        <IconBox className="relative h-20 w-20 text-brand-primary/75" />
                     )}
                 </motion.div>
             </div>

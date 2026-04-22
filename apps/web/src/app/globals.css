@@ -512,12 +512,23 @@ input[type="radio"] {
 }
 
 /* === Unified focus-visible ring ===
-   键盘用户可见、点击用户不打扰；颜色绑定到品牌 token。 */
-:where(button, a, [role="button"], [tabindex="0"]):focus-visible,
+   键盘用户可见、点击用户不打扰；颜色绑定到品牌 token。
+   用 box-shadow 实现，能自动跟随元素的 border-radius，不会出现直角矩形。
+   原来的 `outline:` 在带 border-radius 的 input 上会退化成方形 + outline-offset 额外缝隙。 */
+:where(button, a, [role="button"], [tabindex="0"]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--brand-primary) / 0.55);
+}
+
+/* 表单控件的默认 focus：去掉浏览器蓝色 outline，用 box-shadow ring + 边框变色。
+   如果组件在自己的 className 里给了 focus-visible:ring-* 等自定义，则优先级更高会覆盖这里。 */
+:where(input, select, textarea):focus {
+  outline: none;
+}
 :where(input, select, textarea):focus-visible {
-  outline: 2px solid hsl(var(--brand-primary) / 0.6);
-  outline-offset: 2px;
-  border-radius: inherit;
+  outline: none;
+  border-color: hsl(var(--brand-primary) / 0.6);
+  box-shadow: 0 0 0 3px hsl(var(--brand-primary) / 0.2);
 }
 
 /* === Accessibility: Reduced Motion === */
