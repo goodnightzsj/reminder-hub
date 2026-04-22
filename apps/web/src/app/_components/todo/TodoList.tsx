@@ -40,7 +40,7 @@ export function TodoList({ items, timeZone, emptyTitle, emptyDescription, emptyS
     }
 
     return (
-        <ul className="relative flex flex-col px-2 pb-4 pt-1 sm:px-4">
+        <ul className="relative flex flex-col gap-0.5 px-2 pb-4 pt-1 sm:px-4">
             <motion.div
                 initial="hidden"
                 animate="visible"
