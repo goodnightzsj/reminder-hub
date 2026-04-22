@@ -156,11 +156,12 @@ export default async function Home({ searchParams }: HomePageProps) {
           </CreateModal>
         )}
 
-        {/* 与纪念日/订阅/物品页对齐：去掉大 border 容器，避免跨页跳变出现一圈线框；
-            保留 bg-elevated + rounded-2xl 的轻柔分段，不画边 */}
-        <section className="rounded-2xl bg-elevated overflow-hidden min-h-[600px]">
-          {/* Sticky Header with Glassmorphism */}
-          <div className="sticky top-0 z-20 border-b border-divider bg-glass backdrop-blur-xl px-4 py-3">
+        {/* 结构与纪念日/订阅/物品页完全对齐：flat section + space-y-6，
+            不再有圆角 bg-elevated 容器，路由切换不会再"弹出一个卡片框" */}
+        <section className="space-y-6">
+          {/* Filter & action row：原本是 sticky+border-b 的 glass header，移除分隔线与背景色，
+              与其他列表页一致；列表较长时功能通过 BottomNav 切换 */}
+          <div className="px-1 py-2">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               {/* Desktop Create Button (Left) */}
               <div className="hidden md:block">

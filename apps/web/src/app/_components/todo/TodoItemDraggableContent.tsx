@@ -92,7 +92,9 @@ export function TodoItemDraggableContent({
             dragConstraints={{ left: -100, right: 0 }}
             dragElastic={0.05}
             animate={controls}
-            className="relative z-10 flex items-start gap-4 bg-elevated px-5 py-4"
+            // 不透明底色遮挡下层 swipe-delete 红色区；用 bg-base 与页面底色一致，
+            // 行不再看起来像一串"填充卡片"
+            className="relative z-10 flex items-start gap-4 bg-base px-5 py-4"
             whileDrag={{ x: -50 }}
         >
             {/* Priority Indicator Dot/Line */}
