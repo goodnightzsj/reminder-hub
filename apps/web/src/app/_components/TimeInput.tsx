@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { IconCheck, IconClock } from "./Icons";
 import { TimePicker } from "./ui/TimePicker";
 import { Portal } from "./ui/Portal";

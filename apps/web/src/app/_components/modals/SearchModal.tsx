@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { IconSearch } from "../Icons";
 import { useTimeouts } from "../hooks/useTimeouts";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";

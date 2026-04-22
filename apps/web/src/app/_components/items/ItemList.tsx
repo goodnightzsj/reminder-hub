@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { ItemCard } from "./ItemCard";
 import { buildCreateModalHref } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";

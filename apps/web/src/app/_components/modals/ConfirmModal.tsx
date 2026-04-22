@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "../ui/Button";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useEscapeKey } from "../hooks/useEscapeKey";
 import { Portal } from "../ui/Portal";

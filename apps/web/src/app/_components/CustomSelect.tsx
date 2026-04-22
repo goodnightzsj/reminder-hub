@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
 import { Input } from "./ui/Input";
 import { IconCheck, IconChevronDown } from "./Icons";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 type Option = {
     value: string;

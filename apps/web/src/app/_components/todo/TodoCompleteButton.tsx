@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { useTransition } from "react";
 import { useConfetti } from "../ConfettiProvider";
 import { Tooltip } from "../ui/Tooltip";

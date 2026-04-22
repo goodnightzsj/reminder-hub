@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { IconBox } from "../Icons";
 import { cn } from "../../../lib/utils";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 
 type EmptyStateProps = {
     title?: string;

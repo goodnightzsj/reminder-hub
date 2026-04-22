@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useMotionValue, useSpring, useTransform, motion, useInView } from "framer-motion";
+import { useMotionValue, useSpring, useTransform, m as motion, useInView } from "framer-motion";
 import { useTimeouts } from "../hooks/useTimeouts";
 
 type NumberTickerProps = {

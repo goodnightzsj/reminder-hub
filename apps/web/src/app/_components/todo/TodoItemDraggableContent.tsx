@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { motion, useAnimationControls, useReducedMotion } from "framer-motion";
+import { m as motion, useAnimationControls, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { type TodoPriority } from "@/lib/todo";
 import { TodoItemActions } from "./TodoItemActions";

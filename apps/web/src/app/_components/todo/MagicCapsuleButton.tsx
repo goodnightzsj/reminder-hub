@@ -3,7 +3,7 @@
 import { useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { IconPlus } from "../Icons";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { MODAL_CREATE_VALUE, MODAL_QUERY_KEY, setSearchParamOnPathname } from "@/lib/url";
 
 export function MagicCapsuleButton() {

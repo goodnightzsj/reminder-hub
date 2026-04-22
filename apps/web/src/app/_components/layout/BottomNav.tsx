@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { IconBox, IconCalendar, IconCreditCard, IconDashboard, IconTodo } from "../Icons";
 import { Magnetic } from "../shared/Magnetic";
 import { ROUTES } from "../../../lib/routes";

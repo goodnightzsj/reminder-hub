@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { IconCalendar, IconChevronLeft, IconChevronRight, IconClock } from "../Icons";
 import { getLunarDayText } from "@/lib/lunar-utils";
 import { TimePicker } from "./TimePicker";

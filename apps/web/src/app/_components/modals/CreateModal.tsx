@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence, useDragControls, type PanInfo } from "framer-motion";
+import { m as motion, AnimatePresence, useDragControls, type PanInfo } from "framer-motion";
 import { IconX } from "../Icons";
 import { useCreateModal } from "../hooks/useCreateModal";
 import { useBodyScrollLock } from "../hooks/useBodyScrollLock";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { IconBox, IconCalendar, IconCreditCard, IconPlus, IconTodo } from "./Icons";
 import { Magnetic } from "./shared/Magnetic";
 import { buildCreateModalHref } from "@/lib/url";

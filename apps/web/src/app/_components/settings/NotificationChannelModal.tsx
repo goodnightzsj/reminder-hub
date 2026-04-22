@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { Portal } from "@/app/_components/ui/Portal";
 import { useEscapeKey } from "../hooks/useEscapeKey";

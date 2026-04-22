@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { TodoItem } from "./TodoItem";
 import type { TodoItemData } from "./TodoItem.types";
 import { EmptyState } from "../shared/EmptyState";

@@ -29,6 +29,13 @@
     "zod": "^4.3.6",
     "zod-form-data": "^3.0.1"
   },
+  "browserslist": [
+    "chrome >= 111",
+    "firefox >= 115",
+    "safari >= 16.4",
+    "edge >= 111",
+    "not dead"
+  ],
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { NumberTicker } from "../../_components/shared/NumberTicker";
 import { formatCurrencyAmount } from "@/lib/format";
 

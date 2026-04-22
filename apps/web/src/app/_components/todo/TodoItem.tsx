@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { TODO_PRIORITY, type TodoPriority } from "@/lib/todo";
 import type { TodoItemData } from "./TodoItem.types";
 import { TodoItemDraggableContent } from "./TodoItemDraggableContent";
