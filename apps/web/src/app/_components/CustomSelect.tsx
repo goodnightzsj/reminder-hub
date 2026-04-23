@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect, ChangeEvent } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, ChangeEvent } from "react";
 import { Input } from "./ui/Input";
 import { IconCheck, IconChevronDown } from "./Icons";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -21,8 +21,21 @@ type CustomSelectProps = {
     allowCustom?: boolean;
 };
 
-const DROPDOWN_MAX_H = 240; // max-h-60 = 15rem
+const DROPDOWN_MAX_H = 240;
 const GAP = 4;
+
+type DropdownClosed = { isOpen: false };
+type DropdownOpen = {
+    isOpen: true;
+    dir: "down" | "up";
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+};
+type DropdownState = DropdownClosed | DropdownOpen;
+
+const CLOSED: DropdownClosed = { isOpen: false };
 
 export function CustomSelect({
     options,
@@ -39,45 +52,39 @@ export function CustomSelect({
     const isControlled = controlledValue !== undefined;
     const value = isControlled ? controlledValue : internalValue;
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [dd, setDd] = useState<DropdownState>(CLOSED);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number }>({ left: 0, width: 0 });
-    const [direction, setDirection] = useState<"down" | "up">("down");
-
-    const updatePosition = useCallback(() => {
+    const open = useCallback(() => {
         if (!containerRef.current) return;
         const rect = containerRef.current.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
         const openUp = spaceBelow < DROPDOWN_MAX_H && rect.top > spaceBelow;
-        setDirection(openUp ? "up" : "down");
-        setPos(
+        setDd(
             openUp
-                ? { bottom: window.innerHeight - rect.top + GAP, left: rect.left, width: rect.width }
-                : { top: rect.bottom + GAP, left: rect.left, width: rect.width },
+                ? { isOpen: true, dir: "up", bottom: window.innerHeight - rect.top + GAP, left: rect.left, width: rect.width }
+                : { isOpen: true, dir: "down", top: rect.bottom + GAP, left: rect.left, width: rect.width },
         );
     }, []);
 
-    useLayoutEffect(() => {
-        if (isOpen) updatePosition();
-    }, [isOpen, updatePosition]);
+    const close = useCallback(() => setDd(CLOSED), []);
 
     useEffect(() => {
-        if (!isOpen) return;
+        if (!dd.isOpen) return;
         const handleScroll = (e: Event) => {
             if (dropdownRef.current?.contains(e.target as Node)) return;
-            setIsOpen(false);
+            close();
         };
-        const handleResize = () => setIsOpen(false);
+        const handleResize = close;
         window.addEventListener("scroll", handleScroll, true);
         window.addEventListener("resize", handleResize);
         return () => {
             window.removeEventListener("scroll", handleScroll, true);
             window.removeEventListener("resize", handleResize);
         };
-    }, [isOpen]);
+    }, [dd.isOpen, close]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -86,19 +93,19 @@ export function CustomSelect({
                 containerRef.current && !containerRef.current.contains(target) &&
                 (!dropdownRef.current || !dropdownRef.current.contains(target))
             ) {
-                setIsOpen(false);
+                close();
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [close]);
 
     const handleSelect = (optValue: string) => {
         if (!isControlled) {
             setInternalValue(optValue);
         }
         onChange?.(optValue);
-        setIsOpen(false);
+        close();
     };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -128,11 +135,11 @@ export function CustomSelect({
                         if (allowCustom) handleInputChange(e);
                     }}
                     onFocus={() => {
-                        if (allowCustom) setIsOpen(true);
+                        if (allowCustom) open();
                     }}
                     onClick={() => {
-                        if (!allowCustom) setIsOpen(!isOpen);
-                        else setIsOpen(true);
+                        if (!allowCustom && dd.isOpen) close();
+                        else open();
                     }}
                     readOnly={!allowCustom}
                     placeholder={placeholder}
@@ -149,14 +156,14 @@ export function CustomSelect({
 
             <Portal>
                 <AnimatePresence>
-                    {isOpen && (
+                    {dd.isOpen && (
                         <motion.div
                             ref={dropdownRef}
-                            initial={{ opacity: 0, y: direction === "up" ? 6 : -6, scale: 0.95 }}
+                            initial={{ opacity: 0, y: dd.dir === "up" ? 6 : -6, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: direction === "up" ? 6 : -6, scale: 0.95 }}
+                            exit={{ opacity: 0, y: dd.dir === "up" ? 6 : -6, scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            style={{ position: "fixed", left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, transformOrigin: direction === "up" ? "bottom left" : "top left" }}
+                            style={{ position: "fixed", left: dd.left, width: dd.width, top: dd.top, bottom: dd.bottom, transformOrigin: dd.dir === "up" ? "bottom left" : "top left" }}
                             className="z-[9990] max-h-60 overflow-y-auto rounded-xl border border-black/5 bg-[#F5F5F7]/95 backdrop-blur-xl shadow-2xl p-1 dark:bg-[#1E1E1E]/95 dark:border-white/10"
                         >
                             {options.map((opt) => {
