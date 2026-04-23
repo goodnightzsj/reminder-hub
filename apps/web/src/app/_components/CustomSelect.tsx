@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect, ChangeEvent } from "react";
 import { Input } from "./ui/Input";
 import { IconCheck, IconChevronDown } from "./Icons";
 import { m as motion, AnimatePresence } from "framer-motion";
+import { Portal } from "./ui/Portal";
 
 type Option = {
     value: string;
@@ -17,16 +18,12 @@ type CustomSelectProps = {
     placeholder?: string;
     className?: string;
     required?: boolean;
-    allowCustom?: boolean; // New prop: if false, acts as a strict select
+    allowCustom?: boolean;
 };
 
-/**
- * 可输入或仅选择的下拉组件
- * 
- * Modes:
- * 1. allowCustom={true} (默认): 类似 Combobox，允许自由输入。Visible Input 的 Value 即提交 Value。
- * 2. allowCustom={false}: 类似 Select，只读。Visible Input 显示 Label，Hidden Input 提交 Value。
- */
+const DROPDOWN_MAX_H = 240; // max-h-60 = 15rem
+const GAP = 4;
+
 export function CustomSelect({
     options,
     name,
@@ -45,11 +42,50 @@ export function CustomSelect({
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Close on click outside
+    const [pos, setPos] = useState<{ top?: number; bottom?: number; left: number; width: number }>({ left: 0, width: 0 });
+    const [direction, setDirection] = useState<"down" | "up">("down");
+
+    const updatePosition = useCallback(() => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const openUp = spaceBelow < DROPDOWN_MAX_H && rect.top > spaceBelow;
+        setDirection(openUp ? "up" : "down");
+        setPos(
+            openUp
+                ? { bottom: window.innerHeight - rect.top + GAP, left: rect.left, width: rect.width }
+                : { top: rect.bottom + GAP, left: rect.left, width: rect.width },
+        );
+    }, []);
+
+    useLayoutEffect(() => {
+        if (isOpen) updatePosition();
+    }, [isOpen, updatePosition]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleScroll = (e: Event) => {
+            if (dropdownRef.current?.contains(e.target as Node)) return;
+            setIsOpen(false);
+        };
+        const handleResize = () => setIsOpen(false);
+        window.addEventListener("scroll", handleScroll, true);
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("scroll", handleScroll, true);
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [isOpen]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+            if (
+                containerRef.current && !containerRef.current.contains(target) &&
+                (!dropdownRef.current || !dropdownRef.current.contains(target))
+            ) {
                 setIsOpen(false);
             }
         };
@@ -65,7 +101,6 @@ export function CustomSelect({
         setIsOpen(false);
     };
 
-    // Handle input change for allowCustom
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         if (!isControlled) {
@@ -74,7 +109,6 @@ export function CustomSelect({
         onChange?.(newValue);
     };
 
-    // Calculate display text
     const displayValue = useMemo(() => {
         if (allowCustom) return value;
         const selectedOpt = options.find((o) => o.value === value);
@@ -83,13 +117,12 @@ export function CustomSelect({
 
     return (
         <div ref={containerRef} className={`relative ${className}`}>
-            {/* Hidden Input for Form Submission in Strict Mode */}
             {!allowCustom && name && <input type="hidden" name={name} value={value} />}
 
             <div className="relative group">
                 <Input
                     ref={inputRef}
-                    name={allowCustom ? name : undefined} // Only trigger name if editable
+                    name={allowCustom ? name : undefined}
                     value={displayValue}
                     onChange={(e) => {
                         if (allowCustom) handleInputChange(e);
@@ -98,7 +131,6 @@ export function CustomSelect({
                         if (allowCustom) setIsOpen(true);
                     }}
                     onClick={() => {
-                        // For readonly mode, click should toggle or open
                         if (!allowCustom) setIsOpen(!isOpen);
                         else setIsOpen(true);
                     }}
@@ -115,45 +147,49 @@ export function CustomSelect({
                 )}
             </div>
 
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        className="absolute z-50 mt-1 min-w-full w-max max-h-60 overflow-y-auto rounded-xl border border-black/5 bg-[#F5F5F7]/95 backdrop-blur-xl shadow-2xl p-1 dark:bg-[#1E1E1E]/95 dark:border-white/10"
-                    >
-                        {options.map((opt) => {
-                            const isSelected = opt.value === value;
-                            return (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onMouseDown={(e) => e.preventDefault()} // Prevent blur
-                                    onClick={() => handleSelect(opt.value)}
-                                    className={`
-                                        w-full px-2 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors
-                                        ${isSelected ? "text-primary font-medium" : "text-primary"}
-                                        hover:bg-brand-primary hover:text-white
-                                        group
-                                    `}
-                                >
-                                    <span className={`w-4 flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:text-white"}`}>
-                                        {isSelected && <IconCheck className="w-3.5 h-3.5" />}
-                                    </span>
-                                    <span className="flex-1 text-left truncate">{opt.label}</span>
-                                </button>
-                            );
-                        })}
-                        {allowCustom && value && !options.some((opt) => opt.value === value) && (
-                            <div className="px-3 py-2 text-xs text-muted border-t border-black/5 dark:border-white/5 mt-1">
-                                使用自定义值：&quot;{value}&quot;
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            <Portal>
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            ref={dropdownRef}
+                            initial={{ opacity: 0, y: direction === "up" ? 6 : -6, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: direction === "up" ? 6 : -6, scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            style={{ position: "fixed", left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, transformOrigin: direction === "up" ? "bottom left" : "top left" }}
+                            className="z-[9990] max-h-60 overflow-y-auto rounded-xl border border-black/5 bg-[#F5F5F7]/95 backdrop-blur-xl shadow-2xl p-1 dark:bg-[#1E1E1E]/95 dark:border-white/10"
+                        >
+                            {options.map((opt) => {
+                                const isSelected = opt.value === value;
+                                return (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => handleSelect(opt.value)}
+                                        className={`
+                                            w-full px-2 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors
+                                            ${isSelected ? "text-primary font-medium" : "text-primary"}
+                                            hover:bg-brand-primary hover:text-white
+                                            group
+                                        `}
+                                    >
+                                        <span className={`w-4 flex items-center justify-center ${isSelected ? "opacity-100" : "opacity-0 group-hover:text-white"}`}>
+                                            {isSelected && <IconCheck className="w-3.5 h-3.5" />}
+                                        </span>
+                                        <span className="flex-1 text-left truncate">{opt.label}</span>
+                                    </button>
+                                );
+                            })}
+                            {allowCustom && value && !options.some((opt) => opt.value === value) && (
+                                <div className="px-3 py-2 text-xs text-muted border-t border-black/5 dark:border-white/5 mt-1">
+                                    使用自定义值：&quot;{value}&quot;
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </Portal>
         </div>
     );
 }
