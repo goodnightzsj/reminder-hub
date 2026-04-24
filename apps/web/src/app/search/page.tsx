@@ -14,6 +14,7 @@ import { ROUTES } from "@/lib/routes";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
 import { getItemStatusLabel } from "@/lib/items";
 import { SEARCH_QUERY_KEY } from "@/lib/url";
+import { requireAuth } from "@/server/auth";
 
 import { parseSearchQuery, querySearchRows } from "./_lib/search-results";
 import { getItemStatusBadgeVariant, todoPriorityBadgeConfig } from "./_lib/search-ui";
@@ -29,6 +30,7 @@ type SearchPageProps = {
 };
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
+  await requireAuth();
   const params = (await searchParams) ?? {};
   const q = parseSearchQuery(getSearchParamString(params, SEARCH_QUERY_KEY));
 

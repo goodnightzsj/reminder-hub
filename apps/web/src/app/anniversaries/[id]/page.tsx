@@ -19,6 +19,7 @@ import { anniversaryCategoryOptions, getAnniversaryCategoryLabel } from "@/lib/a
 import { ROUTES } from "@/lib/routes";
 import { anniversaryReminderOptionsDays } from "@/lib/reminder-options";
 
+import { requireAuth } from "@/server/auth";
 import { getAnniversaryDetailPageData } from "./_lib/anniversary-detail";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,7 @@ export async function generateMetadata({ params }: AnniversaryDetailPageProps): 
 export default async function AnniversaryDetailPage({
   params,
 }: AnniversaryDetailPageProps) {
+  await requireAuth();
   const { id } = await params;
 
   const data = await getAnniversaryDetailPageData(id);

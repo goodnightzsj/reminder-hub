@@ -22,6 +22,7 @@ import {
   itemStatusOptions,
 } from "@/lib/items";
 
+import { requireAuth } from "@/server/auth";
 import { getItemDetailPageData } from "./_lib/item-detail";
 import { getItemStatusBadgeVariant, ITEM_STATUS_ACTIONS } from "./_lib/item-status";
 
@@ -46,6 +47,7 @@ export async function generateMetadata({ params }: ItemDetailPageProps): Promise
 }
 
 export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
+  await requireAuth();
   const { id } = await params;
 
   const data = await getItemDetailPageData(id);

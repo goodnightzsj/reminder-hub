@@ -13,6 +13,7 @@ import { Badge } from "../../_components/ui/Badge";
 import { getSmartColorStyle } from "../../_components/shared/SmartCategoryBadge";
 import { PageBackgroundDecoration } from "../../_components/layout/PageBackgroundDecoration";
 
+import { requireAuth } from "@/server/auth";
 import { getTodoDetailPageData } from "./_lib/todo-detail";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: TodoPageProps): Promise<Metad
 }
 
 export default async function TodoPage({ params }: TodoPageProps) {
+  await requireAuth();
   const { id } = await params;
   const data = await getTodoDetailPageData(id);
   if (!data) notFound();

@@ -15,6 +15,7 @@ import {
 } from "@/app/_actions/subscriptions";
 import { formatCurrencyCents } from "@/lib/format";
 import { ROUTES } from "@/lib/routes";
+import { requireAuth } from "@/server/auth";
 import { getSubscriptionDetailPageData } from "./_lib/subscription-detail";
 import { SubscriptionEditForm } from "@/app/_components/subscriptions/SubscriptionEditForm";
 
@@ -42,6 +43,7 @@ export async function generateMetadata({ params }: SubscriptionDetailPageProps):
 export default async function SubscriptionDetailPage({
   params,
 }: SubscriptionDetailPageProps) {
+  await requireAuth();
   const { id } = await params;
 
   const data = await getSubscriptionDetailPageData(id);

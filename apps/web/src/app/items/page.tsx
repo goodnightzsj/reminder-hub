@@ -10,6 +10,7 @@ import { ItemList } from "@/app/_components/items/ItemList";
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
 import { buildItemsHref as buildHref, buildCreateModalHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";
+import { requireAuth } from "@/server/auth";
 
 import { ITEM_FILTER, parseItemFilter } from "./_lib/item-filters";
 import { getItemsPageData } from "./_lib/items-page-data";
@@ -25,6 +26,7 @@ type ItemsPageProps = {
 };
 
 export default async function ItemsPage({ searchParams }: ItemsPageProps) {
+  await requireAuth();
   const params = (await searchParams) ?? {};
   const filter = parseItemFilter(getSearchParamString(params, FILTER_QUERY_KEY));
   const categoryFilter = getSearchParamString(params, CATEGORY_QUERY_KEY);

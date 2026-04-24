@@ -11,6 +11,7 @@ import { SubscriptionList } from "@/app/_components/subscriptions/SubscriptionLi
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
 import { buildCreateModalHref, buildSubscriptionsHref as buildHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";
+import { requireAuth } from "@/server/auth";
 
 import { SUBSCRIPTION_FILTER, parseSubscriptionFilter } from "./_lib/subscription-filters";
 import { getSubscriptionsPageData } from "./_lib/subscriptions-page-data";
@@ -26,6 +27,7 @@ type SubscriptionsPageProps = {
 };
 
 export default async function SubscriptionsPage({ searchParams }: SubscriptionsPageProps) {
+  await requireAuth();
   const params = (await searchParams) ?? {};
   const filter = parseSubscriptionFilter(getSearchParamString(params, FILTER_QUERY_KEY));
   const categoryFilter = getSearchParamString(params, CATEGORY_QUERY_KEY);

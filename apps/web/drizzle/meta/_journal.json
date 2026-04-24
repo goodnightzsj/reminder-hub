@@ -169,6 +169,13 @@
       "when": 1777004208178,
       "tag": "0023_unknown_sentry",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1777020822182,
+      "tag": "0024_cheerful_post",
+      "breakpoints": true
     }
   ]
 }

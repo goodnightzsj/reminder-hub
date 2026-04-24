@@ -15,6 +15,7 @@ import {
   TODO_TAG_QUERY_KEY,
   TODO_TASK_TYPE_QUERY_KEY,
 } from "@/lib/url";
+import { requireAuth } from "@/server/auth";
 
 import { AppHeader } from "../_components/layout/AppHeader";
 import { TodoCreateForm } from "../_components/todo/TodoCreateForm";
@@ -47,6 +48,7 @@ type HomePageProps = {
 };
 
 export default async function Home({ searchParams }: HomePageProps) {
+  await requireAuth();
   const params = (await searchParams) ?? {};
   const filter = parseTodoFilter(getSearchParamString(params, FILTER_QUERY_KEY));
   const priorityFilter = parsePriorityFilter(getSearchParamString(params, TODO_PRIORITY_QUERY_KEY));

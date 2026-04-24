@@ -18,6 +18,8 @@ export function BottomNav() {
         { href: ROUTES.items, label: "物品", icon: IconBox },
     ];
 
+    if (pathname === ROUTES.login) return null;
+
     return (
         <nav
             aria-label="底部导航"

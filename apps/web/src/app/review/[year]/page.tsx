@@ -9,6 +9,7 @@ import { IconBox, IconCheckSquare, IconGift, IconRepeat } from "@/app/_component
 import { Badge, getBadgeVariantFromLabel } from "@/app/_components/ui/Badge";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { requireAuth } from "@/server/auth";
 import { getAnniversaryCategoryLabel } from "@/lib/anniversary";
 import { getItemStatusLabel } from "@/lib/items";
 import { getTodoPriorityLabel } from "@/lib/todo";
@@ -237,6 +238,7 @@ function TodoDetailRow(props: { title: string; href: string; meta: ReactNode }) 
 }
 
 export default async function YearReviewPage({ params }: ReviewYearPageProps) {
+  await requireAuth();
   const { year: yearRaw } = await params;
   const year = parseYearParam(yearRaw);
   if (!year) notFound();

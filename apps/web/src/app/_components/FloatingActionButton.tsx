@@ -12,6 +12,7 @@ export function FloatingActionButton() {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
+    const isLoginPage = pathname === ROUTES.login;
 
     const actions = [
         { label: "Todo", pathPrefix: ROUTES.todo, href: buildCreateModalHref(ROUTES.todo), icon: IconTodo },
@@ -36,6 +37,8 @@ export function FloatingActionButton() {
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
     }, [isOpen]);
+
+    if (isLoginPage) return null;
 
     const handleClick = () => {
         if (currentAction) {

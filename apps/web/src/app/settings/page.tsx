@@ -12,6 +12,8 @@ import { clearAllData } from "../_actions/settings";
 import { DateReminderForm } from "../_components/settings/DateReminderForm";
 import { InternalSchedulerForm, type InternalSchedulerSettings } from "../_components/settings/InternalSchedulerForm";
 import { ThemeSwitcher } from "../_components/ThemeSwitcher";
+import { PasswordForm } from "../_components/settings/PasswordForm";
+import { requireAuth } from "@/server/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -20,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SettingsPage() {
+  await requireAuth();
   const settings = await getAppSettings();
   const notificationSettings: NotificationSettings = {
     telegramEnabled: settings.telegramEnabled,
@@ -72,6 +75,15 @@ export default async function SettingsPage() {
               <span className="text-sm font-semibold">外观主题</span>
             </div>
             <ThemeSwitcher />
+          </section>
+
+          {/* 1.5 安全设置 */}
+          <section className="rounded-2xl border border-default bg-elevated p-6 shadow-sm hover:shadow-md transition-shadow animate-slide-up stagger-1">
+            <div className="flex items-center gap-2 mb-4">
+              <Icon icon="ri:shield-keyhole-line" className="h-4 w-4 text-brand-primary" />
+              <span className="text-sm font-semibold">访问密码</span>
+            </div>
+            <PasswordForm hasPassword={!!settings.adminPasswordHash} />
           </section>
 
           {/* 2. 日期类提醒 */}

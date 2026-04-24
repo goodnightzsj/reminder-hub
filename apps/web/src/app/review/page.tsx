@@ -6,6 +6,7 @@ import { AppHeader } from "@/app/_components/layout/AppHeader";
 import { getAppTimeSettings } from "@/server/db/settings";
 import { formatDateInTimeZone } from "@/server/date";
 import { cn } from "@/lib/utils";
+import { requireAuth } from "@/server/auth";
 import { getReviewAvailableYears } from "./[year]/_lib/review-page-data";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +30,7 @@ function GlassPanel(props: { children: React.ReactNode; className?: string }) {
 }
 
 export default async function ReviewIndexPage() {
+  await requireAuth();
   const { timeZone } = await getAppTimeSettings();
   const now = new Date();
   const year = formatDateInTimeZone(now, timeZone).slice(0, 4);

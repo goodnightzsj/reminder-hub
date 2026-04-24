@@ -8,6 +8,7 @@ import { UpcomingList } from "../_components/dashboard/UpcomingList";
 import { InsightsCard } from "./_components/InsightsCard";
 import { TodayFocusCard } from "./_components/TodayFocusCard";
 import { getDashboardPageData } from "./_lib/dashboard-page-data";
+import { requireAuth } from "@/server/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DashboardPage() {
+  await requireAuth();
   const {
     greeting,
     timeZone,

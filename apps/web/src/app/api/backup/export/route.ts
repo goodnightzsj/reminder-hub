@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/server/auth";
 
 import type { BackupV2 } from "@/server/backup/backup-parser";
 import { db } from "@/server/db";
@@ -34,6 +35,7 @@ function withDateFields<T extends Record<string, unknown>, K extends keyof T>(
 }
 
 export async function GET() {
+  await requireAuth();
   const settings = await getAppSettings();
 
   const [

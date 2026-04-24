@@ -11,6 +11,7 @@ import { canonicalizeAnniversaryCategory, getAnniversaryCategoryLabel } from "@/
 import { getSearchParamString, type SearchParams } from "@/lib/search-params";
 import { buildAnniversariesHref as buildHref, buildCreateModalHref, CATEGORY_QUERY_KEY, FILTER_QUERY_KEY } from "@/lib/url";
 import { ROUTES } from "@/lib/routes";
+import { requireAuth } from "@/server/auth";
 
 import { ANNIVERSARY_FILTER, parseAnniversaryFilter } from "./_lib/anniversary-filters";
 import { getAnniversariesPageData } from "./_lib/anniversaries-page-data";
@@ -26,6 +27,7 @@ type AnniversariesPageProps = {
 };
 
 export default async function AnniversariesPage({ searchParams }: AnniversariesPageProps) {
+  await requireAuth();
   const params = (await searchParams) ?? {};
   const filter = parseAnniversaryFilter(getSearchParamString(params, FILTER_QUERY_KEY));
   const categoryFilter = getSearchParamString(params, CATEGORY_QUERY_KEY);

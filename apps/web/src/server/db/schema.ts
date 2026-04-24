@@ -106,6 +106,7 @@ export const todoSubtasksRelations = relations(todoSubtasks, ({ one }) => ({
 
 export const appSettings = sqliteTable("app_settings", {
   id: text("id").primaryKey(),
+  adminPasswordHash: text("admin_password_hash"),
   timeZone: text("time_zone").notNull().default(DEFAULT_TIME_ZONE),
   dateReminderTime: text("date_reminder_time").notNull().default(DEFAULT_DATE_REMINDER_TIME),
   internalSchedulerEnabled: integer("internal_scheduler_enabled", { mode: "boolean" })
