@@ -96,6 +96,23 @@ input, textarea {
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes skeleton-sweep {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-muted) 100%, transparent) 0%,
+    color-mix(in srgb, var(--color-muted) 50%, transparent) 20%,
+    color-mix(in srgb, var(--color-muted) 100%, transparent) 40%,
+    color-mix(in srgb, var(--color-muted) 100%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+
 /* iOS safe area support */
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);

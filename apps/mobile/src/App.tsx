@@ -12,6 +12,7 @@ import { loadConfig, saveConfig, type AppConfig } from "./preferences";
 import { registerPushNotifications } from "./push";
 import { Login } from "./Login";
 import { Dashboard } from "./Dashboard";
+import { ToastProvider } from "./ui/Toast";
 
 type AppState =
   | { kind: "booting" }
@@ -20,6 +21,14 @@ type AppState =
   | { kind: "error"; message: string };
 
 export function App() {
+  return (
+    <ToastProvider>
+      <AppInner />
+    </ToastProvider>
+  );
+}
+
+function AppInner() {
   const [state, setState] = useState<AppState>({ kind: "booting" });
 
   useEffect(() => {
