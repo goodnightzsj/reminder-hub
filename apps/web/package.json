@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
-    "start": "next start",
+    "start": "node ./scripts/ensure-admin-password.mjs && next start",
     "lint": "eslint",
     "test": "node ./scripts/run-tests.mjs",
     "check": "npm run lint -- --max-warnings=0 && npm run test && npm run build",
