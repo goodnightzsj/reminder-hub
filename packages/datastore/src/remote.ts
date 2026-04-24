@@ -11,8 +11,27 @@ import type {
 
 type GetToken = () => string | null;
 
+export type RemoteDataStoreOptions = {
+  /**
+   * Called exactly once when the server returns 401 on any request. Clients
+   * should wipe the local token and redirect to login. The callback is not
+   * re-invoked for subsequent 401s from the same instance so UI can safely
+   * navigate without fear of re-entry.
+   */
+  onUnauthorized?: () => void;
+};
+
 export class RemoteDataStore implements DataStore {
-  constructor(private readonly baseUrl: string, private readonly getToken: GetToken) {}
+  private readonly options: RemoteDataStoreOptions;
+  private unauthorizedFired = false;
+
+  constructor(
+    private readonly baseUrl: string,
+    private readonly getToken: GetToken,
+    options: RemoteDataStoreOptions = {},
+  ) {
+    this.options = options;
+  }
 
   private url(path: string, params?: Record<string, string | number | boolean | undefined>): string {
     const u = new URL(path, this.baseUrl);
@@ -37,6 +56,14 @@ export class RemoteDataStore implements DataStore {
     const body = text ? (JSON.parse(text) as unknown) : {};
 
     if (!res.ok) {
+      // Skip the onUnauthorized hook for /auth/login itself — a 401 there just
+      // means the password was wrong, not that the existing session expired.
+      const isLoginPath = path.includes("/api/v1/auth/login");
+      if (res.status === 401 && !isLoginPath && !this.unauthorizedFired) {
+        this.unauthorizedFired = true;
+        // Fire asynchronously so current await unwinds first.
+        queueMicrotask(() => this.options.onUnauthorized?.());
+      }
       const err = body as { error?: { code?: string; message?: string } };
       throw new RemoteApiError(res.status, err.error?.code ?? "unknown", err.error?.message ?? res.statusText);
     }

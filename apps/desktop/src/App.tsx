@@ -54,6 +54,18 @@ function AppInner() {
     }
   };
 
+  const handleLogout = async () => {
+    const next: AppConfig = { mode: "local", remoteBaseUrl: "", token: null };
+    await saveConfig(next);
+    setState({ kind: "needs-config", config: next });
+  };
+
+  // Called when the server returns 401 — token expired or revoked. Drop the
+  // token and kick the user to the login screen so they can re-auth.
+  const handleUnauthorized = () => {
+    void handleLogout();
+  };
+
   const enterApp = async (config: AppConfig) => {
     const driver = await createTauriSqlDriver();
     const local = new LocalDataStore(driver);
@@ -62,9 +74,13 @@ function AppInner() {
     let syncEngine: SyncEngine | null = null;
 
     if (config.mode === "remote" && config.remoteBaseUrl) {
-      store = new RemoteDataStore(config.remoteBaseUrl, () => config.token);
+      store = new RemoteDataStore(config.remoteBaseUrl, () => config.token, {
+        onUnauthorized: handleUnauthorized,
+      });
     } else if (config.mode === "local" && config.remoteBaseUrl && config.token) {
-      const remote = new RemoteDataStore(config.remoteBaseUrl, () => config.token);
+      const remote = new RemoteDataStore(config.remoteBaseUrl, () => config.token, {
+        onUnauthorized: handleUnauthorized,
+      });
       store = local;
       syncEngine = new SyncEngine(local, remote);
     } else {
@@ -77,12 +93,6 @@ function AppInner() {
   const handleConfigSaved = async (next: AppConfig) => {
     await saveConfig(next);
     await enterApp(next);
-  };
-
-  const handleLogout = async () => {
-    const next: AppConfig = { mode: "local", remoteBaseUrl: "", token: null };
-    await saveConfig(next);
-    setState({ kind: "needs-config", config: next });
   };
 
   if (state.kind === "booting") {

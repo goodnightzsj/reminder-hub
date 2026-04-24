@@ -46,6 +46,10 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         "success",
         `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
       );
+    } else if (result.kind === "unauthorized") {
+      // The RemoteDataStore's onUnauthorized callback already kicks us to
+      // login; this toast just explains why.
+      toast.show("error", "会话已过期，正在退出登录");
     } else if (result.kind === "error") {
       toast.show("error", `同步失败：${result.message}`);
     }

@@ -55,6 +55,10 @@ function AppInner() {
     }
   };
 
+  const handleUnauthorized = () => {
+    void handleLogout();
+  };
+
   const enterApp = async (config: AppConfig) => {
     const driver = await createCapacitorSqlDriver();
     const local = new LocalDataStore(driver);
@@ -63,9 +67,13 @@ function AppInner() {
     let syncEngine: SyncEngine | null = null;
 
     if (config.mode === "remote" && config.remoteBaseUrl) {
-      store = new RemoteDataStore(config.remoteBaseUrl, () => config.token);
+      store = new RemoteDataStore(config.remoteBaseUrl, () => config.token, {
+        onUnauthorized: handleUnauthorized,
+      });
     } else if (config.mode === "local" && config.remoteBaseUrl && config.token) {
-      const remote = new RemoteDataStore(config.remoteBaseUrl, () => config.token);
+      const remote = new RemoteDataStore(config.remoteBaseUrl, () => config.token, {
+        onUnauthorized: handleUnauthorized,
+      });
       store = local;
       syncEngine = new SyncEngine(local, remote);
 

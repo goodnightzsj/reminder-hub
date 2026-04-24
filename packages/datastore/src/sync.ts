@@ -7,6 +7,7 @@ export type SyncStatus =
   | { kind: "idle" }
   | { kind: "running"; startedAt: string }
   | { kind: "success"; finishedAt: string; uploaded: number; downloaded: number }
+  | { kind: "unauthorized"; finishedAt: string; message: string }
   | { kind: "error"; finishedAt: string; message: string };
 
 /**
@@ -78,7 +79,14 @@ export class SyncEngine {
       return this.status;
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      this.status = { kind: "error", finishedAt: new Date().toISOString(), message };
+      // Detect 401 duck-typed so we don't have to import RemoteApiError here.
+      const maybeStatus = (e as { status?: unknown }).status;
+      const finishedAt = new Date().toISOString();
+      if (typeof maybeStatus === "number" && maybeStatus === 401) {
+        this.status = { kind: "unauthorized", finishedAt, message };
+      } else {
+        this.status = { kind: "error", finishedAt, message };
+      }
       return this.status;
     }
   }
