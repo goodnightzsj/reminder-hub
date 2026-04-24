@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import type {
   AnniversaryRecord,
   DataStore,
+  SubscriptionRecord,
   SyncEngine,
   TodoRecord,
 } from "@reminder-hub/datastore";
@@ -80,7 +81,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
       <main className="flex-1 overflow-hidden">
         {tab === "todo" && <TodoScreen store={store} />}
         {tab === "anniversary" && <AnniversaryScreen store={store} />}
-        {tab === "subscription" && <Placeholder icon="ri:bank-card-line" label="订阅" />}
+        {tab === "subscription" && <SubscriptionScreen store={store} />}
         {tab === "item" && <Placeholder icon="ri:box-3-line" label="物品" />}
         {tab === "settings" && <SettingsScreen config={config} onLogout={onLogout} />}
       </main>
@@ -579,5 +580,265 @@ function AnniversaryListSkeleton({ count = 4 }: { count?: number }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// --- Subscription screen (mobile) ---------------------------------------
+
+const SUB_CYCLE_UNITS: Array<{ value: "day" | "week" | "month" | "year"; label: string }> = [
+  { value: "day", label: "日" },
+  { value: "week", label: "周" },
+  { value: "month", label: "月" },
+  { value: "year", label: "年" },
+];
+
+const SUB_CURRENCY_SYMBOLS: Record<string, string> = {
+  CNY: "¥",
+  USD: "$",
+  EUR: "€",
+  JPY: "¥",
+  GBP: "£",
+  HKD: "HK$",
+};
+
+function formatSubPrice(priceCents: number | null, currency: string): string {
+  if (priceCents == null) return "—";
+  const symbol = SUB_CURRENCY_SYMBOLS[currency] ?? currency;
+  return `${symbol}${(priceCents / 100).toFixed(2)}`;
+}
+
+function subDaysUntil(dateStr: string, now = new Date()): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return null;
+  const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function SubscriptionScreen({ store }: { store: DataStore }) {
+  const [items, setItems] = useState<SubscriptionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [priceYuan, setPriceYuan] = useState("");
+  const [cycleUnit, setCycleUnit] = useState<"day" | "week" | "month" | "year">("month");
+  const [nextRenewDate, setNextRenewDate] = useState("");
+  const [currency, setCurrency] = useState("CNY");
+  const toast = useToast();
+
+  const refresh = async () => {
+    try {
+      const rows = await store.listSubscriptions();
+      rows.sort((a, b) => (subDaysUntil(a.nextRenewDate) ?? 9999) - (subDaysUntil(b.nextRenewDate) ?? 9999));
+      setItems(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const add = async () => {
+    const n = name.trim();
+    if (!n) return toast.show("error", "请填写名称");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(nextRenewDate)) return toast.show("error", "请选择下次续费日");
+    const parsed = priceYuan === "" ? null : Math.round(Number(priceYuan) * 100);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) {
+      return toast.show("error", "价格无效");
+    }
+    try {
+      await store.createSubscription({
+        name: n,
+        priceCents: parsed,
+        cycleUnit,
+        cycleInterval: 1,
+        nextRenewDate,
+        currency,
+      });
+      setName("");
+      setPriceYuan("");
+      setNextRenewDate("");
+      setAdding(false);
+      await refresh();
+      toast.show("success", "已添加");
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await store.deleteSubscription(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col relative">
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {loading ? (
+          <DeferredSkeleton>
+            <AnniversaryListSkeleton />
+          </DeferredSkeleton>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon="ri:bank-card-line"
+            title="暂无订阅"
+            subtitle="记录月/年费，到期自动提醒"
+          />
+        ) : (
+          <ul className="space-y-2">
+            {items.map((s) => {
+              const d = subDaysUntil(s.nextRenewDate);
+              const badgeClass =
+                d == null
+                  ? "bg-muted text-muted-foreground"
+                  : d < 0
+                  ? "bg-danger/15 text-danger"
+                  : d === 0
+                  ? "bg-brand-primary text-white"
+                  : d <= 7
+                  ? "bg-brand-primary/15 text-brand-primary"
+                  : "bg-muted text-muted-foreground";
+              const badgeLabel =
+                d == null
+                  ? "日期无效"
+                  : d < 0
+                  ? `已过 ${-d} 天`
+                  : d === 0
+                  ? "今天"
+                  : `${d} 天后`;
+              const unitLabel = SUB_CYCLE_UNITS.find((u) => u.value === s.cycleUnit)?.label ?? "月";
+              return (
+                <li
+                  key={s.id}
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border animate-fade-in"
+                >
+                  <div
+                    className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
+                    style={{
+                      background: s.color
+                        ? `${s.color}22`
+                        : "linear-gradient(135deg, rgba(41,112,237,0.1), rgba(86,160,240,0.1))",
+                    }}
+                  >
+                    <Icon
+                      icon={s.icon ?? "ri:bank-card-line"}
+                      className="h-5 w-5"
+                      style={{ color: s.color ?? "var(--color-brand-primary)" }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{s.name}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      <span className="font-mono">{formatSubPrice(s.priceCents, s.currency)}</span>
+                      <span className="opacity-60"> · 每{unitLabel}</span>
+                    </div>
+                  </div>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
+                    {badgeLabel}
+                  </span>
+                  <button
+                    onClick={() => remove(s.id)}
+                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
+                  >
+                    <Icon icon="ri:close-line" className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {adding && (
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => setAdding(false)}
+        >
+          <div
+            className="absolute left-0 right-0 bottom-0 pb-safe animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="m-3 p-3 rounded-2xl bg-card border border-border shadow-2xl space-y-2">
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="订阅名称（如 Spotify）"
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="h-11 rounded-xl bg-muted px-3 text-sm outline-none"
+                >
+                  {Object.keys(SUB_CURRENCY_SYMBOLS).map((c) => (
+                    <option key={c} value={c}>
+                      {SUB_CURRENCY_SYMBOLS[c]} {c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={priceYuan}
+                  onChange={(e) => setPriceYuan(e.target.value)}
+                  placeholder="价格"
+                  inputMode="decimal"
+                  className="h-11 flex-1 rounded-xl bg-muted px-4 text-sm outline-none"
+                />
+                <select
+                  value={cycleUnit}
+                  onChange={(e) => setCycleUnit(e.target.value as typeof cycleUnit)}
+                  className="h-11 rounded-xl bg-muted px-3 text-sm outline-none"
+                >
+                  {SUB_CYCLE_UNITS.map((u) => (
+                    <option key={u.value} value={u.value}>
+                      每{u.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <input
+                type="date"
+                value={nextRenewDate}
+                onChange={(e) => setNextRenewDate(e.target.value)}
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none"
+              />
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setAdding(false)}
+                  className="tap-scale flex-1 h-10 rounded-xl border border-border text-sm"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={add}
+                  disabled={!name.trim() || !nextRenewDate}
+                  className="tap-scale flex-1 h-10 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium disabled:opacity-50"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setAdding(true)}
+        className="tap-scale absolute right-4 bottom-4 h-14 w-14 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary text-white shadow-xl shadow-brand-primary/40 flex items-center justify-center"
+      >
+        <Icon icon="ri:add-line" className="h-6 w-6" />
+      </button>
+    </div>
   );
 }
