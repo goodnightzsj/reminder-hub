@@ -70,13 +70,13 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                     />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="sm:col-span-1">
-                        <label className="mb-1.5 block text-xs font-medium text-secondary">购入日期</label>
-                        <SmartDateInput type="date" name="purchasedDate" className="h-12 bg-base/50" />
-                    </div>
+                <div>
+                    <label className="mb-1.5 block text-xs font-medium text-secondary">购入日期</label>
+                    <SmartDateInput type="date" name="purchasedDate" className="h-12 bg-base/50" />
+                </div>
 
-                    <div className="sm:col-span-1">
+                <div className="grid gap-4 grid-cols-2">
+                    <div>
                         <label className="mb-1.5 block text-xs font-medium text-secondary">价格</label>
                         <Input
                             type="number"
@@ -89,7 +89,7 @@ export function ItemCreateForm({ className = "" }: ItemCreateFormProps) {
                         />
                     </div>
 
-                    <div className="sm:col-span-1">
+                    <div>
                         <label className="mb-1.5 block text-xs font-medium text-secondary">币种</label>
                         <CustomSelect
                             name="currency"

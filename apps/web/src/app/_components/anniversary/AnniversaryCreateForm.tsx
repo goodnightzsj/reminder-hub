@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Input } from "@/app/_components/ui/Input";
 import { SmartDateInput } from "@/app/_components/SmartDateInput";
 import { Select } from "@/app/_components/ui/Select";
+
+const LunarDateInput = dynamic(
+    () => import("./LunarDateInput").then((m) => ({ default: m.LunarDateInput })),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-10 w-full rounded-lg border border-default bg-surface/30 animate-pulse" />
+        ),
+    }
+);
 import { createAnniversary } from "@/app/_actions/anniversaries";
 import { IconCheck } from "@/app/_components/Icons";
 import { useToast } from "@/app/_components/ui/Toast";
@@ -114,8 +125,8 @@ export function AnniversaryCreateForm({
 
                     {dateType === ANNIVERSARY_DATE_TYPE.LUNAR && (
                         <div className="sm:col-span-3">
-                            <label className="mb-1.5 block text-xs font-medium text-secondary">日期（选择公历日期，自动转换农历）</label>
-                            <SmartDateInput type="date" name="solarDate" dateType={ANNIVERSARY_DATE_TYPE.LUNAR} required className="h-12 bg-base/50" />
+                            <label className="mb-1.5 block text-xs font-medium text-secondary">日期（农历 · 每年自动转换公历提醒）</label>
+                            <LunarDateInput />
                         </div>
                     )}
                 </div>
