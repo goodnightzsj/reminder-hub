@@ -105,4 +105,10 @@ export class SyncEngine {
   async resetWatermark(): Promise<void> {
     await this.local.setSyncState(LAST_SYNC_KEY, "");
   }
+
+  /** ISO timestamp of the last successful sync, or null if never synced. */
+  async getLastSyncTime(): Promise<string | null> {
+    const v = await this.local.getSyncState(LAST_SYNC_KEY);
+    return v && v.length > 0 ? v : null;
+  }
 }

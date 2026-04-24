@@ -120,7 +120,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         {tab === "anniversary" && <AnniversaryScreen store={store} />}
         {tab === "subscription" && <SubscriptionScreen store={store} />}
         {tab === "item" && <ItemScreen store={store} />}
-        {tab === "settings" && <SettingsScreen config={config} onLogout={onLogout} />}
+        {tab === "settings" && <SettingsScreen config={config} syncEngine={syncEngine} onLogout={onLogout} />}
       </main>
 
       {/* Bottom tabs */}
@@ -346,7 +346,28 @@ function EmptyState({
   );
 }
 
-function SettingsScreen({ config, onLogout }: { config: AppConfig; onLogout: () => Promise<void> }) {
+function SettingsScreen({
+  config,
+  syncEngine,
+  onLogout,
+}: {
+  config: AppConfig;
+  syncEngine: SyncEngine | null;
+  onLogout: () => Promise<void>;
+}) {
+  const [lastSync, setLastSync] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!syncEngine) return;
+    let alive = true;
+    syncEngine.getLastSyncTime().then((v) => {
+      if (alive) setLastSync(v);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [syncEngine]);
+
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
       <div className="space-y-2 mb-6">
@@ -366,6 +387,13 @@ function SettingsScreen({ config, onLogout }: { config: AppConfig; onLogout: () 
           value={config.token ? "已登录" : "未登录"}
           valueColor={config.token ? "text-success" : "text-muted-foreground"}
         />
+        {syncEngine && (
+          <InfoRow
+            icon="ri:time-line"
+            label="上次同步"
+            value={lastSync ? formatRelative(lastSync) : "尚未同步"}
+          />
+        )}
       </div>
 
       <button
@@ -405,6 +433,21 @@ function InfoRow({
       <span className={`text-sm font-medium truncate ml-3 ${valueColor}`}>{value}</span>
     </div>
   );
+}
+
+function formatRelative(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return "—";
+  const diff = Date.now() - t;
+  if (diff < 0) return "刚刚";
+  if (diff < 60_000) return "刚刚";
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins} 分钟前`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} 天前`;
+  return new Date(iso).toLocaleDateString("zh-CN");
 }
 
 // --- Anniversary screen --------------------------------------------------
