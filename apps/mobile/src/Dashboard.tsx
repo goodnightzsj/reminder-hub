@@ -121,8 +121,17 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="flex-1 flex flex-col items-center justify-center gap-0.5 tap-scale"
+                className="relative flex-1 flex flex-col items-center justify-center gap-0.5 tap-scale"
               >
+                {/* Active indicator — a short pill that fades + slides down
+                    on activation, fades up + out when leaving. Positioned
+                    absolutely so it doesn't shift the icon/label layout. */}
+                <span
+                  aria-hidden
+                  className={`absolute top-1 h-1 rounded-full bg-brand-primary transition-all duration-300 ease-out ${
+                    active ? "w-6 opacity-100" : "w-0 opacity-0"
+                  }`}
+                />
                 <Icon
                   icon={t.icon}
                   className={`h-5 w-5 transition-colors ${
