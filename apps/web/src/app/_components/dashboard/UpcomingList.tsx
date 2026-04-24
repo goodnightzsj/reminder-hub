@@ -30,16 +30,19 @@ export function UpcomingList({ items, timeZone }: UpcomingListProps) {
     return (
         <div className="space-y-4">
             {items.map((u) => {
-                const month = u.at
+                // RSC serializes Date -> ISO string across the server/client boundary.
+                // Always coerce before calling Date methods.
+                const at = u.at instanceof Date ? u.at : new Date(u.at);
+                const month = at
                     .toLocaleString("en-US", { month: "short" })
                     .toUpperCase();
-                const day = u.at.getDate();
+                const day = at.getDate();
                 const time = new Intl.DateTimeFormat("zh-CN", {
                     hour: "2-digit",
                     minute: "2-digit",
                     hour12: false,
                     timeZone,
-                }).format(u.at);
+                }).format(at);
 
                 const meta = UPCOMING_KIND_META[u.kind];
                 const href = `${meta.hrefPrefix}/${u.id}`;

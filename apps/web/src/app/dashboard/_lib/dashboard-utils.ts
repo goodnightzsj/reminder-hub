@@ -245,7 +245,11 @@ export function buildUpcomingItems(args: {
     upcoming.push({ kind: "subscription", at, id: s.id, name: s.name });
   }
 
-  upcoming.sort((a, b) => a.at.getTime() - b.at.getTime());
+  upcoming.sort((a, b) => {
+    const ta = a.at instanceof Date ? a.at.getTime() : new Date(a.at).getTime();
+    const tb = b.at instanceof Date ? b.at.getTime() : new Date(b.at).getTime();
+    return ta - tb;
+  });
 
   return upcoming;
 }

@@ -343,3 +343,21 @@ export const brandMetadata = sqliteTable("brand_metadata", {
     .notNull()
     .default(sql`(unixepoch()*1000)`),
 });
+
+export const deviceTokens = sqliteTable(
+  "device_tokens",
+  {
+    token: text("token").primaryKey(),
+    platform: text("platform").notNull(), // "ios" | "android" | "web"
+    lastActiveAt: integer("last_active_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch()*1000)`),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch()*1000)`),
+  },
+  (table) => ({
+    idxDeviceTokensPlatform: index("idx_device_tokens_platform").on(table.platform),
+    idxDeviceTokensLastActiveAt: index("idx_device_tokens_last_active_at").on(table.lastActiveAt),
+  }),
+);

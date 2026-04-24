@@ -5,6 +5,7 @@ import { BottomNav } from "./_components/layout/BottomNav";
 import { FloatingActionButton } from "./_components/FloatingActionButton";
 import { GlobalToastListener } from "./_components/GlobalToastListener";
 import { PWARegister } from "./_components/PWARegister";
+import { PWAInstallPrompt } from "./_components/PWAInstallPrompt";
 import "./themes.css";
 import "./globals.css";
 
@@ -93,6 +94,7 @@ export default function RootLayout({
           <BottomNav />
           <FloatingActionButton />
           <PWARegister />
+          <PWAInstallPrompt />
         </Providers>
       </body>
     </html>

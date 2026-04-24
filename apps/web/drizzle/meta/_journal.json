@@ -176,6 +176,13 @@
       "when": 1777020822182,
       "tag": "0024_cheerful_post",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1777031024977,
+      "tag": "0025_spicy_naoko",
+      "breakpoints": true
     }
   ]
 }
