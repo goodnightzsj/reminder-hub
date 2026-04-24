@@ -84,30 +84,45 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Detect macOS signing identity
-        id: mac_signing
-        if: matrix.platform == 'macos-latest'
+      # Setting env via GITHUB_ENV only when a secret is non-empty avoids passing
+      # APPLE_TEAM_ID="" (which tauri interprets as "please notarize" and fails).
+      - name: Prepare signing env
+        shell: bash
         env:
-          IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_SIGNING_IDENTITY_SECRET: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_TEAM_ID_SECRET: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID_SECRET: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD_SECRET: ${{ secrets.APPLE_PASSWORD }}
+          WINDOWS_CERTIFICATE_SECRET: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD_SECRET: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          TAURI_SIGNING_KEY_SECRET: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_KEY_PW_SECRET: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          if [ -n "$IDENTITY" ]; then
-            echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
-          else
-            # `-` tells Tauri to skip codesign (ad-hoc). Without this, tauri-bundler
-            # errors out looking up an identity that doesn't exist.
-            echo "identity=-" >> "$GITHUB_OUTPUT"
+          if [[ "${{ matrix.platform }}" == macos-* ]]; then
+            if [ -n "$APPLE_SIGNING_IDENTITY_SECRET" ]; then
+              # Full notarize-capable build
+              echo "APPLE_SIGNING_IDENTITY=$APPLE_SIGNING_IDENTITY_SECRET" >> "$GITHUB_ENV"
+              [ -n "$APPLE_TEAM_ID_SECRET" ] && echo "APPLE_TEAM_ID=$APPLE_TEAM_ID_SECRET" >> "$GITHUB_ENV"
+              [ -n "$APPLE_ID_SECRET" ] && echo "APPLE_ID=$APPLE_ID_SECRET" >> "$GITHUB_ENV"
+              [ -n "$APPLE_PASSWORD_SECRET" ] && echo "APPLE_PASSWORD=$APPLE_PASSWORD_SECRET" >> "$GITHUB_ENV"
+            else
+              # Ad-hoc sign only. Do NOT set TEAM_ID/APPLE_ID/PASSWORD so tauri
+              # does not attempt notarization (which fails on empty Team ID).
+              echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+            fi
+          fi
+
+          if [[ "${{ matrix.platform }}" == windows-* ]] && [ -n "$WINDOWS_CERTIFICATE_SECRET" ]; then
+            echo "WINDOWS_CERTIFICATE=$WINDOWS_CERTIFICATE_SECRET" >> "$GITHUB_ENV"
+            echo "WINDOWS_CERTIFICATE_PASSWORD=$WINDOWS_CERTIFICATE_PASSWORD_SECRET" >> "$GITHUB_ENV"
+          fi
+
+          if [ -n "$TAURI_SIGNING_KEY_SECRET" ]; then
+            echo "TAURI_SIGNING_PRIVATE_KEY=$TAURI_SIGNING_KEY_SECRET" >> "$GITHUB_ENV"
+            echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$TAURI_SIGNING_KEY_PW_SECRET" >> "$GITHUB_ENV"
           fi
 
       - name: Build Tauri app
-        env:
-          APPLE_SIGNING_IDENTITY: ${{ steps.mac_signing.outputs.identity }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run tauri build -- ${{ matrix.args }}
 
       - name: Collect installers
