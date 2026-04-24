@@ -73,11 +73,11 @@ export function LunarDateInput({
                     name="lunarMonth"
                     value={String(month)}
                     onChange={(e) => setMonth(Number(e.target.value))}
-                    className="h-10 w-[110px] bg-base/50"
+                    className="h-10 w-[88px] bg-base/50"
                 >
                     {LUNAR_MONTH_LABELS.map((label, idx) => (
                         <option key={label} value={String(idx + 1)}>
-                            {label}（{idx + 1}月）
+                            {label}
                         </option>
                     ))}
                 </Select>
@@ -86,11 +86,11 @@ export function LunarDateInput({
                     name="lunarDay"
                     value={String(day)}
                     onChange={(e) => setDay(Number(e.target.value))}
-                    className="h-10 w-[110px] bg-base/50"
+                    className="h-10 w-[88px] bg-base/50"
                 >
                     {Array.from({ length: MAX_LUNAR_DAY }, (_, i) => i + 1).map((d) => (
                         <option key={d} value={String(d)}>
-                            {LUNAR_DAY_LABELS[d - 1]}（{d}日）
+                            {LUNAR_DAY_LABELS[d - 1]}
                         </option>
                     ))}
                 </Select>
