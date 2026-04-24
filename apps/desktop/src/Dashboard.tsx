@@ -317,6 +317,8 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
 
 function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: SyncEngine | null }) {
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (!syncEngine) return;
@@ -328,6 +330,26 @@ function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: 
       alive = false;
     };
   }, [syncEngine]);
+
+  const fullResync = async () => {
+    if (!syncEngine) return;
+    setResetting(true);
+    try {
+      await syncEngine.resetWatermark();
+      invalidateOverviewCache();
+      const result = await syncEngine.run();
+      if (result.kind === "success") {
+        setLastSync(await syncEngine.getLastSyncTime());
+        toast.show("success", `完整同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`);
+      } else if (result.kind === "unauthorized") {
+        toast.show("error", "会话已过期，请重新登录");
+      } else if (result.kind === "error") {
+        toast.show("error", `完整同步失败：${result.message}`);
+      }
+    } finally {
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="h-full scroll-area px-6 py-6">
@@ -346,6 +368,19 @@ function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: 
             label="上次同步"
             value={lastSync ? formatRelative(lastSync) : "尚未同步"}
           />
+        )}
+        {syncEngine && (
+          <button
+            onClick={fullResync}
+            disabled={resetting}
+            className="w-full h-10 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            <Icon
+              icon={resetting ? "line-md:loading-twotone-loop" : "ri:refresh-double-line"}
+              className="h-4 w-4"
+            />
+            {resetting ? "同步中…" : "强制完整同步"}
+          </button>
         )}
         <div className="pt-4 text-xs text-muted-foreground leading-relaxed">
           <p className="mb-1.5">数据文件位置：</p>

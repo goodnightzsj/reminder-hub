@@ -356,6 +356,8 @@ function SettingsScreen({
   onLogout: () => Promise<void>;
 }) {
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (!syncEngine) return;
@@ -367,6 +369,26 @@ function SettingsScreen({
       alive = false;
     };
   }, [syncEngine]);
+
+  const fullResync = async () => {
+    if (!syncEngine) return;
+    setResetting(true);
+    try {
+      await syncEngine.resetWatermark();
+      invalidateOverviewCache();
+      const result = await syncEngine.run();
+      if (result.kind === "success") {
+        setLastSync(await syncEngine.getLastSyncTime());
+        toast.show("success", `完整同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`);
+      } else if (result.kind === "unauthorized") {
+        toast.show("error", "会话已过期，请重新登录");
+      } else if (result.kind === "error") {
+        toast.show("error", `完整同步失败：${result.message}`);
+      }
+    } finally {
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto px-4 py-4">
@@ -395,6 +417,20 @@ function SettingsScreen({
           />
         )}
       </div>
+
+      {syncEngine && (
+        <button
+          onClick={fullResync}
+          disabled={resetting}
+          className="tap-scale w-full h-11 mb-3 rounded-2xl border border-border text-sm text-muted-foreground flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          <Icon
+            icon={resetting ? "line-md:loading-twotone-loop" : "ri:refresh-double-line"}
+            className="h-4 w-4"
+          />
+          {resetting ? "同步中…" : "强制完整同步"}
+        </button>
+      )}
 
       <button
         onClick={onLogout}
