@@ -14,6 +14,22 @@ import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
 
+/** Overview cache: render-instantly snapshot + mutation invalidation. */
+type OverviewSnapshot = {
+  store: DataStore;
+  fetchedAt: number;
+  todos: TodoRecord[];
+  anniversaries: AnniversaryRecord[];
+  subscriptions: SubscriptionRecord[];
+  items: ItemRecord[];
+};
+let overviewCache: OverviewSnapshot | null = null;
+const OVERVIEW_FRESH_MS = 5_000;
+
+function invalidateOverviewCache() {
+  overviewCache = null;
+}
+
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
 type DashboardProps = {
@@ -43,6 +59,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
     const result = await syncEngine.run();
     setSyncing(false);
     if (result.kind === "success") {
+      invalidateOverviewCache();
       toast.show(
         "success",
         `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
@@ -154,6 +171,7 @@ function TodoScreen({ store }: { store: DataStore }) {
     if (!title) return;
     try {
       await store.createTodo({ title });
+      invalidateOverviewCache();
       setNewTitle("");
       setAdding(false);
       await refresh();
@@ -165,6 +183,7 @@ function TodoScreen({ store }: { store: DataStore }) {
   const toggle = async (t: TodoRecord) => {
     try {
       await store.updateTodo(t.id, { isDone: !t.isDone });
+      invalidateOverviewCache();
       await refresh();
     } catch (e) {
       toast.show("error", `更新失败：${localizeError(e)}`);
@@ -174,6 +193,7 @@ function TodoScreen({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteTodo(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -424,6 +444,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
     }
     try {
       await store.createAnniversary({ title: t, date });
+      invalidateOverviewCache();
       setTitle("");
       setDate("");
       setAdding(false);
@@ -437,6 +458,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteAnniversary(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -649,6 +671,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
         nextRenewDate,
         currency,
       });
+      invalidateOverviewCache();
       setName("");
       setPriceYuan("");
       setNextRenewDate("");
@@ -663,6 +686,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteSubscription(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -904,6 +928,7 @@ function ItemScreen({ store }: { store: DataStore }) {
         purchasedDate: purchasedDate || null,
         status,
       });
+      invalidateOverviewCache();
       setName("");
       setPriceYuan("");
       setPurchasedDate("");
@@ -921,6 +946,7 @@ function ItemScreen({ store }: { store: DataStore }) {
       item.status === "active" ? "idle" : item.status === "idle" ? "retired" : "active";
     try {
       await store.updateItem(item.id, { status: next });
+      invalidateOverviewCache();
       await refresh();
     } catch (e) {
       toast.show("error", `更新失败：${localizeError(e)}`);
@@ -930,6 +956,7 @@ function ItemScreen({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteItem(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -1095,14 +1122,18 @@ function OverviewScreen({
   store: DataStore;
   onNavigate: (tab: Tab) => void;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [todos, setTodos] = useState<TodoRecord[]>([]);
-  const [anniversaries, setAnniversaries] = useState<AnniversaryRecord[]>([]);
-  const [subs, setSubs] = useState<SubscriptionRecord[]>([]);
-  const [items, setItems] = useState<ItemRecord[]>([]);
+  const cached = overviewCache && overviewCache.store === store ? overviewCache : null;
+  const [loading, setLoading] = useState(!cached);
+  const [todos, setTodos] = useState<TodoRecord[]>(cached?.todos ?? []);
+  const [anniversaries, setAnniversaries] = useState<AnniversaryRecord[]>(cached?.anniversaries ?? []);
+  const [subs, setSubs] = useState<SubscriptionRecord[]>(cached?.subscriptions ?? []);
+  const [items, setItems] = useState<ItemRecord[]>(cached?.items ?? []);
   const toast = useToast();
 
   useEffect(() => {
+    if (cached && Date.now() - cached.fetchedAt < OVERVIEW_FRESH_MS) {
+      return;
+    }
     (async () => {
       try {
         const [t, a, s, i] = await Promise.all([
@@ -1115,6 +1146,14 @@ function OverviewScreen({
         setAnniversaries(a);
         setSubs(s);
         setItems(i);
+        overviewCache = {
+          store,
+          fetchedAt: Date.now(),
+          todos: t,
+          anniversaries: a,
+          subscriptions: s,
+          items: i,
+        };
       } catch (e) {
         toast.show("error", `加载失败：${localizeError(e)}`);
       } finally {

@@ -14,6 +14,27 @@ import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
 
+/**
+ * Overview cache: holds the last successful 4-list snapshot per store. If a
+ * fresh cache (< OVERVIEW_FRESH_MS) exists when OverviewPanel mounts we render
+ * it instantly (no skeleton flash). Mutations in other panels call
+ * invalidateOverviewCache() to force a refetch on next mount.
+ */
+type OverviewSnapshot = {
+  store: DataStore;
+  fetchedAt: number;
+  todos: TodoRecord[];
+  anniversaries: AnniversaryRecord[];
+  subscriptions: SubscriptionRecord[];
+  items: ItemRecord[];
+};
+let overviewCache: OverviewSnapshot | null = null;
+const OVERVIEW_FRESH_MS = 5_000;
+
+function invalidateOverviewCache() {
+  overviewCache = null;
+}
+
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
 type DashboardProps = {
@@ -43,6 +64,8 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
     const result = await syncEngine.run();
     setSyncing(false);
     if (result.kind === "success") {
+      // Sync may have pulled new rows — force the next overview mount to refetch.
+      invalidateOverviewCache();
       toast.show(
         "success",
         `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
@@ -174,6 +197,7 @@ function TodoPanel({ store }: { store: DataStore }) {
     if (!title) return;
     try {
       await store.createTodo({ title });
+      invalidateOverviewCache();
       setNewTitle("");
       await refresh();
     } catch (e) {
@@ -184,6 +208,7 @@ function TodoPanel({ store }: { store: DataStore }) {
   const toggle = async (t: TodoRecord) => {
     try {
       await store.updateTodo(t.id, { isDone: !t.isDone });
+      invalidateOverviewCache();
       await refresh();
     } catch (e) {
       toast.show("error", `更新失败：${localizeError(e)}`);
@@ -193,6 +218,7 @@ function TodoPanel({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteTodo(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -387,6 +413,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
     }
     try {
       await store.createAnniversary({ title: t, date });
+      invalidateOverviewCache();
       setTitle("");
       setDate("");
       await refresh();
@@ -399,6 +426,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteAnniversary(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -587,6 +615,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
         nextRenewDate,
         currency,
       });
+      invalidateOverviewCache();
       setName("");
       setPriceYuan("");
       setNextRenewDate("");
@@ -600,6 +629,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteSubscription(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -815,6 +845,7 @@ function ItemPanel({ store }: { store: DataStore }) {
         purchasedDate: purchasedDate || null,
         status,
       });
+      invalidateOverviewCache();
       setName("");
       setPriceYuan("");
       setPurchasedDate("");
@@ -832,6 +863,7 @@ function ItemPanel({ store }: { store: DataStore }) {
       item.status === "active" ? "idle" : item.status === "idle" ? "retired" : "active";
     try {
       await store.updateItem(item.id, { status: next });
+      invalidateOverviewCache();
       await refresh();
     } catch (e) {
       toast.show("error", `更新失败：${localizeError(e)}`);
@@ -841,6 +873,7 @@ function ItemPanel({ store }: { store: DataStore }) {
   const remove = async (id: string) => {
     try {
       await store.deleteItem(id);
+      invalidateOverviewCache();
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
@@ -983,14 +1016,21 @@ function OverviewPanel({
   store: DataStore;
   onNavigate: (tab: Tab) => void;
 }) {
-  const [loading, setLoading] = useState(true);
-  const [todos, setTodos] = useState<TodoRecord[]>([]);
-  const [anniversaries, setAnniversaries] = useState<AnniversaryRecord[]>([]);
-  const [subs, setSubs] = useState<SubscriptionRecord[]>([]);
-  const [items, setItems] = useState<ItemRecord[]>([]);
+  // If we have a cached snapshot for THIS store, hydrate from it immediately
+  // so the panel renders without a skeleton flash on tab switch.
+  const cached = overviewCache && overviewCache.store === store ? overviewCache : null;
+  const [loading, setLoading] = useState(!cached);
+  const [todos, setTodos] = useState<TodoRecord[]>(cached?.todos ?? []);
+  const [anniversaries, setAnniversaries] = useState<AnniversaryRecord[]>(cached?.anniversaries ?? []);
+  const [subs, setSubs] = useState<SubscriptionRecord[]>(cached?.subscriptions ?? []);
+  const [items, setItems] = useState<ItemRecord[]>(cached?.items ?? []);
   const toast = useToast();
 
   useEffect(() => {
+    // If cache is fresh enough, skip the refetch entirely.
+    if (cached && Date.now() - cached.fetchedAt < OVERVIEW_FRESH_MS) {
+      return;
+    }
     (async () => {
       try {
         const [t, a, s, i] = await Promise.all([
@@ -1003,6 +1043,14 @@ function OverviewPanel({
         setAnniversaries(a);
         setSubs(s);
         setItems(i);
+        overviewCache = {
+          store,
+          fetchedAt: Date.now(),
+          todos: t,
+          anniversaries: a,
+          subscriptions: s,
+          items: i,
+        };
       } catch (e) {
         toast.show("error", `加载失败：${localizeError(e)}`);
       } finally {
