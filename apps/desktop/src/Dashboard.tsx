@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import type {
   AnniversaryRecord,
   DataStore,
+  ItemRecord,
   SubscriptionRecord,
   SyncEngine,
   TodoRecord,
@@ -130,7 +131,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
           {tab === "todo" && <TodoPanel store={store} />}
           {tab === "anniversary" && <AnniversaryPanel store={store} />}
           {tab === "subscription" && <SubscriptionPanel store={store} />}
-          {tab === "item" && <Placeholder icon="ri:box-3-line" label="物品" />}
+          {tab === "item" && <ItemPanel store={store} />}
           {tab === "settings" && <SettingsPanel config={config} />}
         </div>
       </main>
@@ -253,14 +254,6 @@ function TodoPanel({ store }: { store: DataStore }) {
           </ul>
         )}
       </div>
-    </div>
-  );
-}
-
-function Placeholder({ icon, label }: { icon: string; label: string }) {
-  return (
-    <div className="h-full flex items-center justify-center">
-      <EmptyState icon={icon} title={`${label}模块`} subtitle="在 Web 端管理或后续版本补全" />
     </div>
   );
 }
@@ -738,6 +731,241 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
                   </span>
                   <button
                     onClick={() => remove(s.id)}
+                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
+                  >
+                    <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- Item panel ----------------------------------------------------------
+
+const ITEM_STATUSES: Array<{ value: "active" | "idle" | "retired"; label: string; color: string }> = [
+  { value: "active", label: "在用", color: "text-success bg-success/10" },
+  { value: "idle", label: "闲置", color: "text-muted-foreground bg-muted" },
+  { value: "retired", label: "弃用", color: "text-danger bg-danger/10" },
+];
+
+function daysOwned(dateStr: string | null, now = new Date()): number | null {
+  if (!dateStr) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return null;
+  const purchased = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = Math.round((today.getTime() - purchased.getTime()) / 86_400_000);
+  return d < 0 ? 0 : d;
+}
+
+function formatDailyCost(priceCents: number | null, purchasedDate: string | null, currency: string): string | null {
+  const d = daysOwned(purchasedDate);
+  if (priceCents == null || d == null || d <= 0) return null;
+  const perDay = priceCents / d / 100;
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency;
+  return `${symbol}${perDay.toFixed(2)}/天`;
+}
+
+function ItemPanel({ store }: { store: DataStore }) {
+  const [items, setItems] = useState<ItemRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [priceYuan, setPriceYuan] = useState("");
+  const [purchasedDate, setPurchasedDate] = useState("");
+  const [currency, setCurrency] = useState("CNY");
+  const [status, setStatus] = useState<"active" | "idle" | "retired">("active");
+  const toast = useToast();
+
+  const refresh = async () => {
+    try {
+      const rows = await store.listItems();
+      rows.sort((a, b) => {
+        // Active first, then by created date desc
+        if (a.status !== b.status) {
+          if (a.status === "active") return -1;
+          if (b.status === "active") return 1;
+          if (a.status === "idle") return -1;
+          if (b.status === "idle") return 1;
+        }
+        return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+      });
+      setItems(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const add = async () => {
+    const n = name.trim();
+    if (!n) return toast.show("error", "请填写物品名称");
+    const parsed = priceYuan === "" ? null : Math.round(Number(priceYuan) * 100);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) {
+      return toast.show("error", "价格无效");
+    }
+    try {
+      await store.createItem({
+        name: n,
+        priceCents: parsed,
+        currency,
+        purchasedDate: purchasedDate || null,
+        status,
+      });
+      setName("");
+      setPriceYuan("");
+      setPurchasedDate("");
+      setStatus("active");
+      await refresh();
+      toast.show("success", "已添加");
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const toggleStatus = async (item: ItemRecord) => {
+    // Cycle active -> idle -> retired -> active
+    const next: ItemRecord["status"] =
+      item.status === "active" ? "idle" : item.status === "idle" ? "retired" : "active";
+    try {
+      await store.updateItem(item.id, { status: next });
+      await refresh();
+    } catch (e) {
+      toast.show("error", `更新失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await store.deleteItem(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+        <div className="flex flex-wrap gap-2 max-w-3xl">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="物品名称（如 MacBook、相机）"
+            className="h-11 flex-[2] min-w-[180px] rounded-xl border border-border bg-card px-3 text-sm outline-none"
+          />
+          <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden">
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="h-11 pl-3 pr-2 text-sm outline-none bg-transparent border-r border-border cursor-pointer"
+            >
+              {Object.keys(CURRENCY_SYMBOLS).map((c) => (
+                <option key={c} value={c}>
+                  {CURRENCY_SYMBOLS[c]} {c}
+                </option>
+              ))}
+            </select>
+            <input
+              value={priceYuan}
+              onChange={(e) => setPriceYuan(e.target.value)}
+              placeholder="价格"
+              inputMode="decimal"
+              className="h-11 w-20 px-2 text-sm outline-none bg-transparent"
+            />
+          </div>
+          <input
+            type="date"
+            value={purchasedDate}
+            onChange={(e) => setPurchasedDate(e.target.value)}
+            placeholder="购入日期"
+            className="h-11 rounded-xl border border-border bg-card px-3 text-sm outline-none"
+          />
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as typeof status)}
+            className="h-11 rounded-xl border border-border bg-card px-3 text-sm outline-none cursor-pointer"
+          >
+            {ITEM_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={add}
+            className="h-11 px-4 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium shadow-md shadow-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/30 transition-all active:scale-[0.97]"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Icon icon="ri:add-line" className="h-4 w-4" /> 添加
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 scroll-area px-6 py-4">
+        {loading ? (
+          <DeferredSkeleton>
+            <AnniversaryListSkeleton />
+          </DeferredSkeleton>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon="ri:box-3-line"
+            title="暂无物品"
+            subtitle="记录购入价 + 日期，看清每日成本"
+          />
+        ) : (
+          <ul className="space-y-2 max-w-3xl">
+            {items.map((i) => {
+              const owned = daysOwned(i.purchasedDate);
+              const dailyCost = formatDailyCost(i.priceCents, i.purchasedDate, i.currency);
+              const statusCfg = ITEM_STATUSES.find((s) => s.value === i.status) ?? ITEM_STATUSES[0];
+              return (
+                <li
+                  key={i.id}
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 transition-colors animate-fade-in"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center shrink-0">
+                    <Icon icon="ri:box-3-line" className="h-5 w-5 text-brand-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{i.name}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="font-mono">{formatPrice(i.priceCents, i.currency)}</span>
+                      {owned != null && (
+                        <>
+                          <span className="opacity-60">·</span>
+                          <span>已用 {owned} 天</span>
+                        </>
+                      )}
+                      {dailyCost && (
+                        <>
+                          <span className="opacity-60">·</span>
+                          <span className="text-brand-primary font-medium">{dailyCost}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleStatus(i)}
+                    title="点击切换状态"
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${statusCfg.color} hover:opacity-80`}
+                  >
+                    {statusCfg.label}
+                  </button>
+                  <button
+                    onClick={() => remove(i.id)}
                     className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
                   >
                     <Icon icon="ri:delete-bin-line" className="h-4 w-4" />

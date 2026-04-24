@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import type {
   AnniversaryRecord,
   DataStore,
+  ItemRecord,
   SubscriptionRecord,
   SyncEngine,
   TodoRecord,
@@ -82,7 +83,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         {tab === "todo" && <TodoScreen store={store} />}
         {tab === "anniversary" && <AnniversaryScreen store={store} />}
         {tab === "subscription" && <SubscriptionScreen store={store} />}
-        {tab === "item" && <Placeholder icon="ri:box-3-line" label="物品" />}
+        {tab === "item" && <ItemScreen store={store} />}
         {tab === "settings" && <SettingsScreen config={config} onLogout={onLogout} />}
       </main>
 
@@ -275,14 +276,6 @@ function TodoScreen({ store }: { store: DataStore }) {
       >
         <Icon icon="ri:add-line" className="h-6 w-6" />
       </button>
-    </div>
-  );
-}
-
-function Placeholder({ icon, label }: { icon: string; label: string }) {
-  return (
-    <div className="h-full flex items-center justify-center p-6">
-      <EmptyState icon={icon} title={`${label}模块`} subtitle="在 Web 端管理或后续版本补全" />
     </div>
   );
 }
@@ -823,6 +816,264 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
                 <button
                   onClick={add}
                   disabled={!name.trim() || !nextRenewDate}
+                  className="tap-scale flex-1 h-10 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium disabled:opacity-50"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setAdding(true)}
+        className="tap-scale absolute right-4 bottom-4 h-14 w-14 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary text-white shadow-xl shadow-brand-primary/40 flex items-center justify-center"
+      >
+        <Icon icon="ri:add-line" className="h-6 w-6" />
+      </button>
+    </div>
+  );
+}
+
+// --- Item screen (mobile) -----------------------------------------------
+
+const ITEM_STATUSES: Array<{ value: "active" | "idle" | "retired"; label: string; color: string }> = [
+  { value: "active", label: "在用", color: "text-success bg-success/10" },
+  { value: "idle", label: "闲置", color: "text-muted-foreground bg-muted" },
+  { value: "retired", label: "弃用", color: "text-danger bg-danger/10" },
+];
+
+function itemDaysOwned(dateStr: string | null, now = new Date()): number | null {
+  if (!dateStr) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return null;
+  const purchased = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = Math.round((today.getTime() - purchased.getTime()) / 86_400_000);
+  return d < 0 ? 0 : d;
+}
+
+function itemDailyCost(priceCents: number | null, purchasedDate: string | null, currency: string): string | null {
+  const d = itemDaysOwned(purchasedDate);
+  if (priceCents == null || d == null || d <= 0) return null;
+  const perDay = priceCents / d / 100;
+  const symbol = SUB_CURRENCY_SYMBOLS[currency] ?? currency;
+  return `${symbol}${perDay.toFixed(2)}/天`;
+}
+
+function ItemScreen({ store }: { store: DataStore }) {
+  const [items, setItems] = useState<ItemRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [priceYuan, setPriceYuan] = useState("");
+  const [purchasedDate, setPurchasedDate] = useState("");
+  const [currency, setCurrency] = useState("CNY");
+  const [status, setStatus] = useState<"active" | "idle" | "retired">("active");
+  const toast = useToast();
+
+  const refresh = async () => {
+    try {
+      const rows = await store.listItems();
+      rows.sort((a, b) => {
+        if (a.status !== b.status) {
+          if (a.status === "active") return -1;
+          if (b.status === "active") return 1;
+          if (a.status === "idle") return -1;
+          if (b.status === "idle") return 1;
+        }
+        return (b.createdAt ?? "").localeCompare(a.createdAt ?? "");
+      });
+      setItems(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const add = async () => {
+    const n = name.trim();
+    if (!n) return toast.show("error", "请填写物品名称");
+    const parsed = priceYuan === "" ? null : Math.round(Number(priceYuan) * 100);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) {
+      return toast.show("error", "价格无效");
+    }
+    try {
+      await store.createItem({
+        name: n,
+        priceCents: parsed,
+        currency,
+        purchasedDate: purchasedDate || null,
+        status,
+      });
+      setName("");
+      setPriceYuan("");
+      setPurchasedDate("");
+      setStatus("active");
+      setAdding(false);
+      await refresh();
+      toast.show("success", "已添加");
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const toggleStatus = async (item: ItemRecord) => {
+    const next: ItemRecord["status"] =
+      item.status === "active" ? "idle" : item.status === "idle" ? "retired" : "active";
+    try {
+      await store.updateItem(item.id, { status: next });
+      await refresh();
+    } catch (e) {
+      toast.show("error", `更新失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await store.deleteItem(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col relative">
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {loading ? (
+          <DeferredSkeleton>
+            <AnniversaryListSkeleton />
+          </DeferredSkeleton>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon="ri:box-3-line"
+            title="暂无物品"
+            subtitle="记录购入价 + 日期，看清每日成本"
+          />
+        ) : (
+          <ul className="space-y-2">
+            {items.map((i) => {
+              const owned = itemDaysOwned(i.purchasedDate);
+              const dailyCost = itemDailyCost(i.priceCents, i.purchasedDate, i.currency);
+              const statusCfg = ITEM_STATUSES.find((s) => s.value === i.status) ?? ITEM_STATUSES[0];
+              return (
+                <li
+                  key={i.id}
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border animate-fade-in"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center shrink-0">
+                    <Icon icon="ri:box-3-line" className="h-5 w-5 text-brand-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{i.name}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono">{formatSubPrice(i.priceCents, i.currency)}</span>
+                      {owned != null && (
+                        <>
+                          <span className="opacity-60">·</span>
+                          <span>{owned} 天</span>
+                        </>
+                      )}
+                      {dailyCost && (
+                        <>
+                          <span className="opacity-60">·</span>
+                          <span className="text-brand-primary font-medium">{dailyCost}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleStatus(i)}
+                    className={`tap-scale text-[11px] px-2 py-0.5 rounded-full font-medium ${statusCfg.color}`}
+                  >
+                    {statusCfg.label}
+                  </button>
+                  <button
+                    onClick={() => remove(i.id)}
+                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
+                  >
+                    <Icon icon="ri:close-line" className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {adding && (
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => setAdding(false)}
+        >
+          <div
+            className="absolute left-0 right-0 bottom-0 pb-safe animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="m-3 p-3 rounded-2xl bg-card border border-border shadow-2xl space-y-2">
+              <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="物品名称（如 MacBook）"
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="h-11 rounded-xl bg-muted px-3 text-sm outline-none"
+                >
+                  {Object.keys(SUB_CURRENCY_SYMBOLS).map((c) => (
+                    <option key={c} value={c}>
+                      {SUB_CURRENCY_SYMBOLS[c]} {c}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  value={priceYuan}
+                  onChange={(e) => setPriceYuan(e.target.value)}
+                  placeholder="价格"
+                  inputMode="decimal"
+                  className="h-11 flex-1 rounded-xl bg-muted px-4 text-sm outline-none"
+                />
+              </div>
+              <input
+                type="date"
+                value={purchasedDate}
+                onChange={(e) => setPurchasedDate(e.target.value)}
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none"
+              />
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as typeof status)}
+                className="h-11 w-full rounded-xl bg-muted px-3 text-sm outline-none"
+              >
+                {ITEM_STATUSES.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setAdding(false)}
+                  className="tap-scale flex-1 h-10 rounded-xl border border-border text-sm"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={add}
+                  disabled={!name.trim()}
                   className="tap-scale flex-1 h-10 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium disabled:opacity-50"
                 >
                   添加
