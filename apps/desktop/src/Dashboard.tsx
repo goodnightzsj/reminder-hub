@@ -257,7 +257,7 @@ function TodoPanel({ store }: { store: DataStore }) {
             {todos.map((t) => (
               <li
                 key={t.id}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 transition-colors animate-fade-in"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 hover:-translate-y-[1px] transition-all animate-fade-in"
               >
                 <button
                   onClick={() => toggle(t)}
@@ -491,7 +491,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
               return (
                 <li
                   key={a.id}
-                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 transition-colors animate-fade-in"
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 hover:-translate-y-[1px] hover:shadow-sm transition-all animate-fade-in"
                 >
                   <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center shrink-0">
                     <Icon icon="ri:calendar-event-line" className="h-5 w-5 text-brand-primary" />
@@ -731,7 +731,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
               return (
                 <li
                   key={s.id}
-                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 transition-colors animate-fade-in"
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 hover:-translate-y-[1px] hover:shadow-sm transition-all animate-fade-in"
                 >
                   <div
                     className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
@@ -963,7 +963,7 @@ function ItemPanel({ store }: { store: DataStore }) {
               return (
                 <li
                   key={i.id}
-                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 transition-colors animate-fade-in"
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 hover:-translate-y-[1px] hover:shadow-sm transition-all animate-fade-in"
                 >
                   <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center shrink-0">
                     <Icon icon="ri:box-3-line" className="h-5 w-5 text-brand-primary" />
@@ -1251,7 +1251,7 @@ function StatCard({
   return (
     <button
       onClick={onClick}
-      className="group text-left p-4 rounded-2xl bg-card border border-border hover:border-brand-primary/40 hover:shadow-md transition-all"
+      className="group text-left p-4 rounded-2xl bg-card border border-border hover:border-brand-primary/40 hover:shadow-md hover:-translate-y-[2px] transition-all"
     >
       <div className="flex items-center justify-between mb-2">
         <div
