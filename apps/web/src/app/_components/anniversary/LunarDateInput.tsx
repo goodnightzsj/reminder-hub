@@ -37,6 +37,10 @@ function formatSolarPreview(ymd: string): string {
     return `${y}年${Number(m)}月${Number(d)}日`;
 }
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_RANGE_START = CURRENT_YEAR - 80;
+const YEAR_RANGE_END = CURRENT_YEAR + 20;
+
 export function LunarDateInput({
     defaultLunarMonth,
     defaultLunarDay,
@@ -46,29 +50,41 @@ export function LunarDateInput({
     const [month, setMonth] = useState<number>(defaultLunarMonth ?? 1);
     const [day, setDay] = useState<number>(defaultLunarDay ?? 1);
     const [isLeap, setIsLeap] = useState<boolean>(Boolean(defaultIsLeapMonth));
+    const [year, setYear] = useState<number | null>(null);
 
     const leapAvailable = useMemo(() => {
-        const current = new Date().getFullYear();
-        for (let y = current - 2; y <= current + 2; y++) {
+        if (year) return hasLeapMonth(year, month);
+        for (let y = CURRENT_YEAR - 2; y <= CURRENT_YEAR + 2; y++) {
             if (hasLeapMonth(y, month)) return true;
         }
         return true;
-    }, [month]);
+    }, [month, year]);
 
     const solarPreview = useMemo(() => {
-        const now = new Date();
-        const thisYear = now.getFullYear();
         const results: { year: number; solar: string }[] = [];
-        for (const y of [thisYear, thisYear + 1]) {
+        const years = year ? [year] : [CURRENT_YEAR, CURRENT_YEAR + 1];
+        for (const y of years) {
             const s = lunarToSolar(y, month, day, isLeap);
             if (s) results.push({ year: y, solar: s });
         }
         return results;
-    }, [month, day, isLeap]);
+    }, [month, day, isLeap, year]);
 
     return (
         <div className={className}>
             <div className="flex flex-wrap items-center gap-2">
+                <Select
+                    value={year ? String(year) : ""}
+                    onChange={(e) => setYear(e.target.value ? Number(e.target.value) : null)}
+                    className="h-10 w-[88px] bg-base/50"
+                    placeholder="不限年"
+                >
+                    <option value="">不限年</option>
+                    {Array.from({ length: YEAR_RANGE_END - YEAR_RANGE_START + 1 }, (_, i) => YEAR_RANGE_END - i).map((y) => (
+                        <option key={y} value={String(y)}>{y}</option>
+                    ))}
+                </Select>
+
                 <Select
                     name="lunarMonth"
                     value={String(month)}

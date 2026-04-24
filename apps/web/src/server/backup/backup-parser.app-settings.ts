@@ -119,6 +119,21 @@ export function parseAppSettingsRow(
     insert.wecomWebhookUrl = value;
   }
 
+  if (hasOwn(row, "wecomPushType")) {
+    const value = asString(row.wecomPushType);
+    if (value !== null) insert.wecomPushType = value;
+  }
+
+  for (const key of ["wecomCorpId", "wecomAgentId", "wecomAppSecret", "wecomToUser"] as const) {
+    if (hasOwn(row, key)) {
+      const value = asString(row[key]);
+      if (row[key] !== null && value === null) {
+        throw new Error(`app.settings.${key} must be string|null`);
+      }
+      insert[key] = value;
+    }
+  }
+
   if (hasOwn(row, "feishuEnabled")) {
     const value = asBoolean(row.feishuEnabled);
     if (value === null) throw new Error("app.settings.feishuEnabled must be boolean");

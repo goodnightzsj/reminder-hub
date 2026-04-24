@@ -32,7 +32,13 @@ export function assertNotificationChannelConfig(settings: AppSettings, channel: 
 
   if (channel === NOTIFICATION_CHANNEL.WECOM) {
     if (!settings.wecomEnabled) throw new NotificationConfigError("wecom-disabled");
-    if (!settings.wecomWebhookUrl) throw new NotificationConfigError("missing-wecom-webhook-url");
+    if (settings.wecomPushType === "app") {
+      if (!settings.wecomCorpId) throw new NotificationConfigError("missing-wecom-corp-id");
+      if (!settings.wecomAgentId) throw new NotificationConfigError("missing-wecom-agent-id");
+      if (!settings.wecomAppSecret) throw new NotificationConfigError("missing-wecom-app-secret");
+    } else {
+      if (!settings.wecomWebhookUrl) throw new NotificationConfigError("missing-wecom-webhook-url");
+    }
     return;
   }
 

@@ -111,15 +111,26 @@ export async function updateWebhookSettings(formData: FormData) {
 export async function updateWecomSettings(formData: FormData) {
   await validateAndUpsertSettings(formData, async (data) => {
     const parsed = await wecomSettingsSchema.parseAsync(data);
-    const { wecomEnabled: enabled, wecomWebhookUrl } = parsed;
+    const { wecomEnabled: enabled, wecomPushType, wecomWebhookUrl, wecomCorpId, wecomAgentId, wecomAppSecret, wecomToUser } = parsed;
 
-    const rawUrl = data.get("wecomWebhookUrl")?.toString().trim();
+    if (enabled) {
+      if (wecomPushType === "app") {
+        if (!wecomCorpId) redirectSettingsError("missing-wecom-corp-id");
+        if (!wecomAgentId) redirectSettingsError("missing-wecom-agent-id");
+        if (!wecomAppSecret) redirectSettingsError("missing-wecom-app-secret");
+      } else {
+        const rawUrl = data.get("wecomWebhookUrl")?.toString().trim();
+        if (!wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
+        if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
+      }
+    }
 
-    if (enabled && !wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
-    if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
-
-    const set: AppSettingsUpdate = { wecomEnabled: enabled };
+    const set: AppSettingsUpdate = { wecomEnabled: enabled, wecomPushType };
     if (wecomWebhookUrl) set.wecomWebhookUrl = wecomWebhookUrl;
+    if (wecomCorpId) set.wecomCorpId = wecomCorpId;
+    if (wecomAgentId) set.wecomAgentId = wecomAgentId;
+    if (wecomAppSecret) set.wecomAppSecret = wecomAppSecret;
+    if (wecomToUser !== undefined) set.wecomToUser = wecomToUser || null;
     return set;
   });
 }

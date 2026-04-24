@@ -162,6 +162,13 @@
       "when": 1773740541549,
       "tag": "0022_legal_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1777004208178,
+      "tag": "0023_unknown_sentry",
+      "breakpoints": true
     }
   ]
 }

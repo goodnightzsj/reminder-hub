@@ -31,7 +31,12 @@ export const webhookSettingsSchema = zfd.formData({
 // Wecom
 export const wecomSettingsSchema = zfd.formData({
     wecomEnabled: looseCheckbox(),
+    wecomPushType: zfd.text(z.enum(["webhook", "app"]).catch("webhook")),
     wecomWebhookUrl: zfd.text(z.string().transform(urlTransformer).optional()),
+    wecomCorpId: zfd.text(z.string().optional()),
+    wecomAgentId: zfd.text(z.string().optional()),
+    wecomAppSecret: zfd.text(z.string().optional()),
+    wecomToUser: zfd.text(z.string().optional()),
 });
 
 // Feishu

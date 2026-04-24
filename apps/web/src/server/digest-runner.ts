@@ -23,6 +23,7 @@ import {
   sendFeishuWebhookMessage,
   sendTelegramMessage,
   sendWebhookMessage,
+  sendWecomAppMessage,
   sendWecomWebhookMessage,
 } from "@/server/notification-senders";
 
@@ -62,10 +63,20 @@ async function sendDigestMessageToChannel(args: {
       return;
     }
     case NOTIFICATION_CHANNEL.WECOM: {
-      await sendWecomWebhookMessage({
-        webhookUrl: args.settings.wecomWebhookUrl ?? "",
-        text,
-      });
+      if (args.settings.wecomPushType === "app") {
+        await sendWecomAppMessage({
+          corpId: args.settings.wecomCorpId ?? "",
+          appSecret: args.settings.wecomAppSecret ?? "",
+          agentId: args.settings.wecomAgentId ?? "",
+          toUser: args.settings.wecomToUser ?? "@all",
+          text,
+        });
+      } else {
+        await sendWecomWebhookMessage({
+          webhookUrl: args.settings.wecomWebhookUrl ?? "",
+          text,
+        });
+      }
       return;
     }
     case NOTIFICATION_CHANNEL.FEISHU: {

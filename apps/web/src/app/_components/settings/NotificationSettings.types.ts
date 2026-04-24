@@ -12,6 +12,11 @@ export type NotificationSettings = {
 
   wecomEnabled: boolean;
   wecomWebhookUrl: string | null;
+  wecomPushType: string;
+  wecomCorpId: string | null;
+  wecomAgentId: string | null;
+  wecomHasAppSecret: boolean;
+  wecomToUser: string | null;
 
   feishuEnabled: boolean;
   feishuWebhookUrl: string | null;

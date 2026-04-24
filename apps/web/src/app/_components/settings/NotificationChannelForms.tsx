@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/app/_components/ui/Input";
 import {
   runEmailNotifications,
@@ -100,23 +101,68 @@ export function WebhookForm({ settings }: { settings: AppSettings }) {
 }
 
 export function WeComForm({ settings }: { settings: AppSettings }) {
+  const [pushType, setPushType] = useState(settings.wecomPushType ?? "webhook");
+
   return (
     <div className="space-y-6">
       <form action={updateWecomSettings} className="flex flex-col gap-4">
         <ChannelEnabledToggle
           name="wecomEnabled"
           defaultChecked={settings.wecomEnabled}
-          label="启用企业微信群机器人"
+          label="启用企业微信通知"
         />
 
         <div className="space-y-1.5">
-          <span className="text-xs font-medium text-secondary">Webhook URL</span>
-          <Input
-            name="wecomWebhookUrl"
-            placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..."
-            defaultValue={settings.wecomWebhookUrl ?? ""}
-          />
+          <span className="text-xs font-medium text-secondary">推送方式</span>
+          <div className="flex gap-2">
+            {[
+              { value: "webhook", label: "群机器人" },
+              { value: "app", label: "应用推送" },
+            ].map((opt) => (
+              <label key={opt.value} className={`flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border text-sm cursor-pointer transition-colors ${pushType === opt.value ? "border-brand-primary bg-brand-primary/5 text-brand-primary font-medium" : "border-default text-secondary hover:border-muted"}`}>
+                <input type="radio" name="wecomPushType" value={opt.value} checked={pushType === opt.value} onChange={() => setPushType(opt.value)} className="sr-only" />
+                {opt.label}
+              </label>
+            ))}
+          </div>
         </div>
+
+        {pushType === "webhook" && (
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-secondary">Webhook URL</span>
+            <Input
+              name="wecomWebhookUrl"
+              placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=..."
+              defaultValue={settings.wecomWebhookUrl ?? ""}
+            />
+          </div>
+        )}
+
+        {pushType === "app" && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-secondary">Corp ID（企业ID）</span>
+                <Input name="wecomCorpId" placeholder="ww..." defaultValue={settings.wecomCorpId ?? ""} />
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-secondary">Agent ID（应用ID）</span>
+                <Input name="wecomAgentId" placeholder="1000002" defaultValue={settings.wecomAgentId ?? ""} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-secondary">App Secret（应用密钥）</span>
+                {settings.wecomHasAppSecret && <span className="text-[10px] text-success">已保存</span>}
+              </div>
+              <Input type="password" name="wecomAppSecret" placeholder="输入应用 Secret" />
+            </div>
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-secondary">接收人 UserID（可选，默认 @all）</span>
+              <Input name="wecomToUser" placeholder="@all 或 user1|user2" defaultValue={settings.wecomToUser ?? ""} />
+            </div>
+          </>
+        )}
 
         <SaveConfigButton />
       </form>

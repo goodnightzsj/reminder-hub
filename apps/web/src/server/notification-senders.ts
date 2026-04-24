@@ -71,6 +71,49 @@ export async function sendWebhookMessage(args: { webhookUrl: string; payload: un
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
 }
 
+let wecomAccessTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function getWecomAccessToken(corpId: string, appSecret: string): Promise<string> {
+  if (wecomAccessTokenCache && Date.now() < wecomAccessTokenCache.expiresAt) {
+    return wecomAccessTokenCache.token;
+  }
+  const res = await fetchWithTimeout(
+    `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${encodeURIComponent(corpId)}&corpsecret=${encodeURIComponent(appSecret)}`,
+    { timeoutMs: 10_000 },
+  );
+  if (!res.ok) throw new Error(`WeChat Work token HTTP ${res.status}`);
+  const data = (await res.json()) as { errcode: number; errmsg: string; access_token?: string; expires_in?: number };
+  if (data.errcode !== 0 || !data.access_token) {
+    throw new Error(`WeChat Work token error ${data.errcode}: ${data.errmsg}`);
+  }
+  wecomAccessTokenCache = { token: data.access_token, expiresAt: Date.now() + (data.expires_in ?? 7200) * 1000 - 60_000 };
+  return data.access_token;
+}
+
+export async function sendWecomAppMessage(args: { corpId: string; appSecret: string; agentId: string; toUser: string; text: string }) {
+  const token = await getWecomAccessToken(args.corpId, args.appSecret);
+  const res = await fetchWithTimeout(
+    `https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${encodeURIComponent(token)}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        touser: args.toUser || "@all",
+        msgtype: "text",
+        agentid: Number(args.agentId),
+        text: { content: args.text },
+      }),
+      timeoutMs: 10_000,
+    },
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = (await res.json()) as { errcode: number; errmsg: string };
+  if (data.errcode !== 0) {
+    wecomAccessTokenCache = null;
+    throw new Error(`errcode ${data.errcode}: ${data.errmsg}`);
+  }
+}
+
 export async function sendWecomWebhookMessage(args: { webhookUrl: string; text: string }) {
   const res = await fetchWithTimeout(args.webhookUrl, {
     method: "POST",
@@ -344,16 +387,21 @@ export function createSenders(
       };
     }
     case NOTIFICATION_CHANNEL.WECOM: {
-      const webhookUrl = settings.wecomWebhookUrl ?? "";
+      const sendWecom = settings.wecomPushType === "app"
+        ? (text: string) => sendWecomAppMessage({
+            corpId: settings.wecomCorpId ?? "",
+            appSecret: settings.wecomAppSecret ?? "",
+            agentId: settings.wecomAgentId ?? "",
+            toUser: settings.wecomToUser ?? "@all",
+            text,
+          })
+        : (text: string) => sendWecomWebhookMessage({ webhookUrl: settings.wecomWebhookUrl ?? "", text });
       return {
         sendTest: async (nowIso: string) => {
-          await sendWecomWebhookMessage({ webhookUrl, text: `测试通知（${nowIso}）` });
+          await sendWecom(`测试通知（${nowIso}）`);
         },
         sendCandidate: async (candidate: NotificationCandidate) => {
-          await sendWecomWebhookMessage({
-            webhookUrl,
-            text: formatNotificationText(candidate, settings.timeZone),
-          });
+          await sendWecom(formatNotificationText(candidate, settings.timeZone));
         },
       };
     }

@@ -137,6 +137,11 @@ export const appSettings = sqliteTable("app_settings", {
     .notNull()
     .default(false),
   wecomWebhookUrl: text("wecom_webhook_url"),
+  wecomPushType: text("wecom_push_type").notNull().default("webhook"),
+  wecomCorpId: text("wecom_corp_id"),
+  wecomAgentId: text("wecom_agent_id"),
+  wecomAppSecret: text("wecom_app_secret"),
+  wecomToUser: text("wecom_to_user"),
   feishuEnabled: integer("feishu_enabled", { mode: "boolean" })
     .notNull()
     .default(false),
