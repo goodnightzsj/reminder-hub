@@ -9,6 +9,9 @@ import type {
 } from "./types";
 
 export * from "./types";
+export { RemoteDataStore, RemoteApiError } from "./remote";
+export { LocalDataStore } from "./local";
+export { SyncEngine, type SyncStatus } from "./sync";
 
 /**
  * Unified data access interface for both local-first (SQLite on device)
