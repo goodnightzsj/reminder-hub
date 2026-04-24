@@ -49,7 +49,7 @@ export class SyncEngine {
 
     try {
       const since = await this.local.getSyncState(LAST_SYNC_KEY);
-      const localChanges = await this.local.collectChangesSince(since);
+      const { upToMs, ...localChanges } = await this.local.collectChangesSince(since);
       const uploaded =
         localChanges.todos.length +
         localChanges.anniversaries.length +
@@ -68,7 +68,17 @@ export class SyncEngine {
         response.changes.subscriptions.length +
         response.changes.items.length;
 
-      await this.local.setSyncState(LAST_SYNC_KEY, response.serverTime);
+      // Use the earlier of our local snapshot upper bound and the server's
+      // reported time. This protects against (a) writes that landed locally
+      // between collectChangesSince and the server response — they have
+      // updated_at > upToMs and will be caught next sync — and (b) client
+      // clock skewed ahead of server, which would otherwise send a future
+      // `since` to the server and silently drop legitimate server updates.
+      const serverTimeMs = new Date(response.serverTime).getTime();
+      const watermarkMs = Number.isFinite(serverTimeMs)
+        ? Math.min(upToMs, serverTimeMs)
+        : upToMs;
+      await this.local.setSyncState(LAST_SYNC_KEY, new Date(watermarkMs).toISOString());
 
       this.status = {
         kind: "success",

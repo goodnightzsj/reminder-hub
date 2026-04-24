@@ -570,26 +570,41 @@ export class LocalDataStore implements DataStore {
     anniversaries: AnniversaryRecord[];
     subscriptions: SubscriptionRecord[];
     items: ItemRecord[];
+    upToMs: number;
   }> {
     await this.ensureReady();
     const sinceMs = since ? new Date(since).getTime() : 0;
+    // Snapshot an upper bound BEFORE the 4 SELECTs. Any write that lands
+    // between SELECTs will have updated_at > upToMs (Date.now() is
+    // monotonic-ish at ms resolution on all target platforms) and the
+    // `AND updated_at <= ?` clause filters it out uniformly. Caller uses
+    // upToMs as the next sync watermark so excluded writes are picked up
+    // on the next run rather than silently lost.
+    const upToMs = Date.now();
 
-    const todoRows = await this.db.select<TodoRow>("SELECT * FROM todos WHERE updated_at > ?", [sinceMs]);
+    const todoRows = await this.db.select<TodoRow>(
+      "SELECT * FROM todos WHERE updated_at > ? AND updated_at <= ?",
+      [sinceMs, upToMs],
+    );
     const anniversaryRows = await this.db.select<AnniversaryRow>(
-      "SELECT * FROM anniversaries WHERE updated_at > ?",
-      [sinceMs],
+      "SELECT * FROM anniversaries WHERE updated_at > ? AND updated_at <= ?",
+      [sinceMs, upToMs],
     );
     const subRows = await this.db.select<SubscriptionRow>(
-      "SELECT * FROM subscriptions WHERE updated_at > ?",
-      [sinceMs],
+      "SELECT * FROM subscriptions WHERE updated_at > ? AND updated_at <= ?",
+      [sinceMs, upToMs],
     );
-    const itemRows = await this.db.select<ItemRow>("SELECT * FROM items WHERE updated_at > ?", [sinceMs]);
+    const itemRows = await this.db.select<ItemRow>(
+      "SELECT * FROM items WHERE updated_at > ? AND updated_at <= ?",
+      [sinceMs, upToMs],
+    );
 
     return {
       todos: todoRows.map(rowToTodo),
       anniversaries: anniversaryRows.map(rowToAnniversary),
       subscriptions: subRows.map(rowToSubscription),
       items: itemRows.map(rowToItem),
+      upToMs,
     };
   }
 
