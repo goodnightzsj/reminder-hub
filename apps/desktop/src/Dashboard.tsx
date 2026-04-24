@@ -323,11 +323,19 @@ function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: 
   useEffect(() => {
     if (!syncEngine) return;
     let alive = true;
-    syncEngine.getLastSyncTime().then((v) => {
-      if (alive) setLastSync(v);
-    });
+    const read = () => {
+      syncEngine.getLastSyncTime().then((v) => {
+        if (alive) setLastSync(v);
+      });
+    };
+    read();
+    // Re-read every 30s so the "N 分钟前" label updates while the user
+    // stays on Settings, and reflects a background sync that finished
+    // elsewhere in the app.
+    const id = window.setInterval(read, 30_000);
     return () => {
       alive = false;
+      window.clearInterval(id);
     };
   }, [syncEngine]);
 

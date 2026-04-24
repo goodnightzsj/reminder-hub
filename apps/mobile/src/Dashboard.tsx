@@ -362,11 +362,16 @@ function SettingsScreen({
   useEffect(() => {
     if (!syncEngine) return;
     let alive = true;
-    syncEngine.getLastSyncTime().then((v) => {
-      if (alive) setLastSync(v);
-    });
+    const read = () => {
+      syncEngine.getLastSyncTime().then((v) => {
+        if (alive) setLastSync(v);
+      });
+    };
+    read();
+    const id = window.setInterval(read, 30_000);
     return () => {
       alive = false;
+      window.clearInterval(id);
     };
   }, [syncEngine]);
 
