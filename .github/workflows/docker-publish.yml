@@ -6,9 +6,29 @@ on:
       - main
     tags:
       - "v*"
+    paths-ignore:
+      - "apps/desktop/**"
+      - "apps/mobile/**"
+      - "ios/**"
+      - "android/**"
+      - ".github/workflows/desktop-release.yml"
+      - ".github/workflows/android-release.yml"
+      - ".github/workflows/ios-release.yml"
+      - ".github/workflows/ci.yml"
+      - "**/*.md"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "apps/desktop/**"
+      - "apps/mobile/**"
+      - "ios/**"
+      - "android/**"
+      - ".github/workflows/desktop-release.yml"
+      - ".github/workflows/android-release.yml"
+      - ".github/workflows/ios-release.yml"
+      - ".github/workflows/ci.yml"
+      - "**/*.md"
   workflow_dispatch:
 
 concurrency:
