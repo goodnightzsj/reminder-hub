@@ -93,14 +93,14 @@ export async function updateTelegramSettings(formData: FormData) {
 }
 
 export async function updateWebhookSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, async (data) => {
+  await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await webhookSettingsSchema.parseAsync(data);
     const { webhookEnabled: enabled, webhookUrl } = parsed;
-    
+
     const rawUrl = data.get("webhookUrl")?.toString().trim();
     if (rawUrl && !webhookUrl) redirectSettingsError("invalid-webhook-url");
 
-    if (enabled && !webhookUrl) redirectSettingsError("missing-webhook-url");
+    if (enabled && !webhookUrl && !existing.webhookUrl) redirectSettingsError("missing-webhook-url");
 
     const set: AppSettingsUpdate = { webhookEnabled: enabled };
     if (webhookUrl) set.webhookUrl = webhookUrl;
@@ -109,18 +109,18 @@ export async function updateWebhookSettings(formData: FormData) {
 }
 
 export async function updateWecomSettings(formData: FormData) {
-  await validateAndUpsertSettings(formData, async (data) => {
+  await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await wecomSettingsSchema.parseAsync(data);
     const { wecomEnabled: enabled, wecomPushType, wecomWebhookUrl, wecomCorpId, wecomAgentId, wecomAppSecret, wecomToUser } = parsed;
 
     if (enabled) {
       if (wecomPushType === "app") {
-        if (!wecomCorpId) redirectSettingsError("missing-wecom-corp-id");
-        if (!wecomAgentId) redirectSettingsError("missing-wecom-agent-id");
-        if (!wecomAppSecret) redirectSettingsError("missing-wecom-app-secret");
+        if (!wecomCorpId && !existing.wecomCorpId) redirectSettingsError("missing-wecom-corp-id");
+        if (!wecomAgentId && !existing.wecomAgentId) redirectSettingsError("missing-wecom-agent-id");
+        if (!wecomAppSecret && !existing.wecomAppSecret) redirectSettingsError("missing-wecom-app-secret");
       } else {
         const rawUrl = data.get("wecomWebhookUrl")?.toString().trim();
-        if (!wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
+        if (!wecomWebhookUrl && !existing.wecomWebhookUrl) redirectSettingsError("missing-wecom-webhook-url");
         if (rawUrl && !wecomWebhookUrl) redirectSettingsError("invalid-wecom-webhook-url");
       }
     }
