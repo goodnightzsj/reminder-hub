@@ -11,6 +11,21 @@ import type {
 
 type GetToken = () => string | null;
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function isSyncResponse(v: unknown): v is SyncResponse {
+  if (!isRecord(v)) return false;
+  if (typeof v.serverTime !== "string") return false;
+  if (!isRecord(v.changes)) return false;
+  const { todos, anniversaries, subscriptions, items } = v.changes;
+  return Array.isArray(todos)
+    && Array.isArray(anniversaries)
+    && Array.isArray(subscriptions)
+    && Array.isArray(items);
+}
+
 export type RemoteDataStoreOptions = {
   /**
    * Called exactly once when the server returns 401 on any request. Clients
@@ -53,7 +68,7 @@ export class RemoteDataStore implements DataStore {
 
     const res = await fetch(this.url(path, init?.params), { ...init, headers });
     const text = await res.text();
-    const body = text ? (JSON.parse(text) as unknown) : {};
+    const body: unknown = text ? JSON.parse(text) : {};
 
     if (!res.ok) {
       // Skip the onUnauthorized hook for /auth/login itself — a 401 there just
@@ -64,8 +79,10 @@ export class RemoteDataStore implements DataStore {
         // Fire asynchronously so current await unwinds first.
         queueMicrotask(() => this.options.onUnauthorized?.());
       }
-      const err = body as { error?: { code?: string; message?: string } };
-      throw new RemoteApiError(res.status, err.error?.code ?? "unknown", err.error?.message ?? res.statusText);
+      const errObj = isRecord(body) && isRecord(body.error) ? body.error : null;
+      const code = typeof errObj?.code === "string" ? errObj.code : "unknown";
+      const message = typeof errObj?.message === "string" ? errObj.message : res.statusText;
+      throw new RemoteApiError(res.status, code, message);
     }
     return body as T;
   }
@@ -252,10 +269,18 @@ export class RemoteDataStore implements DataStore {
 
   /** Sync */
   async sync(request: SyncRequest): Promise<SyncResponse> {
-    return this.fetch<SyncResponse>("/api/v1/sync", {
+    const body = await this.fetch<unknown>("/api/v1/sync", {
       method: "POST",
       body: JSON.stringify(request),
     });
+    if (!isSyncResponse(body)) {
+      throw new RemoteApiError(
+        200,
+        "invalid_response",
+        "sync 响应格式不正确",
+      );
+    }
+    return body;
   }
 }
 
