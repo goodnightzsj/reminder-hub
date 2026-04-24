@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import type { DataStore, SyncEngine, TodoRecord } from "@reminder-hub/datastore";
 import type { AppConfig } from "./lib/app-config";
+import { useToast } from "./ui/Toast";
+import { DeferredSkeleton, TodoListSkeleton } from "./ui/Skeleton";
 
 type Tab = "todo" | "anniversary" | "subscription" | "item" | "settings";
 
@@ -22,18 +24,22 @@ const TABS: Array<{ id: Tab; label: string; icon: string }> = [
 
 export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProps) {
   const [tab, setTab] = useState<Tab>("todo");
-  const [syncStatus, setSyncStatus] = useState<string>("");
+  const [syncing, setSyncing] = useState(false);
+  const toast = useToast();
 
   const runSync = async () => {
     if (!syncEngine) return;
-    setSyncStatus("同步中");
+    setSyncing(true);
     const result = await syncEngine.run();
+    setSyncing(false);
     if (result.kind === "success") {
-      setSyncStatus(`上传 ${result.uploaded} · 下载 ${result.downloaded}`);
+      toast.show(
+        "success",
+        `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
+      );
     } else if (result.kind === "error") {
-      setSyncStatus(`失败: ${result.message.slice(0, 40)}`);
+      toast.show("error", `同步失败：${result.message}`);
     }
-    setTimeout(() => setSyncStatus(""), 5000);
   };
 
   return (
@@ -74,10 +80,14 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
           {syncEngine && (
             <button
               onClick={runSync}
-              className="w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+              disabled={syncing}
+              className="w-full flex items-center gap-2.5 px-3 h-9 rounded-lg text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors disabled:opacity-60"
             >
-              <Icon icon="ri:refresh-line" className="h-4 w-4 shrink-0" />
-              <span className="truncate">{syncStatus || "同步"}</span>
+              <Icon
+                icon={syncing ? "line-md:loading-twotone-loop" : "ri:refresh-line"}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="truncate">{syncing ? "同步中…" : "同步"}</span>
             </button>
           )}
           <button
@@ -126,32 +136,53 @@ function TodoPanel({ store }: { store: DataStore }) {
   const [todos, setTodos] = useState<TodoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
+  const toast = useToast();
 
   const refresh = async () => {
-    const rows = await store.listTodos();
-    setTodos(rows);
-    setLoading(false);
+    try {
+      const rows = await store.listTodos();
+      setTodos(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store]);
 
   const add = async () => {
-    if (!newTitle.trim()) return;
-    await store.createTodo({ title: newTitle.trim() });
-    setNewTitle("");
-    await refresh();
+    const title = newTitle.trim();
+    if (!title) return;
+    try {
+      await store.createTodo({ title });
+      setNewTitle("");
+      await refresh();
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const toggle = async (t: TodoRecord) => {
-    await store.updateTodo(t.id, { isDone: !t.isDone });
-    await refresh();
+    try {
+      await store.updateTodo(t.id, { isDone: !t.isDone });
+      await refresh();
+    } catch (e) {
+      toast.show("error", `更新失败：${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const remove = async (id: string) => {
-    await store.deleteTodo(id);
-    await refresh();
+    try {
+      await store.deleteTodo(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   return (
@@ -175,10 +206,9 @@ function TodoPanel({ store }: { store: DataStore }) {
 
       <div className="flex-1 scroll-area px-6 py-4">
         {loading ? (
-          <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
-            <Icon icon="line-md:loading-twotone-loop" className="h-5 w-5 mr-2" />
-            加载中
-          </div>
+          <DeferredSkeleton>
+            <TodoListSkeleton />
+          </DeferredSkeleton>
         ) : todos.length === 0 ? (
           <EmptyState icon="ri:task-line" title="暂无待办" subtitle="在上方输入框快速添加" />
         ) : (
