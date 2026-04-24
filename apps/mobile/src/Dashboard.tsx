@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
-import type { DataStore, SyncEngine, TodoRecord } from "@reminder-hub/datastore";
+import type {
+  AnniversaryRecord,
+  DataStore,
+  SyncEngine,
+  TodoRecord,
+} from "@reminder-hub/datastore";
 import type { AppConfig } from "./preferences";
 import { useToast } from "./ui/Toast";
-import { DeferredSkeleton, TodoListSkeleton } from "./ui/Skeleton";
+import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 
 type Tab = "todo" | "anniversary" | "subscription" | "item" | "settings";
 
@@ -74,7 +79,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
       {/* Scroll area */}
       <main className="flex-1 overflow-hidden">
         {tab === "todo" && <TodoScreen store={store} />}
-        {tab === "anniversary" && <Placeholder icon="ri:calendar-event-line" label="纪念日" />}
+        {tab === "anniversary" && <AnniversaryScreen store={store} />}
         {tab === "subscription" && <Placeholder icon="ri:bank-card-line" label="订阅" />}
         {tab === "item" && <Placeholder icon="ri:box-3-line" label="物品" />}
         {tab === "settings" && <SettingsScreen config={config} onLogout={onLogout} />}
@@ -357,5 +362,222 @@ function InfoRow({
       </div>
       <span className={`text-sm font-medium truncate ml-3 ${valueColor}`}>{value}</span>
     </div>
+  );
+}
+
+// --- Anniversary screen --------------------------------------------------
+
+type Countdown =
+  | { kind: "today"; label: string }
+  | { kind: "upcoming"; days: number; label: string }
+  | { kind: "past"; days: number; label: string };
+
+function getNextAnniversary(dateStr: string, now = new Date()): Countdown {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return { kind: "past", days: 0, label: "日期无效" };
+  const month = Number(m[2]) - 1;
+  const day = Number(m[3]);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let next = new Date(now.getFullYear(), month, day);
+  if (next < today) next = new Date(now.getFullYear() + 1, month, day);
+  const msPerDay = 86_400_000;
+  const diffDays = Math.round((next.getTime() - today.getTime()) / msPerDay);
+  if (diffDays === 0) return { kind: "today", label: "就是今天！" };
+  return { kind: "upcoming", days: diffDays, label: `还有 ${diffDays} 天` };
+}
+
+function AnniversaryScreen({ store }: { store: DataStore }) {
+  const [items, setItems] = useState<AnniversaryRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const toast = useToast();
+
+  const refresh = async () => {
+    try {
+      const rows = await store.listAnniversaries();
+      rows.sort((a, b) => {
+        const da = getNextAnniversary(a.date);
+        const db = getNextAnniversary(b.date);
+        const aDays = da.kind === "today" ? 0 : da.kind === "upcoming" ? da.days : 9999;
+        const bDays = db.kind === "today" ? 0 : db.kind === "upcoming" ? db.days : 9999;
+        return aDays - bDays;
+      });
+      setItems(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const add = async () => {
+    const t = title.trim();
+    if (!t) {
+      toast.show("error", "请填写标题");
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      toast.show("error", "请选择日期");
+      return;
+    }
+    try {
+      await store.createAnniversary({ title: t, date });
+      setTitle("");
+      setDate("");
+      setAdding(false);
+      await refresh();
+      toast.show("success", "已添加");
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await store.deleteAnniversary(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col relative">
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {loading ? (
+          <DeferredSkeleton>
+            <AnniversaryListSkeleton />
+          </DeferredSkeleton>
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon="ri:calendar-event-line"
+            title="暂无纪念日"
+            subtitle="添加生日、周年，每年自动倒计时"
+          />
+        ) : (
+          <ul className="space-y-2">
+            {items.map((a) => {
+              const cd = getNextAnniversary(a.date);
+              const badgeClass =
+                cd.kind === "today"
+                  ? "bg-brand-primary text-white"
+                  : cd.kind === "upcoming" && cd.days <= 7
+                  ? "bg-brand-primary/15 text-brand-primary"
+                  : "bg-muted text-muted-foreground";
+              return (
+                <li
+                  key={a.id}
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border animate-fade-in"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 flex items-center justify-center shrink-0">
+                    <Icon icon="ri:calendar-event-line" className="h-5 w-5 text-brand-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{a.title}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{a.date}</div>
+                  </div>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
+                    {cd.label}
+                  </span>
+                  <button
+                    onClick={() => remove(a.id)}
+                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
+                  >
+                    <Icon icon="ri:close-line" className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* Bottom-sheet add overlay */}
+      {adding && (
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => {
+            setAdding(false);
+            setTitle("");
+            setDate("");
+          }}
+        >
+          <div
+            className="absolute left-0 right-0 bottom-0 pb-safe animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="m-3 p-3 rounded-2xl bg-card border border-border shadow-2xl">
+              <input
+                autoFocus
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="纪念日标题…"
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none mb-2"
+              />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-11 w-full rounded-xl bg-muted px-4 text-sm outline-none mb-2"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setAdding(false);
+                    setTitle("");
+                    setDate("");
+                  }}
+                  className="tap-scale flex-1 h-10 rounded-xl border border-border text-sm"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={add}
+                  disabled={!title.trim() || !date}
+                  className="tap-scale flex-1 h-10 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium disabled:opacity-50"
+                >
+                  添加
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setAdding(true)}
+        className="tap-scale absolute right-4 bottom-4 h-14 w-14 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary text-white shadow-xl shadow-brand-primary/40 flex items-center justify-center"
+      >
+        <Icon icon="ri:add-line" className="h-6 w-6" />
+      </button>
+    </div>
+  );
+}
+
+function AnniversaryListSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <ul className="space-y-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <li
+          key={i}
+          className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border"
+        >
+          <Skeleton className="h-10 w-10 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4" style={{ maxWidth: `${45 + ((i * 13) % 30)}%` }} />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </li>
+      ))}
+    </ul>
   );
 }
