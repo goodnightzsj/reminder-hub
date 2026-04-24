@@ -12,7 +12,7 @@ type BadgeProps = {
 };
 
 export function Badge({ children, variant = "default", className = "", style }: BadgeProps) {
-    const base = "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-default";
+    const base = "inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-default whitespace-nowrap max-w-full";
 
     const variants: Record<BadgeVariant, string> = {
         // Default: Neutral styled (used for categories, tags, etc.)

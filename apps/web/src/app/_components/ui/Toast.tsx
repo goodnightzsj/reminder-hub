@@ -190,8 +190,8 @@ function ToastContainer({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss:
                                 >
                                     {icon}
                                 </div>
-                                <div className="flex-1 pt-0.5">
-                                    <p className="text-sm font-medium leading-tight">{t.message}</p>
+                                <div className="min-w-0 flex-1 pt-0.5">
+                                    <p className="text-sm font-medium leading-tight line-clamp-3 break-words">{t.message}</p>
                                 </div>
                             </motion.div>
                         );

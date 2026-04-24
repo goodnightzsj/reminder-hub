@@ -40,7 +40,7 @@ export function NotificationChannelCard({
     return (
         <div className="group relative flex items-center justify-between gap-4 rounded-xl border border-default bg-elevated p-4 shadow-sm transition-all duration-200 hover:border-brand-primary/30 hover:shadow-md hover:shadow-brand-primary/5">
             {/* 左侧：图标 + 名称 + 状态 */}
-            <div className="flex items-center gap-3">
+            <div className="min-w-0 flex items-center gap-3">
                 {/* 品牌图标 */}
                 <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface"
@@ -60,8 +60,8 @@ export function NotificationChannelCard({
                 </div>
 
                 {/* 名称 + 状态 */}
-                <div className="flex flex-col">
-                    <span className="text-sm font-medium text-primary">{name}</span>
+                <div className="min-w-0 flex flex-col">
+                    <span className="text-sm font-medium text-primary truncate">{name}</span>
                     <span
                         className={`text-xs ${isBound ? "text-brand-primary" : "text-muted"}`}
                     >

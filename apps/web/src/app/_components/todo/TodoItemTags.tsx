@@ -11,7 +11,7 @@ export function TodoItemTags({ todoId, tags }: TodoItemTagsProps) {
             {tags.map((t) => (
                 <span
                     key={`${todoId}:${t}`}
-                    className="inline-flex items-center rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-secondary border border-border/50"
+                    className="inline-flex items-center rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-secondary border border-border/50 max-w-[10rem] truncate"
                 >
                     #{t}
                 </span>

@@ -188,7 +188,7 @@ export function Tooltip({ content, children, delay = 0.05, side: preferredSide =
                             }}
                             className={`pointer-events-none ${translateStyles[computedSide]}`}
                         >
-                            <div className="bg-zinc-800 text-white text-[11px] font-medium px-2 py-1 rounded shadow-xl whitespace-nowrap border border-zinc-700/50">
+                            <div className="bg-zinc-800 text-white text-[11px] font-medium px-2 py-1 rounded shadow-xl max-w-[280px] break-words border border-zinc-700/50">
                                 {content}
                             </div>
                             {/* Arrow */}
