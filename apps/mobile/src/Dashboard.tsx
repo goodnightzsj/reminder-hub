@@ -239,8 +239,55 @@ function TodoScreen({ store }: { store: DataStore }) {
     }
   };
 
+  const doneCount = todos.filter((t) => t.isDone).length;
+  const [clearArmed, setClearArmed] = useState(false);
+  const clearTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
+  }, []);
+
+  const clearCompleted = async () => {
+    if (!clearArmed) {
+      setClearArmed(true);
+      clearTimerRef.current = window.setTimeout(() => setClearArmed(false), 3000);
+      return;
+    }
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
+    setClearArmed(false);
+    const completed = todos.filter((t) => t.isDone);
+    let ok = 0;
+    for (const t of completed) {
+      try {
+        await store.deleteTodo(t.id);
+        ok++;
+      } catch {
+        // partial success is fine
+      }
+    }
+    invalidateOverviewCache();
+    await refresh();
+    toast.show(
+      ok === completed.length ? "success" : "error",
+      `已清除 ${ok}/${completed.length} 条已完成待办`,
+    );
+  };
+
   return (
     <div className="h-full flex flex-col relative">
+      {doneCount > 0 && (
+        <div className="px-4 pt-3">
+          <button
+            onClick={clearCompleted}
+            className={`tap-scale w-full h-10 rounded-xl text-xs font-medium transition-all ${
+              clearArmed
+                ? "bg-danger text-white"
+                : "border border-border text-muted-foreground"
+            }`}
+          >
+            {clearArmed ? `确认清除 ${doneCount} 条` : `清除已完成 (${doneCount})`}
+          </button>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <DeferredSkeleton>

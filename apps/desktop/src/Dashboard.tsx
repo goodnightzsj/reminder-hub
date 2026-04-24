@@ -271,22 +271,69 @@ function TodoPanel({ store }: { store: DataStore }) {
     }
   };
 
+  const doneCount = todos.filter((t) => t.isDone).length;
+  const [clearArmed, setClearArmed] = useState(false);
+  const clearTimerRef = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
+  }, []);
+
+  const clearCompleted = async () => {
+    if (!clearArmed) {
+      setClearArmed(true);
+      clearTimerRef.current = window.setTimeout(() => setClearArmed(false), 3000);
+      return;
+    }
+    if (clearTimerRef.current !== null) window.clearTimeout(clearTimerRef.current);
+    setClearArmed(false);
+    const completed = todos.filter((t) => t.isDone);
+    let ok = 0;
+    for (const t of completed) {
+      try {
+        await store.deleteTodo(t.id);
+        ok++;
+      } catch {
+        // partial success is fine; keep going
+      }
+    }
+    invalidateOverviewCache();
+    await refresh();
+    toast.show(
+      ok === completed.length ? "success" : "error",
+      `已清除 ${ok}/${completed.length} 条已完成待办`,
+    );
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Quick add */}
       <div className={`px-6 pt-4 pb-3 border-b border-border/40 transition-shadow ${scrolled ? "shadow-sm" : ""}`}>
-        <div className="relative max-w-xl">
-          <Icon
-            icon="ri:add-line"
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
-          />
-          <input
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && add()}
-            placeholder="快速添加待办… (Enter 确认)"
-            className="h-11 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm outline-none"
-          />
+        <div className="flex items-center gap-3 max-w-3xl">
+          <div className="relative flex-1 max-w-xl">
+            <Icon
+              icon="ri:add-line"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
+            />
+            <input
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && add()}
+              placeholder="快速添加待办… (Enter 确认)"
+              className="h-11 w-full rounded-xl border border-border bg-card pl-11 pr-4 text-sm outline-none"
+            />
+          </div>
+          {doneCount > 0 && (
+            <button
+              onClick={clearCompleted}
+              className={`shrink-0 h-11 px-4 rounded-xl text-sm font-medium transition-all ${
+                clearArmed
+                  ? "bg-danger text-white shadow-sm"
+                  : "border border-border text-muted-foreground hover:text-danger hover:border-danger/40"
+              }`}
+            >
+              {clearArmed ? `确认清除 ${doneCount} 条` : `清除已完成 (${doneCount})`}
+            </button>
+          )}
         </div>
       </div>
 
