@@ -157,7 +157,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
           </h1>
         </header>
 
-        <div className="flex-1 overflow-hidden">
+        <div key={tab} className="flex-1 overflow-hidden animate-fade-in">
           {tab === "overview" && <OverviewPanel store={store} onNavigate={setTab} />}
           {tab === "todo" && <TodoPanel store={store} />}
           {tab === "anniversary" && <AnniversaryPanel store={store} />}

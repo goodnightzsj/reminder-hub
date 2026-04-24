@@ -100,8 +100,10 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         </div>
       </header>
 
-      {/* Scroll area */}
-      <main className="flex-1 overflow-hidden">
+      {/* Scroll area — keyed on `tab` so React re-mounts the panel on switch
+          and its `animate-fade-in` re-runs, giving a gentle crossfade instead
+          of an abrupt swap. */}
+      <main key={tab} className="flex-1 overflow-hidden animate-fade-in">
         {tab === "overview" && <OverviewScreen store={store} onNavigate={setTab} />}
         {tab === "todo" && <TodoScreen store={store} />}
         {tab === "anniversary" && <AnniversaryScreen store={store} />}
