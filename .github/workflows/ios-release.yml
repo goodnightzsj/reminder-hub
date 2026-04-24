@@ -1,0 +1,190 @@
+name: iOS Release (Capacitor)
+
+# Builds the Capacitor iOS app. Requires an Apple Developer account and
+# several Apple-specific secrets.
+#
+# Triggers:
+# - Tag starting with "ios-v*" triggers a full signed release build
+# - workflow_dispatch can test the build pipeline (produces an unsigned archive)
+#
+# Required secrets for signed builds:
+#   IOS_P12_BASE64                Base64-encoded developer .p12 distribution certificate
+#   IOS_P12_PASSWORD              Password for the .p12 file
+#   IOS_PROVISIONING_PROFILE_BASE64  Base64-encoded .mobileprovision file
+#   IOS_PROVISIONING_PROFILE_NAME    The profile's name (as shown in Apple Developer Portal)
+#   APPLE_TEAM_ID                 10-char Apple Developer team ID
+#   APPLE_ID                      Apple ID email (for notarization/upload)
+#   APPLE_APP_SPECIFIC_PASSWORD   App-specific password generated at appleid.apple.com
+#   IOS_KEYCHAIN_PASSWORD         Any random string used to unlock the temp keychain
+#
+# Bundle ID defaults to com.reminder-hub.mobile; change in apps/mobile/capacitor.config.ts
+# if you use a different one in Apple Developer Portal.
+
+on:
+  push:
+    tags:
+      - "ios-v*"
+  workflow_dispatch:
+
+concurrency:
+  group: ios-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: apps/mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "16.0"
+
+      - name: Install Ruby & CocoaPods
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: false
+      - run: gem install cocoapods
+
+      - name: Install JavaScript dependencies
+        run: npm install
+
+      - name: Build web bundle
+        run: npm run build
+
+      - name: Add iOS platform (first run)
+        run: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Install CocoaPods deps
+        run: |
+          cd ios/App
+          pod install --repo-update
+
+      # -----------  UNSIGNED TEST BUILD  -----------
+      - name: Xcode archive (unsigned, dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO \
+            archive -archivePath build/App.xcarchive | tee xcodebuild.log
+
+      - name: Upload unsigned archive
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-archive
+          path: apps/mobile/ios/App/build/App.xcarchive
+          retention-days: 14
+
+      # -----------  SIGNED RELEASE BUILD (tag)  -----------
+      - name: Import signing certificate
+        if: github.ref_type == 'tag'
+        env:
+          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH=$RUNNER_TEMP/cert.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo "$IOS_P12_BASE64" | base64 -d > "$CERT_PATH"
+
+          security create-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$IOS_KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          security import "$CERT_PATH" -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+      - name: Install provisioning profile
+        if: github.ref_type == 'tag'
+        env:
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -d \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Build signed .ipa
+        if: github.ref_type == 'tag'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          IOS_PROVISIONING_PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+        run: |
+          cd ios/App
+
+          # Generate ExportOptions.plist
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.reminder-hub.mobile</key>
+              <string>${IOS_PROVISIONING_PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/App.xcarchive \
+            archive
+
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload signed .ipa
+        if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: apps/mobile/ios/App/build/ipa/*.ipa
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/mobile/ios/App/build/ipa/*.ipa
+          draft: true
+          prerelease: false
+          name: "Reminder Hub iOS ${{ github.ref_name }}"
+          body: |
+            iOS build. Upload via Transporter or `xcrun altool` to App Store Connect.

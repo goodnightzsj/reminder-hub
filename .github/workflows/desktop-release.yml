@@ -1,0 +1,124 @@
+name: Desktop Release (Tauri)
+
+# Builds Tauri desktop packages for Windows, macOS (Intel + Apple Silicon) and Linux.
+#
+# Triggers:
+# - Tag starting with "desktop-v*" creates a GitHub Release with all installers attached
+# - workflow_dispatch can be used to test the build without releasing
+#
+# Required secrets: NONE for unsigned builds. Code-signing is optional and adds:
+#   - macOS: APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+#   - Windows: WINDOWS_CERTIFICATE (base64 .pfx), WINDOWS_CERTIFICATE_PASSWORD
+#   - Tauri updater: TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+
+on:
+  push:
+    tags:
+      - "desktop-v*"
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target aarch64-apple-darwin
+            label: mac-arm64
+          - platform: macos-latest
+            args: --target x86_64-apple-darwin
+            label: mac-x64
+          - platform: ubuntu-22.04
+            args: ""
+            label: linux-x64
+          - platform: windows-latest
+            args: ""
+            label: win-x64
+
+    runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        working-directory: apps/desktop
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./apps/desktop/src-tauri -> target"
+
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libayatana-appindicator3-dev
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional signing keys (leave unset for unsigned builds)
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          releaseName: "Reminder Hub Desktop ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}"
+          releaseBody: |
+            Reminder Hub desktop installers.
+
+            Download the one matching your platform:
+            - **Windows**: `.msi` (recommended) or `.exe`
+            - **macOS**: `.dmg` (arm64 for Apple Silicon, x64 for Intel)
+            - **Linux**: `.AppImage` (universal) or `.deb` (Debian/Ubuntu)
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Upload artifacts (when no tag)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.label }}
+          path: |
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.dmg
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.app
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.msi
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.exe
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.AppImage
+            apps/desktop/src-tauri/target/**/release/bundle/**/*.deb
+          if-no-files-found: warn
+          retention-days: 14

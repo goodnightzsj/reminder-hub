@@ -225,8 +225,9 @@ npm run mobile:ios       # 在 iOS 设备/模拟器运行（仅 macOS）
 ```
 
 更多说明：
-- `apps/desktop/README.md` — Tauri 桌面端开发与打包
-- `apps/mobile/README.md` — Capacitor 移动端开发与打包
+- `BUILDING.md` — 所有端的 GitHub Actions 自动打包流程（桌面 / Android / iOS）
+- `apps/desktop/README.md` — Tauri 桌面端本地开发与手动打包
+- `apps/mobile/README.md` — Capacitor 移动端本地开发与手动打包
 
 ## 质量检查
 
