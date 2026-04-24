@@ -65,7 +65,7 @@ npm run ios:build
 然后在 Xcode 里打开 `ios/App/App.xcworkspace` → Product → Archive → 上传到 App Store Connect。
 
 需要 Apple Developer 账号 ($99/年)，以及：
-- Bundle ID 注册（`com.reminder-hub.mobile`）
+- Bundle ID 注册（`com.reminderhub.mobile`）
 - Provisioning Profile
 
 ## 推送通知设置

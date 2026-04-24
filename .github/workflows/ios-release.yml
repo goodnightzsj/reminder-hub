@@ -131,7 +131,7 @@ jobs:
             <string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.reminder-hub.mobile</key>
+              <key>com.reminderhub.mobile</key>
               <string>${IOS_PROVISIONING_PROFILE_NAME}</string>
             </dict>
           </dict>

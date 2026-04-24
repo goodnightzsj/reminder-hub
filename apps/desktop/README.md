@@ -41,7 +41,7 @@ npm run desktop:build
 
 首次启动在"设置"面板选择：
 
-- **本地优先（推荐）**：数据存在 `~/Library/Application Support/com.reminder-hub.desktop/reminder-hub.db`（macOS 路径，其他平台类似的 app data 目录）；可选填入服务器地址+密码，启用后后台同步到云端
+- **本地优先（推荐）**：数据存在 `~/Library/Application Support/com.reminderhub.desktop/reminder-hub.db`（macOS 路径，其他平台类似的 app data 目录）；可选填入服务器地址+密码，启用后后台同步到云端
 - **纯云端**：所有读写走 `{服务器地址}/api/v1/*`，离线不可用
 
 服务器地址示例：`https://reminder.9962510.xyz`。密码即 Web 端的管理密码。

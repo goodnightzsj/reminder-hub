@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.reminder-hub.mobile",
+  appId: "com.reminderhub.mobile",
   appName: "Reminder Hub",
   webDir: "dist",
   server: {

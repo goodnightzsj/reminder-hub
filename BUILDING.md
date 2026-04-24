@@ -142,7 +142,7 @@ git push origin android-v0.1.0
 ### 准备工作
 
 1. **在 Apple Developer Portal**：
-   - 注册 Bundle ID：`com.reminder-hub.mobile`（或你自己的）
+   - 注册 Bundle ID：`com.reminderhub.mobile`（或你自己的）
    - 创建 Distribution Certificate → 下载为 `.p12`
    - 创建 App Store Provisioning Profile → 下载 `.mobileprovision`
 
