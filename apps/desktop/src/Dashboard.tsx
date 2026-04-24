@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import type {
   AnniversaryRecord,
@@ -57,7 +57,16 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
   const [tab, setTab] = useState<Tab>("overview");
   const [syncing, setSyncing] = useState(false);
   const [justSynced, setJustSynced] = useState(false);
+  const justSyncedTimer = useRef<number | null>(null);
   const toast = useToast();
+
+  useEffect(() => {
+    return () => {
+      if (justSyncedTimer.current !== null) {
+        window.clearTimeout(justSyncedTimer.current);
+      }
+    };
+  }, []);
 
   const runSync = async () => {
     if (!syncEngine) return;
@@ -68,7 +77,13 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
       // Sync may have pulled new rows — force the next overview mount to refetch.
       invalidateOverviewCache();
       setJustSynced(true);
-      setTimeout(() => setJustSynced(false), 900);
+      if (justSyncedTimer.current !== null) {
+        window.clearTimeout(justSyncedTimer.current);
+      }
+      justSyncedTimer.current = window.setTimeout(() => {
+        setJustSynced(false);
+        justSyncedTimer.current = null;
+      }, 900);
       toast.show(
         "success",
         `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
