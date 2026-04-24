@@ -145,7 +145,7 @@ export function AnniversaryCreateForm({
                 </AdvancedOptions>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-4">
                 <button
                     type="submit"
                     className={`h-11 rounded-lg px-8 text-sm font-medium shadow-sm transition-all active:scale-95 flex items-center justify-center min-w-[8rem] ${isSuccess

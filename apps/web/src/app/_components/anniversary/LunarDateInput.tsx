@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Select } from "@/app/_components/ui/Select";
-import { hasLeapMonth } from "@/lib/lunar-utils";
+import { hasLeapMonth, lunarToSolar } from "@/lib/lunar-utils";
 
 type LunarDateInputProps = {
     defaultLunarMonth?: number;
@@ -30,13 +30,13 @@ const LUNAR_DAY_LABELS: string[] = (() => {
     return out;
 })();
 
-// 每月最大日：农历大月 30，小月 29；这里宽松给 30，让服务端兜底校验。
 const MAX_LUNAR_DAY = 30;
 
-/**
- * 纯农历日期选择器：仅依赖 农历月/日/闰月 ，与公历年份解耦
- * 提交字段：lunarMonth / lunarDay / isLeapMonth
- */
+function formatSolarPreview(ymd: string): string {
+    const [y, m, d] = ymd.split("-");
+    return `${y}年${Number(m)}月${Number(d)}日`;
+}
+
 export function LunarDateInput({
     defaultLunarMonth,
     defaultLunarDay,
@@ -47,60 +47,81 @@ export function LunarDateInput({
     const [day, setDay] = useState<number>(defaultLunarDay ?? 1);
     const [isLeap, setIsLeap] = useState<boolean>(Boolean(defaultIsLeapMonth));
 
-    // 任意公历年份内某个农历月是否可能出现闰月（跨全年检测）
     const leapAvailable = useMemo(() => {
-        // lunar-javascript 的闰月判断依赖历年数据；这里简单暴露开关，
-        // 由服务端最终校验（lunarToSolar 失败则回退提示）。
         const current = new Date().getFullYear();
         for (let y = current - 2; y <= current + 2; y++) {
             if (hasLeapMonth(y, month)) return true;
         }
-        return true; // 始终允许勾选；若该年份不存在闰月，服务端校验会给出错误
+        return true;
     }, [month]);
 
+    const solarPreview = useMemo(() => {
+        const now = new Date();
+        const thisYear = now.getFullYear();
+        const results: { year: number; solar: string }[] = [];
+        for (const y of [thisYear, thisYear + 1]) {
+            const s = lunarToSolar(y, month, day, isLeap);
+            if (s) results.push({ year: y, solar: s });
+        }
+        return results;
+    }, [month, day, isLeap]);
+
     return (
-        <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-            <Select
-                name="lunarMonth"
-                value={String(month)}
-                onChange={(e) => setMonth(Number(e.target.value))}
-                className="h-10 w-[110px] bg-base/50"
-            >
-                {LUNAR_MONTH_LABELS.map((label, idx) => (
-                    <option key={label} value={String(idx + 1)}>
-                        {label}（{idx + 1}月）
-                    </option>
-                ))}
-            </Select>
+        <div className={className}>
+            <div className="flex flex-wrap items-center gap-2">
+                <Select
+                    name="lunarMonth"
+                    value={String(month)}
+                    onChange={(e) => setMonth(Number(e.target.value))}
+                    className="h-10 w-[110px] bg-base/50"
+                >
+                    {LUNAR_MONTH_LABELS.map((label, idx) => (
+                        <option key={label} value={String(idx + 1)}>
+                            {label}（{idx + 1}月）
+                        </option>
+                    ))}
+                </Select>
 
-            <Select
-                name="lunarDay"
-                value={String(day)}
-                onChange={(e) => setDay(Number(e.target.value))}
-                className="h-10 w-[110px] bg-base/50"
-            >
-                {Array.from({ length: MAX_LUNAR_DAY }, (_, i) => i + 1).map((d) => (
-                    <option key={d} value={String(d)}>
-                        {LUNAR_DAY_LABELS[d - 1]}（{d}日）
-                    </option>
-                ))}
-            </Select>
+                <Select
+                    name="lunarDay"
+                    value={String(day)}
+                    onChange={(e) => setDay(Number(e.target.value))}
+                    className="h-10 w-[110px] bg-base/50"
+                >
+                    {Array.from({ length: MAX_LUNAR_DAY }, (_, i) => i + 1).map((d) => (
+                        <option key={d} value={String(d)}>
+                            {LUNAR_DAY_LABELS[d - 1]}（{d}日）
+                        </option>
+                    ))}
+                </Select>
 
-            <label
-                className={`inline-flex items-center gap-1.5 text-xs select-none px-2.5 h-10 rounded-lg border border-default bg-base/50 cursor-pointer transition-colors ${
-                    isLeap ? "text-brand-primary border-brand-primary/40 bg-brand-primary/5" : "text-secondary"
-                } ${leapAvailable ? "" : "opacity-60"}`}
-                title="仅在该农历月存在闰月时生效"
-            >
-                <input
-                    type="checkbox"
-                    name="isLeapMonth"
-                    value="1"
-                    checked={isLeap}
-                    onChange={(e) => setIsLeap(e.target.checked)}
-                />
-                闰月
-            </label>
+                <label
+                    className={`inline-flex items-center gap-1.5 text-xs select-none px-2.5 h-10 rounded-lg border border-default bg-base/50 cursor-pointer transition-colors ${
+                        isLeap ? "text-brand-primary border-brand-primary/40 bg-brand-primary/5" : "text-secondary"
+                    } ${leapAvailable ? "" : "opacity-60"}`}
+                    title="仅在该农历月存在闰月时生效"
+                >
+                    <input
+                        type="checkbox"
+                        name="isLeapMonth"
+                        value="1"
+                        checked={isLeap}
+                        onChange={(e) => setIsLeap(e.target.checked)}
+                    />
+                    闰月
+                </label>
+            </div>
+
+            {solarPreview.length > 0 && (
+                <p className="mt-2 text-xs text-muted">
+                    对应公历：{solarPreview.map((p, i) => (
+                        <span key={p.year}>
+                            {i > 0 && "，"}
+                            {formatSolarPreview(p.solar)}
+                        </span>
+                    ))}
+                </p>
+            )}
         </div>
     );
 }

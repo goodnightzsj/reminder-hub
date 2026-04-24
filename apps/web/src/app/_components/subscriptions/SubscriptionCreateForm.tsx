@@ -209,7 +209,7 @@ export function SubscriptionCreateForm({
                 </AdvancedOptions>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-4">
                 <button
                     ref={submitButtonRef}
                     type="submit"

@@ -63,7 +63,7 @@ export function CreateModal({ children, title }: CreateModalProps) {
                             dragConstraints={{ top: 0, bottom: 0 }}
                             dragElastic={{ top: 0, bottom: 0.5 }}
                             onDragEnd={handleDragEnd}
-                            className="relative w-full max-w-lg bg-base sm:rounded-2xl rounded-t-2xl shadow-2xl border border-default flex flex-col max-h-[90dvh]"
+                            className="relative w-full max-w-lg bg-base sm:rounded-2xl rounded-t-2xl shadow-2xl border border-default flex flex-col max-h-[94dvh] sm:max-h-[90dvh]"
                         >
                             {/* Grab bar + header：整块作为拖拽握把 */}
                             <div
@@ -88,8 +88,9 @@ export function CreateModal({ children, title }: CreateModalProps) {
                             </div>
 
                             {/* Scrollable Content — 安全区留底避免被 Home Indicator 遮挡 */}
-                            <div className="flex-1 overflow-y-auto p-4 pb-safe overscroll-contain">
+                            <div className="flex-1 overflow-y-auto px-4 pt-4 pb-8 overscroll-contain">
                                 {children}
+                                <div className="pb-safe" aria-hidden="true" />
                             </div>
                         </motion.div>
                     </div>
