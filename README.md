@@ -52,6 +52,14 @@
 - `/review/[year]` 年度独立回顾页
 - 年度概览、完成统计、分类汇总、完成详情、清单预览
 
+### 7. 访问密码保护
+
+- 首次启动自动生成 32 位随机管理密码（写入数据库并打印到日志）
+- 支持通过 `ADMIN_PASSWORD` 环境变量预设初始密码
+- 设置密码后，所有页面与备份导出 API 都需要登录才能访问
+- 进入 设置 → 访问密码 可随时修改或移除密码、退出登录
+- 会话使用 HttpOnly + SameSite=Lax Cookie，修改密码会立刻失效所有旧会话
+
 ## 技术栈
 
 - Framework: [Next.js 16](https://nextjs.org/) + App Router
@@ -80,8 +88,11 @@ cp apps/web/.env.example apps/web/.env
 DATABASE_FILE_PATH=./data/app.db
 DATABASE_URL=file:./data/app.db
 NOTIFY_CRON_SECRET=
+ADMIN_PASSWORD=
 SKIP_DB_MIGRATIONS=0
 ```
+
+- `ADMIN_PASSWORD`：可选。首次启动且数据库尚未存在密码时使用该值作为管理密码；留空则自动生成 32 位随机密码并打印到启动日志。已存在的密码永远不会被环境变量覆盖。
 
 ### 3. 初始化数据库
 
@@ -122,18 +133,60 @@ docker compose up -d --build
 
 ### 方式 B：docker run
 
+**最小启动（自动生成随机管理密码）：**
+
 ```bash
-docker build -t todo-list:latest ./apps/web
-docker volume create todo_list_data
-docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data todo-list:latest
+docker run -d \
+  --name reminder-hub \
+  --restart always \
+  -p 3088:3000 \
+  -v /mnt/usb1-1/reminder-hub/data:/app/data \
+  -e TZ=Asia/Shanghai \
+  helloworldz1024/reminder-hub:latest
 ```
 
-如果直接使用 GitHub Actions 产出的镜像，也可以：
+启动后查看自动生成的管理密码：
 
 ```bash
-docker pull <你的 Docker Hub 用户名>/<镜像名>:latest
-docker volume create todo_list_data
-docker run -d --name todo-list --restart unless-stopped -p 3000:3000 -v todo_list_data:/app/data <你的 Docker Hub 用户名>/<镜像名>:latest
+docker logs reminder-hub 2>&1 | grep -A 1 "已自动生成管理密码"
+```
+
+**推荐：预设初始密码 + 完整环境变量：**
+
+```bash
+docker run -d \
+  --name reminder-hub \
+  --restart always \
+  -p 3088:3000 \
+  -v /mnt/usb1-1/reminder-hub/data:/app/data \
+  -e TZ=Asia/Shanghai \
+  -e ADMIN_PASSWORD='your-strong-password-here' \
+  -e NOTIFY_CRON_SECRET='optional-cron-bearer-token' \
+  helloworldz1024/reminder-hub:latest
+```
+
+环境变量说明：
+
+| 变量 | 必填 | 说明 |
+| --- | --- | --- |
+| `TZ` | 推荐 | 容器时区，影响通知提醒的本地时间判断。建议 `Asia/Shanghai` |
+| `ADMIN_PASSWORD` | 可选 | 首次启动时的初始管理密码；留空则自动生成并打印到日志；已存在的密码不会被覆盖 |
+| `NOTIFY_CRON_SECRET` | 可选 | 给 `/api/cron/*` 端点加 Bearer 认证，防止被外部调用 |
+| `DATABASE_FILE_PATH` | 可选 | SQLite 文件路径，容器内默认 `/app/data/app.db`，配合 `-v /host/path:/app/data` 持久化即可 |
+| `SKIP_DB_MIGRATIONS` | 可选 | 设为 `1` 跳过启动时自动迁移（需手动执行 `drizzle-kit migrate`） |
+
+后续修改密码请在 应用内 设置 → 访问密码 中操作。重启容器不会重置已有密码；只有清空数据卷后，`ADMIN_PASSWORD` 才会在下次启动时生效。
+
+**本地构建镜像：**
+
+```bash
+docker build -t reminder-hub:latest ./apps/web
+docker volume create reminder_hub_data
+docker run -d --name reminder-hub --restart unless-stopped \
+  -p 3000:3000 \
+  -v reminder_hub_data:/app/data \
+  -e TZ=Asia/Shanghai \
+  reminder-hub:latest
 ```
 
 更完整说明见 `llmdoc/guides/how-to-deploy-with-docker.md`。

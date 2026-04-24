@@ -35,6 +35,13 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        {/* 同步设置 data-theme，避免首屏先渲染默认主题色、再切换到用户选择的主题色。
+            必须在 body 渲染前运行，且比 useEffect 早 ~100ms 级别。 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('color-theme');var v=['ocean-blue','emerald','notion-gray','todoist-zeus','ticktick-teal','fintech-gold','peach-fuzz','aurora'];if(v.indexOf(t)===-1)t='ocean-blue';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','ocean-blue');}})();`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* Body: Geist（干净、非 Inter）；Display: Space Grotesk（几何感，个性化）。
