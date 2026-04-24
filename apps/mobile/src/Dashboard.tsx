@@ -14,6 +14,7 @@ import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
 import { applyBackup, buildBackup, downloadBackup, parseBackup } from "./lib/backup";
+import { matchQuery } from "./lib/search";
 
 /** Overview cache: render-instantly snapshot + mutation invalidation. */
 type OverviewSnapshot = {
@@ -186,7 +187,9 @@ function TodoScreen({ store }: { store: DataStore }) {
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
   const [adding, setAdding] = useState(false);
+  const [q, setQ] = useState("");
   const toast = useToast();
+  const visibleTodos = todos.filter((t) => matchQuery(t.title, q) || matchQuery(t.description, q));
 
   const refresh = async () => {
     try {
@@ -288,6 +291,26 @@ function TodoScreen({ store }: { store: DataStore }) {
           </button>
         </div>
       )}
+      {todos.length > 0 && (
+        <div className="px-4 pt-2">
+          <div className="relative">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索待办…"
+              className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm outline-none"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <DeferredSkeleton>
@@ -299,9 +322,11 @@ function TodoScreen({ store }: { store: DataStore }) {
             title="暂无待办"
             subtitle="点击右下角 + 快速添加"
           />
+        ) : visibleTodos.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有待办匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2">
-            {todos.map((t) => (
+            {visibleTodos.map((t) => (
               <li
                 key={t.id}
                 className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border animate-fade-in"
@@ -655,7 +680,9 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [q, setQ] = useState("");
   const toast = useToast();
+  const visibleItems = items.filter((a) => matchQuery(a.title, q) || matchQuery(a.category, q));
 
   const refresh = async () => {
     try {
@@ -716,6 +743,26 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
 
   return (
     <div className="h-full flex flex-col relative">
+      {items.length > 0 && (
+        <div className="px-4 pt-3">
+          <div className="relative">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索纪念日…"
+              className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm outline-none"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <DeferredSkeleton>
@@ -727,9 +774,11 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
             title="暂无纪念日"
             subtitle="添加生日、周年，每年自动倒计时"
           />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有纪念日匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2">
-            {items.map((a) => {
+            {visibleItems.map((a) => {
               const cd = getNextAnniversary(a.date);
               const badgeClass =
                 cd.kind === "today"
@@ -883,7 +932,9 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
   const [cycleUnit, setCycleUnit] = useState<"day" | "week" | "month" | "year">("month");
   const [nextRenewDate, setNextRenewDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
+  const [q, setQ] = useState("");
   const toast = useToast();
+  const visibleItems = items.filter((s) => matchQuery(s.name, q) || matchQuery(s.description, q) || matchQuery(s.category, q));
 
   const refresh = async () => {
     try {
@@ -944,6 +995,26 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
 
   return (
     <div className="h-full flex flex-col relative">
+      {items.length > 0 && (
+        <div className="px-4 pt-3">
+          <div className="relative">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索订阅…"
+              className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm outline-none"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <DeferredSkeleton>
@@ -955,9 +1026,11 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
             title="暂无订阅"
             subtitle="记录月/年费，到期自动提醒"
           />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有订阅匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2">
-            {items.map((s) => {
+            {visibleItems.map((s) => {
               const d = subDaysUntil(s.nextRenewDate);
               const badgeClass =
                 d == null
@@ -1134,7 +1207,9 @@ function ItemScreen({ store }: { store: DataStore }) {
   const [purchasedDate, setPurchasedDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
   const [status, setStatus] = useState<"active" | "idle" | "retired">("active");
+  const [q, setQ] = useState("");
   const toast = useToast();
+  const visibleItems = items.filter((i) => matchQuery(i.name, q) || matchQuery(i.category, q));
 
   const refresh = async () => {
     try {
@@ -1214,6 +1289,26 @@ function ItemScreen({ store }: { store: DataStore }) {
 
   return (
     <div className="h-full flex flex-col relative">
+      {items.length > 0 && (
+        <div className="px-4 pt-3">
+          <div className="relative">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索物品…"
+              className="h-10 w-full rounded-xl border border-border bg-card pl-9 pr-9 text-sm outline-none"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-lg text-muted-foreground active:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <DeferredSkeleton>
@@ -1225,9 +1320,11 @@ function ItemScreen({ store }: { store: DataStore }) {
             title="暂无物品"
             subtitle="记录购入价 + 日期，看清每日成本"
           />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有物品匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2">
-            {items.map((i) => {
+            {visibleItems.map((i) => {
               const owned = itemDaysOwned(i.purchasedDate);
               const dailyCost = itemDailyCost(i.priceCents, i.purchasedDate, i.currency);
               const statusCfg = ITEM_STATUSES.find((s) => s.value === i.status) ?? ITEM_STATUSES[0];

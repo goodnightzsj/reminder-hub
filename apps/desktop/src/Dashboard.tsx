@@ -14,6 +14,7 @@ import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
 import { applyBackup, buildBackup, downloadBackup, parseBackup } from "./lib/backup";
+import { matchQuery } from "./lib/search";
 
 /**
  * Overview cache: holds the last successful 4-list snapshot per store. If a
@@ -271,6 +272,8 @@ function TodoPanel({ store }: { store: DataStore }) {
     }
   };
 
+  const [q, setQ] = useState("");
+  const visibleTodos = todos.filter((t) => matchQuery(t.title, q) || matchQuery(t.description, q));
   const doneCount = todos.filter((t) => t.isDone).length;
   const [clearArmed, setClearArmed] = useState(false);
   const clearTimerRef = useRef<number | null>(null);
@@ -335,6 +338,30 @@ function TodoPanel({ store }: { store: DataStore }) {
             </button>
           )}
         </div>
+        {todos.length > 0 && (
+          <div className="relative mt-2 max-w-xl">
+            <Icon
+              icon="ri:search-line"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索待办…"
+              className="h-9 w-full rounded-lg border border-border bg-card pl-9 pr-8 text-sm outline-none"
+            />
+            {q && (
+              <button
+                type="button"
+                onClick={() => setQ("")}
+                aria-label="清除搜索"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted/50"
+              >
+                <Icon icon="ri:close-line" className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
@@ -344,9 +371,11 @@ function TodoPanel({ store }: { store: DataStore }) {
           </DeferredSkeleton>
         ) : todos.length === 0 ? (
           <EmptyState icon="ri:task-line" title="暂无待办" subtitle="在上方输入框快速添加" />
+        ) : visibleTodos.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有待办匹配 "${q}"`} />
         ) : (
           <ul className="space-y-1.5 max-w-2xl">
-            {todos.map((t) => (
+            {visibleTodos.map((t) => (
               <li
                 key={t.id}
                 className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/50 hover:-translate-y-[1px] transition-all animate-fade-in"
@@ -629,8 +658,10 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const [q, setQ] = useState("");
   const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
+  const visibleItems = items.filter((a) => matchQuery(a.title, q) || matchQuery(a.category, q));
 
   const refresh = async () => {
     try {
@@ -721,6 +752,22 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
             </span>
           </button>
         </div>
+        {items.length > 0 && (
+          <div className="relative mt-2 max-w-xl">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索纪念日…"
+              className="h-9 w-full rounded-lg border border-border bg-card pl-9 pr-8 text-sm outline-none"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
@@ -730,9 +777,11 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
           </DeferredSkeleton>
         ) : items.length === 0 ? (
           <EmptyState icon="ri:calendar-event-line" title="暂无纪念日" subtitle="添加生日、周年等日期，每年自动提醒" />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有纪念日匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2 max-w-2xl">
-            {items.map((a) => {
+            {visibleItems.map((a) => {
               const cd = getNextAnniversary(a.date);
               const badgeClass =
                 cd.kind === "today"
@@ -830,8 +879,10 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
   const [cycleUnit, setCycleUnit] = useState<"day" | "week" | "month" | "year">("month");
   const [nextRenewDate, setNextRenewDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
+  const [q, setQ] = useState("");
   const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
+  const visibleItems = items.filter((s) => matchQuery(s.name, q) || matchQuery(s.description, q) || matchQuery(s.category, q));
 
   const refresh = async () => {
     try {
@@ -949,6 +1000,22 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
             </span>
           </button>
         </div>
+        {items.length > 0 && (
+          <div className="relative mt-2 max-w-xl">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索订阅…"
+              className="h-9 w-full rounded-lg border border-border bg-card pl-9 pr-8 text-sm outline-none"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
@@ -958,9 +1025,11 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
           </DeferredSkeleton>
         ) : items.length === 0 ? (
           <EmptyState icon="ri:bank-card-line" title="暂无订阅" subtitle="记录月/年费，到期自动提醒" />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有订阅匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2 max-w-3xl">
-            {items.map((s) => {
+            {visibleItems.map((s) => {
               const d = daysUntil(s.nextRenewDate);
               const badgeClass =
                 d == null
@@ -1058,8 +1127,10 @@ function ItemPanel({ store }: { store: DataStore }) {
   const [purchasedDate, setPurchasedDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
   const [status, setStatus] = useState<"active" | "idle" | "retired">("active");
+  const [q, setQ] = useState("");
   const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
+  const visibleItems = items.filter((i) => matchQuery(i.name, q) || matchQuery(i.category, q));
 
   const refresh = async () => {
     try {
@@ -1195,6 +1266,22 @@ function ItemPanel({ store }: { store: DataStore }) {
             </span>
           </button>
         </div>
+        {items.length > 0 && (
+          <div className="relative mt-2 max-w-xl">
+            <Icon icon="ri:search-line" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="搜索物品…"
+              className="h-9 w-full rounded-lg border border-border bg-card pl-9 pr-8 text-sm outline-none"
+            />
+            {q && (
+              <button type="button" onClick={() => setQ("")} aria-label="清除搜索" className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:bg-muted/50">
+                <Icon icon="ri:close-line" className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
@@ -1208,9 +1295,11 @@ function ItemPanel({ store }: { store: DataStore }) {
             title="暂无物品"
             subtitle="记录购入价 + 日期，看清每日成本"
           />
+        ) : visibleItems.length === 0 ? (
+          <EmptyState icon="ri:search-line" title="未找到匹配结果" subtitle={`没有物品匹配 "${q}"`} />
         ) : (
           <ul className="space-y-2 max-w-3xl">
-            {items.map((i) => {
+            {visibleItems.map((i) => {
               const owned = daysOwned(i.purchasedDate);
               const dailyCost = formatDailyCost(i.priceCents, i.purchasedDate, i.currency);
               const statusCfg = ITEM_STATUSES.find((s) => s.value === i.status) ?? ITEM_STATUSES[0];
