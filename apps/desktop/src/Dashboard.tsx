@@ -352,7 +352,9 @@ function InfoRow({
   return (
     <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-card border border-border">
       <div className="flex items-center gap-3">
-        <Icon icon={icon} className="h-4 w-4 text-muted-foreground" />
+        <div className="h-7 w-7 rounded-lg bg-brand-primary/10 flex items-center justify-center shrink-0">
+          <Icon icon={icon} className="h-4 w-4 text-brand-primary" />
+        </div>
         <span className="text-sm text-muted-foreground">{label}</span>
       </div>
       <span className={`text-sm font-medium ${valueColor}`}>{value}</span>
