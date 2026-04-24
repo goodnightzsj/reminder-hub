@@ -41,7 +41,12 @@ export function ConfirmDeleteButton({
     }
   };
 
-  const revealClass = hoverReveal && !armed ? "opacity-0 group-hover:opacity-100" : "";
+  // Hide-until-hover is a desktop affordance; on touch devices (`hover: none`
+  // pointer) the button would stay invisible and users couldn't delete anything
+  // — force visibility there so the control is reachable.
+  const revealClass = hoverReveal && !armed
+    ? "opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+    : "";
 
   return (
     <button
