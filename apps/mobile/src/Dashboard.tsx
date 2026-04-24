@@ -51,6 +51,7 @@ const TABS: Array<{ id: Tab; label: string; icon: string }> = [
 export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProps) {
   const [tab, setTab] = useState<Tab>("overview");
   const [syncing, setSyncing] = useState(false);
+  const [justSynced, setJustSynced] = useState(false);
   const toast = useToast();
 
   const runSync = async () => {
@@ -60,6 +61,8 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
     setSyncing(false);
     if (result.kind === "success") {
       invalidateOverviewCache();
+      setJustSynced(true);
+      setTimeout(() => setJustSynced(false), 900);
       toast.show(
         "success",
         `同步完成：上传 ${result.uploaded}，下载 ${result.downloaded}`,
@@ -91,10 +94,18 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
               className="tap-scale h-8 px-3 rounded-lg text-xs text-muted-foreground hover:bg-muted/50 flex items-center gap-1.5 disabled:opacity-60"
             >
               <Icon
-                icon={syncing ? "line-md:loading-twotone-loop" : "ri:refresh-line"}
-                className="h-3.5 w-3.5"
+                icon={
+                  syncing
+                    ? "line-md:loading-twotone-loop"
+                    : justSynced
+                      ? "ri:check-line"
+                      : "ri:refresh-line"
+                }
+                className={`h-3.5 w-3.5 transition-colors ${justSynced ? "text-success" : ""}`}
               />
-              {syncing ? "同步中" : "同步"}
+              <span className={`transition-colors ${justSynced ? "text-success" : ""}`}>
+                {syncing ? "同步中" : justSynced ? "已同步" : "同步"}
+              </span>
             </button>
           )}
         </div>
