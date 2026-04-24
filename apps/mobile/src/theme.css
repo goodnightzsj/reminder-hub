@@ -53,6 +53,27 @@ input, textarea {
   -webkit-user-select: text;
 }
 
+/* Focus-visible ring — keyboard users (external keyboard on iPad, etc.)
+   get a branded outline. Mobile touch never triggers :focus-visible, so
+   normal tapping stays ring-free. */
+@layer base {
+  button:focus,
+  [role="button"]:focus,
+  a:focus {
+    outline: none;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+  }
+}
+
 @utility bg-glass {
   background-color: color-mix(in srgb, var(--color-card) 72%, transparent);
   backdrop-filter: blur(18px) saturate(140%);

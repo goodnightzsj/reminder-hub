@@ -49,6 +49,28 @@ body {
   overflow: hidden;
 }
 
+/* Focus-visible ring — keyboard users get a branded outline on interactive
+   elements; mouse clicks on buttons/links stay ringless (native :focus hidden
+   specifically for those). Inputs keep their native :focus border so text
+   fields still indicate active state on click. */
+@layer base {
+  button:focus,
+  [role="button"]:focus,
+  a:focus {
+    outline: none;
+  }
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+  }
+}
+
 /* Glass card */
 @utility bg-glass {
   background-color: color-mix(in srgb, var(--color-card) 72%, transparent);
