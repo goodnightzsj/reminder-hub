@@ -4,6 +4,7 @@ import { Providers } from "./Providers";
 import { BottomNav } from "./_components/layout/BottomNav";
 import { FloatingActionButton } from "./_components/FloatingActionButton";
 import { GlobalToastListener } from "./_components/GlobalToastListener";
+import { PWARegister } from "./_components/PWARegister";
 import "./themes.css";
 import "./globals.css";
 
@@ -14,6 +15,25 @@ export const metadata: Metadata = {
   },
   applicationName: "Reminder Hub",
   description: "统一管理待办、纪念日、订阅、物品与通知摘要的个人提醒中心。",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Reminder Hub",
+    statusBarStyle: "black-translucent",
+    startupImage: [{ url: "/icons/apple-touch-icon.png" }],
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: {
+    telephone: false,
+    email: false,
+    address: false,
+  },
 };
 
 // viewport-fit=cover 是 iPhone X+ 刘海/药丸/Home Indicator 生效 env(safe-area-inset-*) 的前提
@@ -72,6 +92,7 @@ export default function RootLayout({
           </div>
           <BottomNav />
           <FloatingActionButton />
+          <PWARegister />
         </Providers>
       </body>
     </html>
