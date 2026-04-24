@@ -117,6 +117,7 @@ export function Login({ config, onSaved }: LoginProps) {
               inputMode="url"
               autoCapitalize="none"
               autoCorrect="off"
+              autoFocus={!config.remoteBaseUrl}
               className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm outline-none"
             />
           </div>
@@ -140,6 +141,7 @@ export function Login({ config, onSaved }: LoginProps) {
                 placeholder="输入密码"
                 autoCapitalize="none"
                 autoCorrect="off"
+                autoFocus={!!config.remoteBaseUrl}
                 className="h-11 w-full rounded-xl border border-border bg-card pl-10 pr-11 text-sm outline-none"
               />
               <button

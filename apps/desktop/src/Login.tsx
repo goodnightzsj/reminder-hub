@@ -124,6 +124,7 @@ export function Login({ config, onSaved }: LoginProps) {
                     value={remoteBaseUrl}
                     onChange={(e) => setRemoteBaseUrl(e.target.value)}
                     placeholder="https://reminder.example.com"
+                    autoFocus={!config.remoteBaseUrl}
                     className="h-10 w-full rounded-lg border border-border bg-transparent pl-9 pr-3 text-sm outline-none transition-colors"
                   />
                 </div>
@@ -147,6 +148,7 @@ export function Login({ config, onSaved }: LoginProps) {
                     onChange={(e) => setPassword(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && submit()}
                     placeholder="输入密码"
+                    autoFocus={!!config.remoteBaseUrl}
                     className="h-10 w-full rounded-lg border border-border bg-transparent pl-9 pr-10 text-sm outline-none transition-colors"
                   />
                   <button
