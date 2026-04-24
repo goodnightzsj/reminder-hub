@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import type {
   AnniversaryRecord,
   DataStore,
+  SubscriptionRecord,
   SyncEngine,
   TodoRecord,
 } from "@reminder-hub/datastore";
@@ -128,7 +129,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         <div className="flex-1 overflow-hidden">
           {tab === "todo" && <TodoPanel store={store} />}
           {tab === "anniversary" && <AnniversaryPanel store={store} />}
-          {tab === "subscription" && <Placeholder icon="ri:bank-card-line" label="订阅" />}
+          {tab === "subscription" && <SubscriptionPanel store={store} />}
           {tab === "item" && <Placeholder icon="ri:box-3-line" label="物品" />}
           {tab === "settings" && <SettingsPanel config={config} />}
         </div>
@@ -512,5 +513,241 @@ function AnniversaryListSkeleton({ count = 4 }: { count?: number }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+// --- Subscription panel --------------------------------------------------
+
+const CYCLE_UNITS: Array<{ value: "day" | "week" | "month" | "year"; label: string }> = [
+  { value: "day", label: "日" },
+  { value: "week", label: "周" },
+  { value: "month", label: "月" },
+  { value: "year", label: "年" },
+];
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  CNY: "¥",
+  USD: "$",
+  EUR: "€",
+  JPY: "¥",
+  GBP: "£",
+  HKD: "HK$",
+};
+
+function formatPrice(priceCents: number | null, currency: string): string {
+  if (priceCents == null) return "—";
+  const symbol = CURRENCY_SYMBOLS[currency] ?? currency;
+  return `${symbol}${(priceCents / 100).toFixed(2)}`;
+}
+
+function daysUntil(dateStr: string, now = new Date()): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
+  if (!m) return null;
+  const target = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function SubscriptionPanel({ store }: { store: DataStore }) {
+  const [items, setItems] = useState<SubscriptionRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [priceYuan, setPriceYuan] = useState("");
+  const [cycleUnit, setCycleUnit] = useState<"day" | "week" | "month" | "year">("month");
+  const [nextRenewDate, setNextRenewDate] = useState("");
+  const [currency, setCurrency] = useState("CNY");
+  const toast = useToast();
+
+  const refresh = async () => {
+    try {
+      const rows = await store.listSubscriptions();
+      rows.sort((a, b) => {
+        const da = daysUntil(a.nextRenewDate) ?? 9999;
+        const db = daysUntil(b.nextRenewDate) ?? 9999;
+        return da - db;
+      });
+      setItems(rows);
+    } catch (e) {
+      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refresh().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const add = async () => {
+    const n = name.trim();
+    if (!n) return toast.show("error", "请填写名称");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(nextRenewDate)) return toast.show("error", "请选择下次续费日");
+    const parsed = priceYuan === "" ? null : Math.round(Number(priceYuan) * 100);
+    if (parsed !== null && (!Number.isFinite(parsed) || parsed < 0)) {
+      return toast.show("error", "价格无效");
+    }
+    try {
+      await store.createSubscription({
+        name: n,
+        priceCents: parsed,
+        cycleUnit,
+        cycleInterval: 1,
+        nextRenewDate,
+        currency,
+      });
+      setName("");
+      setPriceYuan("");
+      setNextRenewDate("");
+      await refresh();
+      toast.show("success", "已添加");
+    } catch (e) {
+      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await store.deleteSubscription(id);
+      await refresh();
+      toast.show("info", "已删除");
+    } catch (e) {
+      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+        <div className="flex flex-wrap gap-2 max-w-3xl">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="订阅名称（如 Spotify、iCloud）"
+            className="h-11 flex-[2] min-w-[180px] rounded-xl border border-border bg-card px-3 text-sm outline-none"
+          />
+          <div className="flex items-center rounded-xl border border-border bg-card overflow-hidden">
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="h-11 pl-3 pr-2 text-sm outline-none bg-transparent border-r border-border cursor-pointer"
+            >
+              {Object.keys(CURRENCY_SYMBOLS).map((c) => (
+                <option key={c} value={c}>
+                  {CURRENCY_SYMBOLS[c]} {c}
+                </option>
+              ))}
+            </select>
+            <input
+              value={priceYuan}
+              onChange={(e) => setPriceYuan(e.target.value)}
+              placeholder="价格"
+              inputMode="decimal"
+              className="h-11 w-20 px-2 text-sm outline-none bg-transparent"
+            />
+          </div>
+          <select
+            value={cycleUnit}
+            onChange={(e) => setCycleUnit(e.target.value as typeof cycleUnit)}
+            className="h-11 rounded-xl border border-border bg-card px-3 text-sm outline-none cursor-pointer"
+          >
+            {CYCLE_UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                每{u.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={nextRenewDate}
+            onChange={(e) => setNextRenewDate(e.target.value)}
+            className="h-11 rounded-xl border border-border bg-card px-3 text-sm outline-none"
+          />
+          <button
+            onClick={add}
+            className="h-11 px-4 rounded-xl bg-gradient-to-b from-brand-primary to-brand-secondary text-white text-sm font-medium shadow-md shadow-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/30 transition-all active:scale-[0.97]"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Icon icon="ri:add-line" className="h-4 w-4" /> 添加
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 scroll-area px-6 py-4">
+        {loading ? (
+          <DeferredSkeleton>
+            <AnniversaryListSkeleton />
+          </DeferredSkeleton>
+        ) : items.length === 0 ? (
+          <EmptyState icon="ri:bank-card-line" title="暂无订阅" subtitle="记录月/年费，到期自动提醒" />
+        ) : (
+          <ul className="space-y-2 max-w-3xl">
+            {items.map((s) => {
+              const d = daysUntil(s.nextRenewDate);
+              const badgeClass =
+                d == null
+                  ? "bg-muted text-muted-foreground"
+                  : d < 0
+                  ? "bg-danger/15 text-danger"
+                  : d === 0
+                  ? "bg-brand-primary text-white"
+                  : d <= 7
+                  ? "bg-brand-primary/15 text-brand-primary"
+                  : "bg-muted text-muted-foreground";
+              const badgeLabel =
+                d == null
+                  ? "日期无效"
+                  : d < 0
+                  ? `已过 ${-d} 天`
+                  : d === 0
+                  ? "今天续费"
+                  : `${d} 天后`;
+              const unitLabel = CYCLE_UNITS.find((u) => u.value === s.cycleUnit)?.label ?? "月";
+              return (
+                <li
+                  key={s.id}
+                  className="group flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border hover:border-brand-primary/40 transition-colors animate-fade-in"
+                >
+                  <div
+                    className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0"
+                    style={{
+                      background: s.color
+                        ? `${s.color}22`
+                        : "linear-gradient(135deg, rgba(41,112,237,0.1), rgba(86,160,240,0.1))",
+                    }}
+                  >
+                    <Icon
+                      icon={s.icon ?? "ri:bank-card-line"}
+                      className="h-5 w-5"
+                      style={{ color: s.color ?? "var(--color-brand-primary)" }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{s.name}</div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                      <span className="font-mono">{formatPrice(s.priceCents, s.currency)}</span>
+                      <span className="opacity-60">·</span>
+                      <span>每{unitLabel}</span>
+                      <span className="opacity-60">·</span>
+                      <span>{s.nextRenewDate}</span>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass}`}>
+                    {badgeLabel}
+                  </span>
+                  <button
+                    onClick={() => remove(s.id)}
+                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
+                  >
+                    <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
   );
 }
