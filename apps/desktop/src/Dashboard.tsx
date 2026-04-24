@@ -12,7 +12,7 @@ import type { AppConfig } from "./lib/app-config";
 import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 
-type Tab = "todo" | "anniversary" | "subscription" | "item" | "settings";
+type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
 type DashboardProps = {
   config: AppConfig;
@@ -22,6 +22,7 @@ type DashboardProps = {
 };
 
 const TABS: Array<{ id: Tab; label: string; icon: string }> = [
+  { id: "overview", label: "概览", icon: "ri:layout-grid-line" },
   { id: "todo", label: "待办", icon: "ri:task-line" },
   { id: "anniversary", label: "纪念日", icon: "ri:calendar-event-line" },
   { id: "subscription", label: "订阅", icon: "ri:bank-card-line" },
@@ -30,7 +31,7 @@ const TABS: Array<{ id: Tab; label: string; icon: string }> = [
 ];
 
 export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProps) {
-  const [tab, setTab] = useState<Tab>("todo");
+  const [tab, setTab] = useState<Tab>("overview");
   const [syncing, setSyncing] = useState(false);
   const toast = useToast();
 
@@ -128,6 +129,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         </header>
 
         <div className="flex-1 overflow-hidden">
+          {tab === "overview" && <OverviewPanel store={store} onNavigate={setTab} />}
           {tab === "todo" && <TodoPanel store={store} />}
           {tab === "anniversary" && <AnniversaryPanel store={store} />}
           {tab === "subscription" && <SubscriptionPanel store={store} />}
@@ -976,6 +978,278 @@ function ItemPanel({ store }: { store: DataStore }) {
           </ul>
         )}
       </div>
+    </div>
+  );
+}
+
+// --- Overview panel -----------------------------------------------------
+
+type UpcomingEntry =
+  | { kind: "todo"; id: string; title: string; daysUntil: number; dueAt: string }
+  | { kind: "anniversary"; id: string; title: string; daysUntil: number; date: string }
+  | { kind: "subscription"; id: string; name: string; daysUntil: number; date: string; priceCents: number | null; currency: string };
+
+function OverviewPanel({
+  store,
+  onNavigate,
+}: {
+  store: DataStore;
+  onNavigate: (tab: Tab) => void;
+}) {
+  const [loading, setLoading] = useState(true);
+  const [todos, setTodos] = useState<TodoRecord[]>([]);
+  const [anniversaries, setAnniversaries] = useState<AnniversaryRecord[]>([]);
+  const [subs, setSubs] = useState<SubscriptionRecord[]>([]);
+  const [items, setItems] = useState<ItemRecord[]>([]);
+  const toast = useToast();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, a, s, i] = await Promise.all([
+          store.listTodos(),
+          store.listAnniversaries(),
+          store.listSubscriptions(),
+          store.listItems(),
+        ]);
+        setTodos(t);
+        setAnniversaries(a);
+        setSubs(s);
+        setItems(i);
+      } catch (e) {
+        toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const now = new Date();
+
+  // Stats
+  const openTodos = todos.filter((t) => !t.isDone).length;
+  const upcomingAnniversaries = anniversaries.filter((a) => {
+    const cd = getNextAnniversary(a.date, now);
+    return cd.kind === "today" || (cd.kind === "upcoming" && cd.days <= 30);
+  }).length;
+  const activeItems = items.filter((i) => i.status === "active").length;
+  // Monthly subscription cost normalized (convert yearly/weekly/daily to monthly equivalent in CNY for display).
+  // Simple heuristic: assume CNY; if not CNY show currency symbol alongside.
+  const monthlySubCost = (() => {
+    let total = 0;
+    for (const s of subs) {
+      if (s.priceCents == null) continue;
+      const perUnit = s.priceCents / Math.max(1, s.cycleInterval);
+      let monthly = perUnit;
+      if (s.cycleUnit === "day") monthly = perUnit * 30;
+      else if (s.cycleUnit === "week") monthly = (perUnit * 52) / 12;
+      else if (s.cycleUnit === "year") monthly = perUnit / 12;
+      total += monthly;
+    }
+    return Math.round(total);
+  })();
+
+  // Upcoming next 14 days
+  const upcoming: UpcomingEntry[] = [];
+  for (const t of todos) {
+    if (t.isDone || !t.dueAt) continue;
+    const due = new Date(t.dueAt);
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const d = Math.round((due.getTime() - today.getTime()) / 86_400_000);
+    if (d >= 0 && d <= 14) {
+      upcoming.push({ kind: "todo", id: t.id, title: t.title, daysUntil: d, dueAt: t.dueAt });
+    }
+  }
+  for (const a of anniversaries) {
+    const cd = getNextAnniversary(a.date, now);
+    if (cd.kind === "today") upcoming.push({ kind: "anniversary", id: a.id, title: a.title, daysUntil: 0, date: a.date });
+    else if (cd.kind === "upcoming" && cd.days <= 14)
+      upcoming.push({ kind: "anniversary", id: a.id, title: a.title, daysUntil: cd.days, date: a.date });
+  }
+  for (const s of subs) {
+    const d = daysUntil(s.nextRenewDate, now);
+    if (d != null && d >= 0 && d <= 14) {
+      upcoming.push({
+        kind: "subscription",
+        id: s.id,
+        name: s.name,
+        daysUntil: d,
+        date: s.nextRenewDate,
+        priceCents: s.priceCents,
+        currency: s.currency,
+      });
+    }
+  }
+  upcoming.sort((a, b) => a.daysUntil - b.daysUntil);
+
+  if (loading) {
+    return (
+      <div className="h-full scroll-area p-6">
+        <div className="max-w-5xl space-y-6">
+          <DeferredSkeleton>
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 rounded-2xl" />
+              ))}
+            </div>
+            <Skeleton className="h-80 rounded-2xl mt-6" />
+          </DeferredSkeleton>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full scroll-area p-6">
+      <div className="max-w-5xl space-y-6">
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          <StatCard
+            icon="ri:task-line"
+            label="未完成待办"
+            value={openTodos}
+            tone="brand"
+            onClick={() => onNavigate("todo")}
+          />
+          <StatCard
+            icon="ri:calendar-event-line"
+            label="30 天内纪念日"
+            value={upcomingAnniversaries}
+            tone="brand"
+            onClick={() => onNavigate("anniversary")}
+          />
+          <StatCard
+            icon="ri:bank-card-line"
+            label="月均订阅支出"
+            value={monthlySubCost > 0 ? `¥${(monthlySubCost / 100).toFixed(0)}` : "—"}
+            hint={`${subs.filter((s) => !s.isArchived).length} 个订阅`}
+            tone="muted"
+            onClick={() => onNavigate("subscription")}
+          />
+          <StatCard
+            icon="ri:box-3-line"
+            label="在用物品"
+            value={activeItems}
+            tone="muted"
+            onClick={() => onNavigate("item")}
+          />
+        </div>
+
+        {/* Upcoming */}
+        <section className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/60">
+            <h2 className="text-sm font-semibold">未来 14 天</h2>
+            <span className="text-xs text-muted-foreground">
+              {upcoming.length > 0 ? `${upcoming.length} 项` : "暂无安排"}
+            </span>
+          </div>
+          {upcoming.length === 0 ? (
+            <div className="px-5 py-10 text-center">
+              <Icon icon="ri:zzz-line" className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">暂无即将到来的事项</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {upcoming.map((u) => (
+                <li key={`${u.kind}-${u.id}`} className="flex items-center gap-3 px-5 py-3">
+                  <UpcomingIcon kind={u.kind} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      {u.kind === "subscription" ? u.name : u.title}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      {u.kind === "todo"
+                        ? new Date(u.dueAt).toLocaleString("zh-CN", {
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : u.date}
+                      {u.kind === "subscription" && u.priceCents != null && (
+                        <span className="ml-2 font-mono">
+                          {formatPrice(u.priceCents, u.currency)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-medium shrink-0 ${
+                      u.daysUntil === 0
+                        ? "bg-brand-primary text-white"
+                        : u.daysUntil <= 3
+                        ? "bg-brand-primary/15 text-brand-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {u.daysUntil === 0 ? "今天" : `${u.daysUntil} 天`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  hint,
+  tone,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  value: string | number;
+  hint?: string;
+  tone: "brand" | "muted";
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="group text-left p-4 rounded-2xl bg-card border border-border hover:border-brand-primary/40 hover:shadow-md transition-all"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div
+          className={`h-9 w-9 rounded-lg flex items-center justify-center ${
+            tone === "brand"
+              ? "bg-brand-primary/10"
+              : "bg-muted"
+          }`}
+        >
+          <Icon
+            icon={icon}
+            className={`h-4 w-4 ${tone === "brand" ? "text-brand-primary" : "text-muted-foreground"}`}
+          />
+        </div>
+        <Icon
+          icon="ri:arrow-right-s-line"
+          className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+        />
+      </div>
+      <div className="text-2xl font-semibold font-display tracking-tight">{value}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      {hint && <div className="text-[11px] text-muted-foreground/70 mt-0.5">{hint}</div>}
+    </button>
+  );
+}
+
+function UpcomingIcon({ kind }: { kind: UpcomingEntry["kind"] }) {
+  const map = {
+    todo: { icon: "ri:task-line", bg: "bg-brand-primary/10", color: "text-brand-primary" },
+    anniversary: { icon: "ri:calendar-event-line", bg: "bg-pink-500/10", color: "text-pink-500" },
+    subscription: { icon: "ri:bank-card-line", bg: "bg-purple-500/10", color: "text-purple-500" },
+  } as const;
+  const cfg = map[kind];
+  return (
+    <div className={`h-8 w-8 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}>
+      <Icon icon={cfg.icon} className={`h-4 w-4 ${cfg.color}`} />
     </div>
   );
 }
