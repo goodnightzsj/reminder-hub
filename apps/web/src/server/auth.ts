@@ -1,7 +1,7 @@
 import "server-only";
 
 import { randomBytes, scryptSync, timingSafeEqual, createHmac } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getAppSettings } from "./db/settings";
@@ -9,6 +9,34 @@ import { getAppSettings } from "./db/settings";
 const AUTH_COOKIE = "rh_session";
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
 const SCRYPT_KEYLEN = 64;
+
+/**
+ * Decide whether to flag the session cookie as Secure. Unlike the naive
+ * `NODE_ENV === "production"` check, this works for Docker deployments
+ * accessed over plain HTTP (localhost, intranet, reverse proxies that
+ * terminate TLS elsewhere). A Secure cookie set over HTTP is silently
+ * dropped by the browser on subsequent navigation, causing the user to
+ * bounce straight back to the login screen.
+ *
+ * Priority:
+ *   1. AUTH_COOKIE_SECURE=true|false explicitly overrides detection.
+ *   2. X-Forwarded-Proto=https (set by reverse proxies like nginx/Traefik).
+ *   3. Otherwise treat the connection as insecure and omit the Secure flag.
+ */
+async function computeSecureCookie(): Promise<boolean> {
+  const override = process.env.AUTH_COOKIE_SECURE;
+  if (override === "true") return true;
+  if (override === "false") return false;
+
+  try {
+    const h = await headers();
+    const proto = h.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    if (proto) return proto === "https";
+  } catch {
+    // headers() not available in this execution context
+  }
+  return false;
+}
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
@@ -62,7 +90,7 @@ export async function setSessionCookie(passwordHash: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(AUTH_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: await computeSecureCookie(),
     sameSite: "lax",
     maxAge: SESSION_MAX_AGE,
     path: "/",
