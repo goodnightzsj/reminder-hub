@@ -6,10 +6,8 @@ name: Desktop Release (Tauri)
 # - Tag starting with "desktop-v*" creates a GitHub Release with all installers attached
 # - workflow_dispatch can be used to test the build without releasing
 #
-# Required secrets: NONE for unsigned builds. Code-signing is optional and adds:
-#   - macOS: APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
-#   - Windows: WINDOWS_CERTIFICATE (base64 .pfx), WINDOWS_CERTIFICATE_PASSWORD
-#   - Tauri updater: TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+# Code signing is optional. Without APPLE_SIGNING_IDENTITY the macOS app is
+# ad-hoc signed (will trigger Gatekeeper warning on user machines).
 
 on:
   push:
@@ -17,14 +15,15 @@ on:
       - "desktop-v*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 concurrency:
   group: desktop-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -85,45 +84,86 @@ jobs:
       - name: Install frontend dependencies
         run: npm install
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+      - name: Detect macOS signing identity
+        id: mac_signing
+        if: matrix.platform == 'macos-latest'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional signing keys (leave unset for unsigned builds)
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          if [ -n "$IDENTITY" ]; then
+            echo "identity=$IDENTITY" >> "$GITHUB_OUTPUT"
+          else
+            # `-` tells Tauri to skip codesign (ad-hoc). Without this, tauri-bundler
+            # errors out looking up an identity that doesn't exist.
+            echo "identity=-" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build Tauri app
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ steps.mac_signing.outputs.identity }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build -- ${{ matrix.args }}
+
+      - name: Collect installers
+        shell: bash
+        run: |
+          cd src-tauri/target
+          mkdir -p /tmp/tauri-dist
+          shopt -s globstar nullglob
+          for pattern in \
+            "**/release/bundle/dmg/*.dmg" \
+            "**/release/bundle/msi/*.msi" \
+            "**/release/bundle/nsis/*.exe" \
+            "**/release/bundle/appimage/*.AppImage" \
+            "**/release/bundle/deb/*.deb" \
+            "**/release/bundle/rpm/*.rpm"; do
+            for f in $pattern; do
+              [ -f "$f" ] && cp -v "$f" /tmp/tauri-dist/
+            done
+          done
+          ls -la /tmp/tauri-dist/ || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          projectPath: apps/desktop
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: "Reminder Hub Desktop ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}"
-          releaseBody: |
+          name: desktop-${{ matrix.label }}
+          path: /tmp/tauri-dist/
+          if-no-files-found: warn
+          retention-days: 30
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          path: dist
+          merge-multiple: true
+
+      - name: List files
+        run: ls -la dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Reminder Hub Desktop ${{ github.ref_name }}"
+          draft: true
+          prerelease: false
+          files: dist/*
+          body: |
             Reminder Hub desktop installers.
 
             Download the one matching your platform:
             - **Windows**: `.msi` (recommended) or `.exe`
-            - **macOS**: `.dmg` (arm64 for Apple Silicon, x64 for Intel)
+            - **macOS**: `.dmg` (arm64 for Apple Silicon, x64 for Intel). Unsigned builds will trigger Gatekeeper; right-click → Open to bypass on first launch.
             - **Linux**: `.AppImage` (universal) or `.deb` (Debian/Ubuntu)
-          releaseDraft: true
-          prerelease: false
-          args: ${{ matrix.args }}
-
-      - name: Upload artifacts (when no tag)
-        if: github.ref_type != 'tag'
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-${{ matrix.label }}
-          path: |
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.dmg
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.app
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.msi
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.exe
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.AppImage
-            apps/desktop/src-tauri/target/**/release/bundle/**/*.deb
-          if-no-files-found: warn
-          retention-days: 14
