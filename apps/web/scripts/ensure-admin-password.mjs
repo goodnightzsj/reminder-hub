@@ -2,9 +2,23 @@ import { randomBytes, scryptSync } from "node:crypto";
 import Database from "better-sqlite3";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = process.env.DATABASE_FILE_PATH || resolve(__dirname, "../data/app.db");
+const projectRoot = resolve(__dirname, "..");
+
+function resolveDbPath() {
+  const url = process.env.DATABASE_URL;
+  if (url?.startsWith("file:")) return resolve(projectRoot, url.slice("file:".length));
+  const filePath = process.env.DATABASE_FILE_PATH;
+  if (filePath) return resolve(projectRoot, filePath);
+  return resolve(projectRoot, "data/app.db");
+}
+
+const dbPath = resolveDbPath();
+const migrationsFolder = resolve(projectRoot, "drizzle");
 const SETTINGS_ID = "singleton";
 const SCRYPT_KEYLEN = 64;
 
@@ -18,17 +32,30 @@ function hashPw(password) {
   return `${salt}:${derived}`;
 }
 
-let db;
-try {
-  db = new Database(dbPath);
-} catch {
-  log(`[auth] 数据库不存在，跳过密码初始化: ${dbPath}`);
-  process.exit(0);
+const db = new Database(dbPath);
+
+// Ensure schema is present. Drizzle's migrator is a no-op for already-applied
+// migrations, so running it here is safe even though src/server/db/index.ts
+// also runs it on Next.js startup. On a fresh Docker volume this is the only
+// way to guarantee the app_settings table exists before we touch it.
+if (existsSync(migrationsFolder) && process.env.SKIP_DB_MIGRATIONS !== "1") {
+  try {
+    migrate(drizzle(db), { migrationsFolder });
+  } catch (e) {
+    log(`[auth] 迁移失败，跳过密码初始化（Next.js 启动时将重试）：${e.message}`);
+    db.close();
+    process.exit(0);
+  }
 }
 
-const existing = db
-  .prepare("SELECT admin_password_hash FROM app_settings WHERE id = ?")
-  .get(SETTINGS_ID);
+let existing;
+try {
+  existing = db.prepare("SELECT admin_password_hash FROM app_settings WHERE id = ?").get(SETTINGS_ID);
+} catch (e) {
+  log(`[auth] 无法读取 app_settings，跳过密码初始化: ${e.message}`);
+  db.close();
+  process.exit(0);
+}
 
 if (existing?.admin_password_hash) {
   db.close();
@@ -41,35 +68,29 @@ const hash = hashPw(password);
 const now = Date.now();
 
 // Atomic check-and-set: only writes if hash is still NULL.
-// If another process wrote a hash between our SELECT and UPDATE, the WHERE
-// fails and we trust that winning value instead.
-const result = db
+const updated = db
   .prepare(
     "UPDATE app_settings SET admin_password_hash = ?, updated_at = ? WHERE id = ? AND admin_password_hash IS NULL",
   )
   .run(hash, now, SETTINGS_ID);
 
-if (result.changes === 0 && !existing) {
-  // Row didn't exist when we checked. Try to insert it.
+if (updated.changes === 0 && !existing) {
   try {
     db
-      .prepare(
-        "INSERT INTO app_settings (id, admin_password_hash, updated_at) VALUES (?, ?, ?)",
-      )
+      .prepare("INSERT INTO app_settings (id, admin_password_hash, updated_at) VALUES (?, ?, ?)")
       .run(SETTINGS_ID, hash, now);
   } catch {
-    // Another process inserted first — their password wins, don't log ours.
+    // Another process won the race.
     db.close();
     process.exit(0);
   }
-} else if (result.changes === 0) {
-  // Another process already set a hash between our check and update.
+} else if (updated.changes === 0) {
+  // Another process set a hash between our SELECT and UPDATE.
   db.close();
   process.exit(0);
 }
 
 if (envPassword) {
-  // Don't echo env-var passwords to logs.
   log("[auth] 已使用环境变量 ADMIN_PASSWORD 初始化管理密码");
 } else {
   log("══════════════════════════════════════════");

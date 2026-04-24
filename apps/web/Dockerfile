@@ -36,8 +36,12 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/drizzle ./drizzle
+COPY scripts/ensure-admin-password.mjs ./scripts/ensure-admin-password.mjs
 
 RUN mkdir -p /app/data
 
 EXPOSE 3000
-CMD ["node", "node_modules/next/dist/bin/next", "start", "-H", "0.0.0.0", "-p", "3000"]
+# Initialize admin password (idempotent) before starting the server.
+# Uses ADMIN_PASSWORD env var if set, otherwise generates a random one and
+# logs it to stderr. Existing hashes are never overwritten.
+CMD ["sh", "-c", "node scripts/ensure-admin-password.mjs && exec node node_modules/next/dist/bin/next start -H 0.0.0.0 -p 3000"]
