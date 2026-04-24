@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { RemoteDataStore } from "@reminder-hub/datastore";
 import type { AppConfig } from "./preferences";
+import { localizeError } from "./lib/errors";
 
 type LoginProps = {
   config: AppConfig;
@@ -33,7 +34,7 @@ export function Login({ config, onSaved }: LoginProps) {
       const result = await remote.authLogin(password);
       await onSaved({ mode, remoteBaseUrl, token: result.token });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setError(localizeError(e));
     } finally {
       setLoading(false);
     }

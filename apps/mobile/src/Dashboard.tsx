@@ -12,6 +12,7 @@ import type { AppConfig } from "./preferences";
 import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
+import { localizeError } from "./lib/errors";
 
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
@@ -137,7 +138,7 @@ function TodoScreen({ store }: { store: DataStore }) {
       const rows = await store.listTodos();
       setTodos(rows);
     } catch (e) {
-      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `加载失败：${localizeError(e)}`);
     } finally {
       setLoading(false);
     }
@@ -157,7 +158,7 @@ function TodoScreen({ store }: { store: DataStore }) {
       setAdding(false);
       await refresh();
     } catch (e) {
-      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `创建失败：${localizeError(e)}`);
     }
   };
 
@@ -166,7 +167,7 @@ function TodoScreen({ store }: { store: DataStore }) {
       await store.updateTodo(t.id, { isDone: !t.isDone });
       await refresh();
     } catch (e) {
-      toast.show("error", `更新失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `更新失败：${localizeError(e)}`);
     }
   };
 
@@ -176,7 +177,7 @@ function TodoScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
-      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `删除失败：${localizeError(e)}`);
     }
   };
 
@@ -400,7 +401,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
       });
       setItems(rows);
     } catch (e) {
-      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `加载失败：${localizeError(e)}`);
     } finally {
       setLoading(false);
     }
@@ -429,7 +430,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("success", "已添加");
     } catch (e) {
-      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `创建失败：${localizeError(e)}`);
     }
   };
 
@@ -439,7 +440,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
-      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `删除失败：${localizeError(e)}`);
     }
   };
 
@@ -620,7 +621,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
       rows.sort((a, b) => (subDaysUntil(a.nextRenewDate) ?? 9999) - (subDaysUntil(b.nextRenewDate) ?? 9999));
       setItems(rows);
     } catch (e) {
-      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `加载失败：${localizeError(e)}`);
     } finally {
       setLoading(false);
     }
@@ -655,7 +656,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("success", "已添加");
     } catch (e) {
-      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `创建失败：${localizeError(e)}`);
     }
   };
 
@@ -665,7 +666,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
-      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `删除失败：${localizeError(e)}`);
     }
   };
 
@@ -877,7 +878,7 @@ function ItemScreen({ store }: { store: DataStore }) {
       });
       setItems(rows);
     } catch (e) {
-      toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `加载失败：${localizeError(e)}`);
     } finally {
       setLoading(false);
     }
@@ -911,7 +912,7 @@ function ItemScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("success", "已添加");
     } catch (e) {
-      toast.show("error", `创建失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `创建失败：${localizeError(e)}`);
     }
   };
 
@@ -922,7 +923,7 @@ function ItemScreen({ store }: { store: DataStore }) {
       await store.updateItem(item.id, { status: next });
       await refresh();
     } catch (e) {
-      toast.show("error", `更新失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `更新失败：${localizeError(e)}`);
     }
   };
 
@@ -932,7 +933,7 @@ function ItemScreen({ store }: { store: DataStore }) {
       await refresh();
       toast.show("info", "已删除");
     } catch (e) {
-      toast.show("error", `删除失败：${e instanceof Error ? e.message : String(e)}`);
+      toast.show("error", `删除失败：${localizeError(e)}`);
     }
   };
 
@@ -1115,7 +1116,7 @@ function OverviewScreen({
         setSubs(s);
         setItems(i);
       } catch (e) {
-        toast.show("error", `加载失败：${e instanceof Error ? e.message : String(e)}`);
+        toast.show("error", `加载失败：${localizeError(e)}`);
       } finally {
         setLoading(false);
       }
