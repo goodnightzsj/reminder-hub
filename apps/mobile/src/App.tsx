@@ -12,7 +12,8 @@ import { loadConfig, saveConfig, type AppConfig } from "./preferences";
 import { registerPushNotifications } from "./push";
 import { Login } from "./Login";
 import { Dashboard } from "./Dashboard";
-import { ToastProvider } from "./ui/Toast";
+import { ToastProvider, useToast } from "./ui/Toast";
+import { localizeError } from "./lib/errors";
 
 type AppState =
   | { kind: "booting" }
@@ -30,6 +31,7 @@ export function App() {
 
 function AppInner() {
   const [state, setState] = useState<AppState>({ kind: "booting" });
+  const toast = useToast();
 
   useEffect(() => {
     // Respect the system color scheme for the native status bar.
@@ -78,20 +80,30 @@ function AppInner() {
       syncEngine = new SyncEngine(local, remote);
 
       // Register for push notifications when a server + token is present.
-      registerPushNotifications(async (token, platform) => {
-        try {
-          await fetch(`${config.remoteBaseUrl}/api/v1/push/register`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${config.token}`,
-            },
-            body: JSON.stringify({ token, platform }),
-          });
-        } catch (e) {
-          console.warn("push register failed:", e);
-        }
-      }).catch(() => {});
+      registerPushNotifications(
+        async (token, platform) => {
+          try {
+            const res = await fetch(`${config.remoteBaseUrl}/api/v1/push/register`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${config.token}`,
+              },
+              body: JSON.stringify({ token, platform }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          } catch (e) {
+            toast.show("error", `推送同步失败：${localizeError(e)}`);
+          }
+        },
+        (msg) => {
+          toast.show("error", `推送注册失败：${msg}`);
+        },
+      ).catch((e) => {
+        // Plugin-level setup errors (plugin missing, native API unavailable) —
+        // not user-actionable, keep silent in UI.
+        console.warn("push setup:", e);
+      });
     } else {
       store = local;
     }
