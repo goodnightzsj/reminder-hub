@@ -128,27 +128,26 @@ jobs:
       - name: Collect installers
         shell: bash
         run: |
-          cd src-tauri/target
-          mkdir -p /tmp/tauri-dist
-          shopt -s globstar nullglob
-          for pattern in \
-            "**/release/bundle/dmg/*.dmg" \
-            "**/release/bundle/msi/*.msi" \
-            "**/release/bundle/nsis/*.exe" \
-            "**/release/bundle/appimage/*.AppImage" \
-            "**/release/bundle/deb/*.deb" \
-            "**/release/bundle/rpm/*.rpm"; do
-            for f in $pattern; do
-              [ -f "$f" ] && cp -v "$f" /tmp/tauri-dist/
-            done
+          mkdir -p "$RUNNER_TEMP/tauri-dist"
+          # macOS ships bash 3.2 (no globstar), so we use `find` for portability.
+          find src-tauri/target -type d -name bundle -print0 | \
+          while IFS= read -r -d '' bundle_dir; do
+            find "$bundle_dir" -type f \( \
+              -name "*.dmg" -o \
+              -name "*.msi" -o \
+              -name "*.exe" -o \
+              -name "*.AppImage" -o \
+              -name "*.deb" -o \
+              -name "*.rpm" \
+            \) -exec cp -v {} "$RUNNER_TEMP/tauri-dist/" \;
           done
-          ls -la /tmp/tauri-dist/ || true
+          ls -la "$RUNNER_TEMP/tauri-dist/" || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.label }}
-          path: /tmp/tauri-dist/
+          path: ${{ runner.temp }}/tauri-dist/
           if-no-files-found: warn
           retention-days: 30
 
