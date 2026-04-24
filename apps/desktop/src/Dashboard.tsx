@@ -35,6 +35,21 @@ function invalidateOverviewCache() {
   overviewCache = null;
 }
 
+/**
+ * Tracks whether a scroll container has been scrolled past the top.
+ * Callers spread `onScroll` on the scroll container and read `scrolled`
+ * to conditionally paint a drop shadow on a sibling header so users
+ * get a visual cue that there's more content above.
+ */
+function useScrolled() {
+  const [scrolled, setScrolled] = useState(false);
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const next = e.currentTarget.scrollTop > 2;
+    setScrolled((prev) => (prev === next ? prev : next));
+  };
+  return { scrolled, onScroll };
+}
+
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
 type DashboardProps = {
@@ -202,6 +217,7 @@ function TodoPanel({ store }: { store: DataStore }) {
   const [todos, setTodos] = useState<TodoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState("");
+  const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
 
   const refresh = async () => {
@@ -257,7 +273,7 @@ function TodoPanel({ store }: { store: DataStore }) {
   return (
     <div className="h-full flex flex-col">
       {/* Quick add */}
-      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+      <div className={`px-6 pt-4 pb-3 border-b border-border/40 transition-shadow ${scrolled ? "shadow-sm" : ""}`}>
         <div className="relative max-w-xl">
           <Icon
             icon="ri:add-line"
@@ -273,7 +289,7 @@ function TodoPanel({ store }: { store: DataStore }) {
         </div>
       </div>
 
-      <div className="flex-1 scroll-area px-6 py-4">
+      <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
         {loading ? (
           <DeferredSkeleton>
             <TodoListSkeleton />
@@ -486,6 +502,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
+  const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
 
   const refresh = async () => {
@@ -548,7 +565,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
   return (
     <div className="h-full flex flex-col">
       {/* Quick add */}
-      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+      <div className={`px-6 pt-4 pb-3 border-b border-border/40 transition-shadow ${scrolled ? "shadow-sm" : ""}`}>
         <div className="flex gap-2 max-w-xl">
           <div className="relative flex-1">
             <Icon
@@ -579,7 +596,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
         </div>
       </div>
 
-      <div className="flex-1 scroll-area px-6 py-4">
+      <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
         {loading ? (
           <DeferredSkeleton>
             <AnniversaryListSkeleton />
@@ -686,6 +703,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
   const [cycleUnit, setCycleUnit] = useState<"day" | "week" | "month" | "year">("month");
   const [nextRenewDate, setNextRenewDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
+  const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
 
   const refresh = async () => {
@@ -750,7 +768,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+      <div className={`px-6 pt-4 pb-3 border-b border-border/40 transition-shadow ${scrolled ? "shadow-sm" : ""}`}>
         <div className="flex flex-wrap gap-2 max-w-3xl">
           <input
             value={name}
@@ -806,7 +824,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
         </div>
       </div>
 
-      <div className="flex-1 scroll-area px-6 py-4">
+      <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
         {loading ? (
           <DeferredSkeleton>
             <AnniversaryListSkeleton />
@@ -913,6 +931,7 @@ function ItemPanel({ store }: { store: DataStore }) {
   const [purchasedDate, setPurchasedDate] = useState("");
   const [currency, setCurrency] = useState("CNY");
   const [status, setStatus] = useState<"active" | "idle" | "retired">("active");
+  const { scrolled, onScroll } = useScrolled();
   const toast = useToast();
 
   const refresh = async () => {
@@ -994,7 +1013,7 @@ function ItemPanel({ store }: { store: DataStore }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 pt-4 pb-3 border-b border-border/40">
+      <div className={`px-6 pt-4 pb-3 border-b border-border/40 transition-shadow ${scrolled ? "shadow-sm" : ""}`}>
         <div className="flex flex-wrap gap-2 max-w-3xl">
           <input
             value={name}
@@ -1051,7 +1070,7 @@ function ItemPanel({ store }: { store: DataStore }) {
         </div>
       </div>
 
-      <div className="flex-1 scroll-area px-6 py-4">
+      <div className="flex-1 scroll-area px-6 py-4" onScroll={onScroll}>
         {loading ? (
           <DeferredSkeleton>
             <AnniversaryListSkeleton />
