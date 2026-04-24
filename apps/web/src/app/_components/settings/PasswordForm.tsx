@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { Icon } from "@iconify/react";
 import {
   setAdminPassword,
@@ -15,31 +15,46 @@ type Mode = "idle" | "change" | "remove";
 function PasswordInput({
   name,
   placeholder,
+  label,
   autoFocus,
   autoComplete,
+  invalid,
 }: {
   name: string;
   placeholder: string;
+  label: string;
   autoFocus?: boolean;
   autoComplete?: string;
+  invalid?: boolean;
 }) {
   const [show, setShow] = useState(false);
+  const id = useId();
   return (
     <div className="relative">
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
       <input
+        id={id}
         type={show ? "text" : "password"}
         name={name}
         placeholder={placeholder}
         autoFocus={autoFocus}
         autoComplete={autoComplete ?? "off"}
         required
-        className="h-10 w-full rounded-lg border border-default bg-transparent px-3 pr-10 text-sm text-primary outline-none transition-all duration-200 placeholder:text-muted-foreground focus-visible:border-brand-primary/60 focus-visible:ring-2 focus-visible:ring-brand-primary/25"
+        aria-invalid={invalid}
+        className={`h-10 w-full rounded-lg border bg-transparent px-3 pr-10 text-sm text-primary outline-none transition-all duration-200 placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-brand-primary/25 ${
+          invalid
+            ? "border-danger/60 focus-visible:border-danger/80 focus-visible:ring-danger/25"
+            : "border-default focus-visible:border-brand-primary/60"
+        }`}
       />
       <button
         type="button"
         onClick={() => setShow((v) => !v)}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-        tabIndex={-1}
+        aria-label={show ? "隐藏密码" : "显示密码"}
+        aria-pressed={show}
+        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-interactive-hover transition-colors"
       >
         <Icon icon={show ? "ri:eye-off-line" : "ri:eye-line"} className="h-4 w-4" />
       </button>
@@ -48,28 +63,28 @@ function PasswordInput({
 }
 
 function StatusMessage({ state }: { state: AuthActionState }) {
-  if (!state) return null;
-  if (state.success) {
-    return (
-      <p className="mt-3 text-sm text-success flex items-center gap-1.5 animate-fade-in">
-        <Icon icon="ri:check-line" className="h-4 w-4 shrink-0" />
-        操作成功
-      </p>
-    );
-  }
-  if (state.error) {
-    return (
-      <p className="mt-3 text-sm text-danger flex items-center gap-1.5 animate-fade-in">
-        <Icon icon="ri:error-warning-line" className="h-4 w-4 shrink-0" />
-        {state.error}
-      </p>
-    );
-  }
-  return null;
+  if (!state?.error) return null;
+  return (
+    <p className="mt-3 text-sm text-danger flex items-center gap-1.5 animate-fade-in" role="alert">
+      <Icon icon="ri:error-warning-line" className="h-4 w-4 shrink-0" />
+      {state.error}
+    </p>
+  );
 }
 
 function SetPasswordForm() {
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(setAdminPassword, null);
+
+  if (state?.success) {
+    // After success, parent's hasPassword prop flips to true on revalidation
+    // and renders the "idle" control panel. Show a transient confirmation.
+    return (
+      <div className="flex items-center gap-2 text-sm text-success animate-fade-in" role="status">
+        <Icon icon="ri:check-line" className="h-4 w-4" />
+        密码已设置，登录态已激活
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -77,8 +92,21 @@ function SetPasswordForm() {
         当前未设置管理密码，应用处于开放访问状态。设置密码后，访问将需要验证。
       </p>
       <form action={formAction} className="space-y-3 max-w-sm">
-        <PasswordInput name="password" placeholder="设置密码（至少 4 位）" autoFocus autoComplete="new-password" />
-        <PasswordInput name="confirmPassword" placeholder="确认密码" autoComplete="new-password" />
+        <PasswordInput
+          name="password"
+          label="新密码"
+          placeholder="设置密码（至少 4 位）"
+          autoFocus
+          autoComplete="new-password"
+          invalid={!!state?.error}
+        />
+        <PasswordInput
+          name="confirmPassword"
+          label="确认密码"
+          placeholder="确认密码"
+          autoComplete="new-password"
+          invalid={!!state?.error}
+        />
         <StatusMessage state={state} />
         <button
           type="submit"
@@ -92,23 +120,49 @@ function SetPasswordForm() {
   );
 }
 
-function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
+function ChangePasswordForm({ onCancel, onSuccess }: { onCancel: () => void; onSuccess: () => void }) {
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(changeAdminPassword, null);
 
   if (state?.success) {
     return (
-      <div className="flex items-center gap-2 text-sm text-success animate-fade-in">
-        <Icon icon="ri:check-line" className="h-4 w-4" />
-        密码已修改
+      <div className="space-y-3 animate-fade-in">
+        <div className="flex items-center gap-2 text-sm text-success" role="status">
+          <Icon icon="ri:check-line" className="h-4 w-4" />
+          密码已修改
+        </div>
+        <button
+          type="button"
+          onClick={onSuccess}
+          className="h-9 rounded-lg border border-default bg-transparent px-4 text-xs font-medium text-secondary hover:bg-interactive-hover transition-colors active-press"
+        >
+          返回
+        </button>
       </div>
     );
   }
 
   return (
     <form action={formAction} className="space-y-3 max-w-sm animate-slide-up">
-      <PasswordInput name="currentPassword" placeholder="当前密码" autoFocus autoComplete="current-password" />
-      <PasswordInput name="newPassword" placeholder="新密码（至少 4 位）" autoComplete="new-password" />
-      <PasswordInput name="confirmPassword" placeholder="确认新密码" autoComplete="new-password" />
+      <PasswordInput
+        name="currentPassword"
+        label="当前密码"
+        placeholder="当前密码"
+        autoFocus
+        autoComplete="current-password"
+        invalid={!!state?.error}
+      />
+      <PasswordInput
+        name="newPassword"
+        label="新密码"
+        placeholder="新密码（至少 4 位）"
+        autoComplete="new-password"
+      />
+      <PasswordInput
+        name="confirmPassword"
+        label="确认新密码"
+        placeholder="确认新密码"
+        autoComplete="new-password"
+      />
       <StatusMessage state={state} />
       <div className="flex gap-2">
         <button
@@ -130,14 +184,23 @@ function ChangePasswordForm({ onCancel }: { onCancel: () => void }) {
   );
 }
 
-function RemovePasswordForm({ onCancel }: { onCancel: () => void }) {
+function RemovePasswordForm({ onCancel, onSuccess }: { onCancel: () => void; onSuccess: () => void }) {
   const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(removeAdminPassword, null);
 
   if (state?.success) {
     return (
-      <div className="flex items-center gap-2 text-sm text-success animate-fade-in">
-        <Icon icon="ri:check-line" className="h-4 w-4" />
-        密码已移除，应用恢复开放访问
+      <div className="space-y-3 animate-fade-in">
+        <div className="flex items-center gap-2 text-sm text-success" role="status">
+          <Icon icon="ri:check-line" className="h-4 w-4" />
+          密码已移除，应用恢复开放访问
+        </div>
+        <button
+          type="button"
+          onClick={onSuccess}
+          className="h-9 rounded-lg border border-default bg-transparent px-4 text-xs font-medium text-secondary hover:bg-interactive-hover transition-colors active-press"
+        >
+          返回
+        </button>
       </div>
     );
   }
@@ -147,7 +210,14 @@ function RemovePasswordForm({ onCancel }: { onCancel: () => void }) {
       <p className="text-xs text-danger/80">
         移除密码后，任何人都可以访问此应用。请输入当前密码以确认。
       </p>
-      <PasswordInput name="currentPassword" placeholder="输入当前密码" autoFocus autoComplete="current-password" />
+      <PasswordInput
+        name="currentPassword"
+        label="当前密码"
+        placeholder="输入当前密码"
+        autoFocus
+        autoComplete="current-password"
+        invalid={!!state?.error}
+      />
       <StatusMessage state={state} />
       <div className="flex gap-2">
         <button
@@ -211,8 +281,8 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
           </div>
         </div>
       )}
-      {mode === "change" && <ChangePasswordForm onCancel={() => setMode("idle")} />}
-      {mode === "remove" && <RemovePasswordForm onCancel={() => setMode("idle")} />}
+      {mode === "change" && <ChangePasswordForm onCancel={() => setMode("idle")} onSuccess={() => setMode("idle")} />}
+      {mode === "remove" && <RemovePasswordForm onCancel={() => setMode("idle")} onSuccess={() => setMode("idle")} />}
     </div>
   );
 }
