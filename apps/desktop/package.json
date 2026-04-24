@@ -12,6 +12,7 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
+    "@iconify/react": "^6.0.2",
     "@reminder-hub/datastore": "file:../../packages/datastore",
     "@tauri-apps/api": "^2.1.0",
     "@tauri-apps/plugin-sql": "^2.2.0",
@@ -20,10 +21,12 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4",
     "@tauri-apps/cli": "^2.1.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.0.0"
   }

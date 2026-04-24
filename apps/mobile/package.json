@@ -21,15 +21,19 @@
     "@capacitor/ios": "^7.0.0",
     "@capacitor/preferences": "^7.0.0",
     "@capacitor/push-notifications": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@iconify/react": "^6.0.2",
     "@reminder-hub/datastore": "file:../../packages/datastore",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
+    "@tailwindcss/vite": "^4",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.0.0"
   }

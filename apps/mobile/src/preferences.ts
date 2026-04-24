@@ -1,6 +1,6 @@
 import { Preferences } from "@capacitor/preferences";
 
-type AppConfig = {
+export type AppConfig = {
   mode: "local" | "remote";
   remoteBaseUrl: string;
   token: string | null;

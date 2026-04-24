@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand color tokens — mirror apps/web ocean-blue theme */
+  --color-brand-primary: hsl(217 95% 62%);
+  --color-brand-secondary: hsl(213 96% 72%);
+  --color-accent: hsl(217 95% 96%);
+  --color-accent-foreground: hsl(217 95% 60%);
+
+  --color-background: hsl(240 10% 98%);
+  --color-foreground: hsl(240 10% 4%);
+  --color-card: hsl(0 0% 100%);
+  --color-muted: hsl(240 5% 96%);
+  --color-muted-foreground: hsl(240 4% 46%);
+  --color-secondary: hsl(240 5% 96%);
+  --color-secondary-foreground: hsl(240 6% 10%);
+  --color-border: hsl(240 6% 90%);
+  --color-success: hsl(150 80% 35%);
+  --color-danger: hsl(0 84% 60%);
+
+  --font-display: "Geist", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: hsl(240 10% 5%);
+    --color-foreground: hsl(0 0% 98%);
+    --color-card: hsl(240 10% 8%);
+    --color-muted: hsl(240 4% 16%);
+    --color-muted-foreground: hsl(240 5% 70%);
+    --color-secondary: hsl(240 4% 12%);
+    --color-secondary-foreground: hsl(0 0% 98%);
+    --color-border: hsl(240 4% 18%);
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Glass card */
+@utility bg-glass {
+  background-color: color-mix(in srgb, var(--color-card) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+  box-shadow:
+    0 8px 28px -6px rgba(0, 0, 0, 0.08),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-glass {
+    background-color: color-mix(in srgb, var(--color-card) 62%, transparent);
+    box-shadow:
+      0 10px 36px -8px rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  }
+}
+
+/* Mesh gradient decoration */
+@utility bg-mesh {
+  background-image:
+    radial-gradient(at 0% 0%, var(--color-brand-primary) 0, transparent 55%),
+    radial-gradient(at 100% 0%, var(--color-brand-secondary) 0, transparent 55%),
+    radial-gradient(at 50% 100%, var(--color-brand-primary) 0, transparent 55%);
+  filter: saturate(1.05) brightness(1.02);
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 0.6; }
+}
+
+@utility animate-pulse-slow {
+  animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scroll region styling */
+.scroll-area {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted-foreground) transparent;
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-muted-foreground) 40%, transparent);
+  border-radius: 999px;
+}
+
+/* Focus ring */
+:where(button, input, textarea, [tabindex="0"]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-primary) 30%, transparent);
+  border-color: color-mix(in srgb, var(--color-brand-primary) 60%, transparent);
+}
+
+/* Drag region for Tauri window title bar */
+.drag-region {
+  -webkit-app-region: drag;
+}
+.no-drag {
+  -webkit-app-region: no-drag;
+}
