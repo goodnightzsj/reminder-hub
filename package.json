@@ -2,20 +2,21 @@
   "name": "reminder-hub",
   "private": true,
   "version": "0.1.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "web:dev": "npm -w apps/web run dev",
-    "web:build": "npm -w apps/web run build",
-    "web:start": "npm -w apps/web run start",
-    "web:check": "npm -w apps/web run check",
-    "desktop:dev": "npm -w apps/desktop run tauri:dev",
-    "desktop:build": "npm -w apps/desktop run tauri:build",
-    "mobile:sync": "npm -w apps/mobile run sync",
-    "mobile:android": "npm -w apps/mobile run android",
-    "mobile:ios": "npm -w apps/mobile run ios"
+    "web:install": "npm -C apps/web install",
+    "web:dev": "npm -C apps/web run dev",
+    "web:build": "npm -C apps/web run build",
+    "web:start": "npm -C apps/web run start",
+    "web:check": "npm -C apps/web run check",
+    "datastore:install": "npm -C packages/datastore install",
+    "datastore:typecheck": "npm -C packages/datastore run typecheck",
+    "desktop:install": "npm -C apps/desktop install",
+    "desktop:dev": "npm -C apps/desktop run tauri:dev",
+    "desktop:build": "npm -C apps/desktop run tauri:build",
+    "mobile:install": "npm -C apps/mobile install",
+    "mobile:sync": "npm -C apps/mobile run sync",
+    "mobile:android": "npm -C apps/mobile run android",
+    "mobile:ios": "npm -C apps/mobile run ios"
   },
   "engines": {
     "node": ">=20"

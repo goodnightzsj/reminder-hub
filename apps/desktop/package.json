@@ -11,7 +11,7 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@reminder-hub/datastore": "*",
+    "@reminder-hub/datastore": "file:../../packages/datastore",
     "@tauri-apps/api": "^2.1.0",
     "@tauri-apps/plugin-sql": "^2.2.0",
     "@tauri-apps/plugin-store": "^2.2.0",

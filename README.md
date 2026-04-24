@@ -198,13 +198,35 @@ docker run -d --name reminder-hub --restart unless-stopped \
 - 指南：`llmdoc/guides/how-to-deploy-systemd.md`
 - 覆盖：专用 `reminder-hub` 系统用户、`/etc/systemd/system/reminder-hub.service` 沙箱、环境变量外置到 `/etc/reminder-hub.env`、Nginx 子域与 Cloudflare Authenticated Origin Pulls 对接、外部 cron 触发与升级流程。
 
-## 目录结构
+## 目录结构（Monorepo）
 
-- `apps/web`：Web 应用
-- `apps/web/src/app`：页面、路由、Server Actions
-- `apps/web/src/server`：数据库、通知、摘要、调度器等服务端逻辑
-- `apps/web/drizzle`：数据库迁移
-- `llmdoc`：面向协作与维护的文档
+```
+reminder-hub/
+├── apps/
+│   ├── web/          Next.js 16 Web 应用（PWA + REST API v1）
+│   ├── desktop/      Tauri 2 桌面客户端（Win / macOS / Linux）
+│   └── mobile/       Capacitor 7 移动客户端（Android / iOS）
+├── packages/
+│   └── datastore/    跨端共享的数据访问层（DataStore 接口 + Remote/Local 实现 + LWW SyncEngine）
+├── llmdoc/           协作与维护文档
+└── package.json      根级 npm workspaces 配置
+```
+
+常用命令（从仓库根目录）：
+
+```bash
+npm run web:dev          # 启动 Web 开发服务器
+npm run web:build        # 构建 Web 生产版本
+npm run desktop:dev      # 启动 Tauri 桌面（需要 Rust 工具链）
+npm run desktop:build    # 打包桌面安装包
+npm run mobile:sync      # 同步前端到原生工程
+npm run mobile:android   # 在 Android 设备/模拟器运行
+npm run mobile:ios       # 在 iOS 设备/模拟器运行（仅 macOS）
+```
+
+更多说明：
+- `apps/desktop/README.md` — Tauri 桌面端开发与打包
+- `apps/mobile/README.md` — Capacitor 移动端开发与打包
 
 ## 质量检查
 
