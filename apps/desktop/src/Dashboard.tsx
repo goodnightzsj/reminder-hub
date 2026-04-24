@@ -13,6 +13,7 @@ import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
+import { applyBackup, buildBackup, downloadBackup, parseBackup } from "./lib/backup";
 
 /**
  * Overview cache: holds the last successful 4-list snapshot per store. If a
@@ -206,7 +207,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
           {tab === "anniversary" && <AnniversaryPanel store={store} />}
           {tab === "subscription" && <SubscriptionPanel store={store} />}
           {tab === "item" && <ItemPanel store={store} />}
-          {tab === "settings" && <SettingsPanel config={config} syncEngine={syncEngine} />}
+          {tab === "settings" && <SettingsPanel config={config} store={store} syncEngine={syncEngine} />}
         </div>
       </main>
     </div>
@@ -346,9 +347,20 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
   );
 }
 
-function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: SyncEngine | null }) {
+function SettingsPanel({
+  config,
+  store,
+  syncEngine,
+}: {
+  config: AppConfig;
+  store: DataStore;
+  syncEngine: SyncEngine | null;
+}) {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -390,6 +402,40 @@ function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: 
     }
   };
 
+  const exportBackup = async () => {
+    setExporting(true);
+    try {
+      const backup = await buildBackup(store);
+      downloadBackup(backup);
+      const total =
+        backup.todos.length + backup.anniversaries.length +
+        backup.subscriptions.length + backup.items.length;
+      toast.show("success", `备份已导出，共 ${total} 条记录`);
+    } catch (e) {
+      toast.show("error", `导出失败：${localizeError(e)}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const importBackup = async (file: File) => {
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const backup = parseBackup(text);
+      const report = await applyBackup(store, backup);
+      invalidateOverviewCache();
+      const total = report.todos + report.anniversaries + report.subscriptions + report.items;
+      const skipSuffix = report.skipped > 0 ? `，${report.skipped} 条跳过` : "";
+      toast.show("success", `导入完成：${total} 条成功${skipSuffix}`);
+    } catch (e) {
+      toast.show("error", `导入失败：${localizeError(e)}`);
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
   return (
     <div className="h-full scroll-area px-6 py-6">
       <div className="max-w-2xl space-y-4">
@@ -421,6 +467,40 @@ function SettingsPanel({ config, syncEngine }: { config: AppConfig; syncEngine: 
             {resetting ? "同步中…" : "强制完整同步"}
           </button>
         )}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={exportBackup}
+            disabled={exporting}
+            className="h-10 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            <Icon
+              icon={exporting ? "line-md:loading-twotone-loop" : "ri:download-2-line"}
+              className="h-4 w-4"
+            />
+            {exporting ? "导出中…" : "导出备份"}
+          </button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+            className="h-10 rounded-xl border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            <Icon
+              icon={importing ? "line-md:loading-twotone-loop" : "ri:upload-2-line"}
+              className="h-4 w-4"
+            />
+            {importing ? "导入中…" : "导入备份"}
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void importBackup(f);
+            }}
+          />
+        </div>
         <div className="pt-4 text-xs text-muted-foreground leading-relaxed">
           <p className="mb-1.5">数据文件位置：</p>
           <code className="block px-3 py-2 rounded bg-muted font-mono text-[11px]">

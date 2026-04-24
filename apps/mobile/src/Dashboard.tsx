@@ -13,6 +13,7 @@ import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
 import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 import { localizeError } from "./lib/errors";
+import { applyBackup, buildBackup, downloadBackup, parseBackup } from "./lib/backup";
 
 /** Overview cache: render-instantly snapshot + mutation invalidation. */
 type OverviewSnapshot = {
@@ -135,7 +136,7 @@ export function Dashboard({ config, store, syncEngine, onLogout }: DashboardProp
         {tab === "anniversary" && <AnniversaryScreen store={store} />}
         {tab === "subscription" && <SubscriptionScreen store={store} />}
         {tab === "item" && <ItemScreen store={store} />}
-        {tab === "settings" && <SettingsScreen config={config} syncEngine={syncEngine} onLogout={onLogout} />}
+        {tab === "settings" && <SettingsScreen config={config} store={store} syncEngine={syncEngine} onLogout={onLogout} />}
       </main>
 
       {/* Bottom tabs */}
@@ -363,15 +364,20 @@ function EmptyState({
 
 function SettingsScreen({
   config,
+  store,
   syncEngine,
   onLogout,
 }: {
   config: AppConfig;
+  store: DataStore;
   syncEngine: SyncEngine | null;
   onLogout: () => Promise<void>;
 }) {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -407,6 +413,40 @@ function SettingsScreen({
       }
     } finally {
       setResetting(false);
+    }
+  };
+
+  const exportBackup = async () => {
+    setExporting(true);
+    try {
+      const backup = await buildBackup(store);
+      downloadBackup(backup);
+      const total =
+        backup.todos.length + backup.anniversaries.length +
+        backup.subscriptions.length + backup.items.length;
+      toast.show("success", `备份已导出，共 ${total} 条记录`);
+    } catch (e) {
+      toast.show("error", `导出失败：${localizeError(e)}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const importBackup = async (file: File) => {
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const backup = parseBackup(text);
+      const report = await applyBackup(store, backup);
+      invalidateOverviewCache();
+      const total = report.todos + report.anniversaries + report.subscriptions + report.items;
+      const skipSuffix = report.skipped > 0 ? `，${report.skipped} 条跳过` : "";
+      toast.show("success", `导入完成：${total} 条成功${skipSuffix}`);
+    } catch (e) {
+      toast.show("error", `导入失败：${localizeError(e)}`);
+    } finally {
+      setImporting(false);
+      if (fileRef.current) fileRef.current.value = "";
     }
   };
 
@@ -451,6 +491,41 @@ function SettingsScreen({
           {resetting ? "同步中…" : "强制完整同步"}
         </button>
       )}
+
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <button
+          onClick={exportBackup}
+          disabled={exporting}
+          className="tap-scale h-11 rounded-2xl border border-border text-sm text-muted-foreground flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          <Icon
+            icon={exporting ? "line-md:loading-twotone-loop" : "ri:download-2-line"}
+            className="h-4 w-4"
+          />
+          {exporting ? "导出中…" : "导出备份"}
+        </button>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={importing}
+          className="tap-scale h-11 rounded-2xl border border-border text-sm text-muted-foreground flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          <Icon
+            icon={importing ? "line-md:loading-twotone-loop" : "ri:upload-2-line"}
+            className="h-4 w-4"
+          />
+          {importing ? "导入中…" : "导入备份"}
+        </button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void importBackup(f);
+        }}
+      />
 
       <button
         onClick={onLogout}
