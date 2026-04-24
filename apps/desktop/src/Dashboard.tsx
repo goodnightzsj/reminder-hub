@@ -289,9 +289,12 @@ function TodoPanel({ store }: { store: DataStore }) {
 
 function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
-        <Icon icon={icon} className="h-7 w-7 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in">
+      <div className="relative mb-5">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-brand-primary to-brand-secondary blur-2xl opacity-20 animate-pulse-slow" />
+        <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 border border-border/60 flex items-center justify-center">
+          <Icon icon={icon} className="h-7 w-7 text-brand-primary" />
+        </div>
       </div>
       <h3 className="text-base font-semibold text-foreground mb-1">{title}</h3>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
