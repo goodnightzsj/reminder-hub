@@ -183,9 +183,11 @@ jobs:
           name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
-          # No body — Desktop workflow owns the shared cross-platform body.
-          # softprops preserves any existing body when `body:` is omitted, so
-          # there's no race when Android+iOS run in parallel with Desktop.
+          # Shared body source with Desktop + iOS workflows. softprops v2 only
+          # writes body on initial release creation — whichever workflow wins
+          # the race writes from this same file, so the body is deterministic.
+          body_path: .github/RELEASE_BODY.md
+          generate_release_notes: true
           files: |
             apps/mobile/android/app/build/outputs/apk/${{ steps.build.outputs.type }}/*.apk
             apps/mobile/android/app/build/outputs/bundle/release/*.aab

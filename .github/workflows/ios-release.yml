@@ -196,7 +196,7 @@ jobs:
           retention-days: 30
 
       # ---------- RELEASE ----------
-      # No body set — Desktop workflow owns the shared cross-platform body.
+      # Shared body source with Desktop + Android workflows.
       - name: Create GitHub Release (signed)
         if: github.ref_type == 'tag' && steps.secrets.outputs.signed == 'true'
         uses: softprops/action-gh-release@v2
@@ -205,6 +205,8 @@ jobs:
           name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
+          body_path: .github/RELEASE_BODY.md
+          generate_release_notes: true
           files: apps/mobile/ios/App/build/ipa/*.ipa
 
       - name: Create GitHub Release (simulator build)
@@ -215,4 +217,6 @@ jobs:
           name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
+          body_path: .github/RELEASE_BODY.md
+          generate_release_notes: true
           files: apps/mobile/ios/App/release/App-simulator.app.tar.gz
