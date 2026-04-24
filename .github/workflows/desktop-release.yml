@@ -3,8 +3,9 @@ name: Desktop Release (Tauri)
 # Builds Tauri desktop packages for Windows, macOS (Intel + Apple Silicon) and Linux.
 #
 # Triggers:
-# - Tag starting with "desktop-v*" creates a GitHub Release with all installers attached
-# - workflow_dispatch can be used to test the build without releasing
+# - Tag starting with "v*" creates a unified Release shared with Android/iOS
+#   workflows. Assets from all three platforms land in the same tag's Release page.
+# - workflow_dispatch can be used to test the build without releasing.
 #
 # Code signing is optional. Without APPLE_SIGNING_IDENTITY the macOS app is
 # ad-hoc signed (will trigger Gatekeeper warning on user machines).
@@ -12,7 +13,7 @@ name: Desktop Release (Tauri)
 on:
   push:
     tags:
-      - "desktop-v*"
+      - "v*"
   workflow_dispatch:
 
 permissions:
@@ -170,14 +171,78 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "Reminder Hub Desktop ${{ github.ref_name }}"
+          name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
           files: dist/*
+          # Auto-generate "What's Changed" (commits / PRs since the previous tag).
+          generate_release_notes: true
+          # Shared release body. Android + iOS workflows intentionally do not
+          # set `body:` so they never race against this text. softprops preserves
+          # the existing body when `body:` is absent. `generate_release_notes`
+          # appends the auto-changelog below this static template.
           body: |
-            Reminder Hub desktop installers.
+            # Reminder Hub ${{ github.ref_name }}
 
-            Download the one matching your platform:
-            - **Windows**: `.msi` (recommended) or `.exe`
-            - **macOS**: `.dmg` (arm64 for Apple Silicon, x64 for Intel). Unsigned builds will trigger Gatekeeper; right-click → Open to bypass on first launch.
-            - **Linux**: `.AppImage` (universal) or `.deb` (Debian/Ubuntu)
+            > 跨平台个人提醒管理 · 待办 / 纪念日 / 订阅 / 物品 · 本地优先 + 可选服务器同步
+
+            ---
+
+            ## 下载
+
+            前往 [Releases](https://github.com/${{ github.repository }}/releases/latest) 选择对应平台。
+
+            ### 桌面 (Tauri)
+
+            | 平台 | 文件 | 说明 |
+            | --- | --- | --- |
+            | Windows | `*_x64_en-US.msi` | **推荐**，MSI 安装包 |
+            | Windows | `*_x64-setup.exe` | NSIS 安装包 |
+            | macOS Apple Silicon | `*_aarch64.dmg` | M1 / M2 / M3 / M4 |
+            | macOS Intel | `*_x64.dmg` | Intel 芯片 |
+            | Linux Debian/Ubuntu | `*_amd64.deb` | `sudo dpkg -i` |
+            | Linux 通用 | `*_amd64.AppImage` | `chmod +x && ./...` |
+
+            > 未签名版 macOS 首次打开需右键 → 打开 绕过 Gatekeeper；Windows SmartScreen 弹窗点 "更多信息" → "仍要运行"。
+
+            ### Android (Capacitor)
+
+            | 文件 | 说明 |
+            | --- | --- |
+            | `app-release.apk` / `*.aab` | 签名版（需 repo 配置 keystore secrets） |
+            | `app-debug.apk` | fallback，无 secrets 时自动产出，可侧载测试 |
+
+            ### iOS (Capacitor)
+
+            | 文件 | 说明 |
+            | --- | --- |
+            | `*.ipa` | 签名版（需 Apple Developer secrets），通过 Transporter 上传 App Store Connect |
+            | `App-simulator.app.tar.gz` | fallback，模拟器构建 |
+
+            ```bash
+            # 模拟器安装
+            tar -xzf App-simulator.app.tar.gz
+            xcrun simctl install booted App.app
+            xcrun simctl launch booted com.reminderhub.mobile
+            ```
+
+            ### Docker (Web 服务端)
+
+            ```bash
+            docker pull ${{ vars.DOCKERHUB_USERNAME }}/reminder-hub:${{ github.ref_name }}
+            docker run -d -p 3000:3000 ${{ vars.DOCKERHUB_USERNAME }}/reminder-hub:${{ github.ref_name }}
+            ```
+
+            ---
+
+            ## 系统要求
+
+            | OS | 最低版本 | 架构 |
+            | --- | --- | --- |
+            | Windows | 10+ | x64 |
+            | macOS | 12 Monterey+ | Intel / Apple Silicon |
+            | Linux | 现代发行版 | x64 |
+            | Android | 7.0+ (API 24) | arm64-v8a / armeabi-v7a |
+            | iOS | 13+ | arm64 |
+
+            ---

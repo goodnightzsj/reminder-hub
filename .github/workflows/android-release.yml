@@ -3,8 +3,9 @@ name: Android Release (Capacitor)
 # Builds the Capacitor Android APK/AAB.
 #
 # Triggers:
-# - Tag starting with "android-v*" creates a GitHub Release with the signed APK + AAB
-# - workflow_dispatch can be used for test builds (unsigned debug APK artifact)
+# - Tag starting with "v*" uploads APK (+ AAB when signed) to the unified
+#   Release shared with the Desktop/iOS workflows.
+# - workflow_dispatch can be used for test builds (unsigned debug APK artifact).
 #
 # Required secrets for SIGNED release builds:
 #   ANDROID_KEYSTORE_BASE64          Base64-encoded .jks/.keystore file
@@ -18,7 +19,7 @@ name: Android Release (Capacitor)
 on:
   push:
     tags:
-      - "android-v*"
+      - "v*"
   workflow_dispatch:
     inputs:
       build_type:
@@ -178,14 +179,13 @@ jobs:
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: "Reminder Hub ${{ github.ref_name }}"
+          draft: true
+          prerelease: false
+          # No body — Desktop workflow owns the shared cross-platform body.
+          # softprops preserves any existing body when `body:` is omitted, so
+          # there's no race when Android+iOS run in parallel with Desktop.
           files: |
             apps/mobile/android/app/build/outputs/apk/${{ steps.build.outputs.type }}/*.apk
             apps/mobile/android/app/build/outputs/bundle/release/*.aab
-          draft: true
-          prerelease: false
-          name: "Reminder Hub Android ${{ github.ref_name }}"
-          body: |
-            Reminder Hub Android build (${{ steps.build.outputs.type }}).
-
-            ${{ steps.build.outputs.type == 'release' && '- `*.apk` — signed, sideloadable
-            - `*.aab` — upload to Google Play Console' || '- `*.apk` — debug build (auto-signed with debug key, sideloadable for testing, NOT for Play Store)' }}

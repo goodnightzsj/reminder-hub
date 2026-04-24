@@ -2,11 +2,12 @@ name: iOS Release (Capacitor)
 
 # Builds the Capacitor iOS app. If Apple Developer secrets are set, produces
 # a signed .ipa ready for App Store upload. Otherwise falls back to an
-# unsigned xcarchive that you can re-sign locally in Xcode.
+# unsigned Simulator .app that can be installed via `xcrun simctl`.
 #
 # Triggers:
-# - Tag starting with "ios-v*" creates a GitHub Release with the .ipa or .xcarchive
-# - workflow_dispatch runs the same logic without creating a Release
+# - Tag starting with "v*" uploads .ipa (signed) or Simulator .app.tar.gz
+#   (unsigned fallback) to the unified Release shared with Desktop/Android.
+# - workflow_dispatch runs the same logic without creating a Release.
 #
 # Required secrets for signed builds (all must be present):
 #   IOS_P12_BASE64                   Base64-encoded developer .p12 distribution certificate
@@ -19,7 +20,7 @@ name: iOS Release (Capacitor)
 on:
   push:
     tags:
-      - "ios-v*"
+      - "v*"
   workflow_dispatch:
 
 concurrency:
@@ -195,33 +196,23 @@ jobs:
           retention-days: 30
 
       # ---------- RELEASE ----------
+      # No body set — Desktop workflow owns the shared cross-platform body.
       - name: Create GitHub Release (signed)
         if: github.ref_type == 'tag' && steps.secrets.outputs.signed == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/mobile/ios/App/build/ipa/*.ipa
+          tag_name: ${{ github.ref_name }}
+          name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
-          name: "Reminder Hub iOS ${{ github.ref_name }}"
-          body: |
-            Signed iOS build. Upload to App Store Connect via Transporter or `xcrun altool`.
+          files: apps/mobile/ios/App/build/ipa/*.ipa
 
       - name: Create GitHub Release (simulator build)
         if: github.ref_type == 'tag' && steps.secrets.outputs.signed != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/mobile/ios/App/release/App-simulator.app.tar.gz
+          tag_name: ${{ github.ref_name }}
+          name: "Reminder Hub ${{ github.ref_name }}"
           draft: true
           prerelease: false
-          name: "Reminder Hub iOS ${{ github.ref_name }} (simulator)"
-          body: |
-            Unsigned iOS Simulator build. Usage:
-
-            ```bash
-            tar -xzf App-simulator.app.tar.gz
-            xcrun simctl install booted App.app   # install to the running simulator
-            xcrun simctl launch booted com.reminderhub.mobile
-            ```
-
-            For real-device builds, configure Apple Developer secrets
-            (see BUILDING.md) and re-tag to produce a signed .ipa.
+          files: apps/mobile/ios/App/release/App-simulator.app.tar.gz
