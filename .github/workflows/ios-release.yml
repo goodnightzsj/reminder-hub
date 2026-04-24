@@ -150,23 +150,32 @@ jobs:
             -exportPath build/ipa \
             -exportOptionsPlist ExportOptions.plist
 
-      # ---------- UNSIGNED FALLBACK ----------
-      - name: Build unsigned archive
+      # ---------- UNSIGNED FALLBACK (SIMULATOR BUILD) ----------
+      # Without signing secrets we build for iOS Simulator instead of
+      # `generic/platform=iOS`. Simulator builds don't require any code
+      # signing, and the resulting `.app` can be dragged into Simulator.app
+      # on a Mac or installed with `xcrun simctl install`.
+      - name: Build unsigned simulator .app
         if: steps.secrets.outputs.signed != 'true'
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
-            -destination "generic/platform=iOS" \
+            -destination "generic/platform=iOS Simulator" \
+            -sdk iphonesimulator \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED=NO \
-            archive -archivePath build/App.xcarchive
+            -derivedDataPath build
 
-      - name: Pack unsigned archive for upload
+      - name: Pack simulator .app for upload
         if: steps.secrets.outputs.signed != 'true'
         run: |
-          cd ios/App/build
-          tar -czf App.xcarchive.tar.gz App.xcarchive
+          cd ios/App/build/Build/Products/Release-iphonesimulator
+          tar -czf App-simulator.app.tar.gz App.app
+          mkdir -p ../../../../release
+          cp App-simulator.app.tar.gz ../../../../release/
 
       # ---------- UPLOAD ----------
       - name: Upload signed .ipa as artifact
@@ -177,12 +186,12 @@ jobs:
           path: apps/mobile/ios/App/build/ipa/*.ipa
           retention-days: 30
 
-      - name: Upload unsigned archive as artifact
+      - name: Upload unsigned simulator .app as artifact
         if: steps.secrets.outputs.signed != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ios-unsigned-archive
-          path: apps/mobile/ios/App/build/App.xcarchive.tar.gz
+          name: ios-simulator-app
+          path: apps/mobile/ios/App/release/App-simulator.app.tar.gz
           retention-days: 30
 
       # ---------- RELEASE ----------
@@ -197,15 +206,22 @@ jobs:
           body: |
             Signed iOS build. Upload to App Store Connect via Transporter or `xcrun altool`.
 
-      - name: Create GitHub Release (unsigned)
+      - name: Create GitHub Release (simulator build)
         if: github.ref_type == 'tag' && steps.secrets.outputs.signed != 'true'
         uses: softprops/action-gh-release@v2
         with:
-          files: apps/mobile/ios/App/build/App.xcarchive.tar.gz
+          files: apps/mobile/ios/App/release/App-simulator.app.tar.gz
           draft: true
           prerelease: false
-          name: "Reminder Hub iOS ${{ github.ref_name }} (unsigned)"
+          name: "Reminder Hub iOS ${{ github.ref_name }} (simulator)"
           body: |
-            Unsigned iOS xcarchive. Extract and re-sign locally in Xcode, or
-            configure Apple Developer secrets (see BUILDING.md) for automatic
-            signed .ipa builds.
+            Unsigned iOS Simulator build. Usage:
+
+            ```bash
+            tar -xzf App-simulator.app.tar.gz
+            xcrun simctl install booted App.app   # install to the running simulator
+            xcrun simctl launch booted com.reminderhub.mobile
+            ```
+
+            For real-device builds, configure Apple Developer secrets
+            (see BUILDING.md) and re-tag to produce a signed .ipa.
