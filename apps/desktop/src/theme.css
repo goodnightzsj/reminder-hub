@@ -90,13 +90,21 @@ body {
   }
 }
 
-/* Mesh gradient decoration */
+/* Mesh gradient decoration — background-size > 100% so animating
+   background-position produces a slow drift across the viewport. */
 @utility bg-mesh {
   background-image:
     radial-gradient(at 0% 0%, var(--color-brand-primary) 0, transparent 55%),
     radial-gradient(at 100% 0%, var(--color-brand-secondary) 0, transparent 55%),
     radial-gradient(at 50% 100%, var(--color-brand-primary) 0, transparent 55%);
+  background-size: 180% 180%;
   filter: saturate(1.05) brightness(1.02);
+  animation: mesh-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes mesh-drift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
 }
 
 @keyframes slide-up {
