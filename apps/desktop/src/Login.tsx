@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { RemoteDataStore } from "@reminder-hub/datastore";
 import type { AppConfig } from "./lib/app-config";
 import { localizeError } from "./lib/errors";
+import { sanitizeBaseUrl } from "./lib/url";
 
 type LoginProps = {
   config: AppConfig;
@@ -23,9 +24,15 @@ export function Login({ config, onSaved }: LoginProps) {
     setError("");
     setLoading(true);
     try {
-      if (!remoteBaseUrl) {
+      if (!remoteBaseUrl.trim()) {
         // Pure local mode — no server required, just save and continue.
         await onSaved({ mode: "local", remoteBaseUrl: "", token: null });
+        return;
+      }
+      const sanitized = sanitizeBaseUrl(remoteBaseUrl);
+      if (!sanitized.ok) {
+        setError(sanitized.error);
+        setLoading(false);
         return;
       }
       if (!password) {
@@ -33,9 +40,11 @@ export function Login({ config, onSaved }: LoginProps) {
         setLoading(false);
         return;
       }
-      const remote = new RemoteDataStore(remoteBaseUrl, () => null);
+      const cleanUrl = sanitized.value;
+      const remote = new RemoteDataStore(cleanUrl, () => null);
       const result = await remote.authLogin(password);
-      await onSaved({ mode, remoteBaseUrl, token: result.token });
+      setRemoteBaseUrl(cleanUrl);
+      await onSaved({ mode, remoteBaseUrl: cleanUrl, token: result.token });
     } catch (e) {
       setError(localizeError(e));
     } finally {
