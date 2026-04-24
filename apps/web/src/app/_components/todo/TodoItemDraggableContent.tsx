@@ -124,7 +124,7 @@ export function TodoItemDraggableContent({
                 </Link>
 
                 {item.description ? (
-                    <p className="mt-1 line-clamp-1 text-sm text-secondary">
+                    <p className="mt-1 line-clamp-1 text-sm text-secondary" title={item.description}>
                         {item.description}
                     </p>
                 ) : null}

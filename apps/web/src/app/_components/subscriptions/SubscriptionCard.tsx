@@ -97,7 +97,7 @@ export function SubscriptionCard({ item, cycleLabel, daysLeft, preview }: Subscr
                                 overrideColor={item.color}
                             />
                             <div className="min-w-0 flex-1 py-0.5">
-                                <h3 className="font-semibold text-lg text-primary leading-tight truncate">{item.name}</h3>
+                                <h3 className="font-semibold text-lg text-primary leading-tight truncate" title={item.name}>{item.name}</h3>
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
                                     {statusBadge}
 

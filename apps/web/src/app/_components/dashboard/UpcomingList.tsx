@@ -60,6 +60,7 @@ export function UpcomingList({ items, timeZone }: UpcomingListProps) {
                         <div className="min-w-0 flex-1 flex flex-col justify-center">
                             <Link
                                 href={href}
+                                title={title}
                                 className="block truncate text-base font-semibold text-primary hover:text-brand-primary transition-colors mb-0.5"
                             >
                                 {title}
