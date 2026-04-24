@@ -11,6 +11,7 @@ import type {
 import type { AppConfig } from "./lib/app-config";
 import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
+import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
@@ -245,12 +246,7 @@ function TodoPanel({ store }: { store: DataStore }) {
                     HIGH
                   </span>
                 )}
-                <button
-                  onClick={() => remove(t.id)}
-                  className="opacity-0 group-hover:opacity-100 h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
-                >
-                  <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
-                </button>
+                <ConfirmDeleteButton onConfirm={() => remove(t.id)} label="删除待办" />
               </li>
             ))}
           </ul>
@@ -478,12 +474,7 @@ function AnniversaryPanel({ store }: { store: DataStore }) {
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass}`}>
                     {cd.label}
                   </span>
-                  <button
-                    onClick={() => remove(a.id)}
-                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
-                  >
-                    <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(a.id)} label="删除纪念日" />
                 </li>
               );
             })}
@@ -731,12 +722,7 @@ function SubscriptionPanel({ store }: { store: DataStore }) {
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${badgeClass}`}>
                     {badgeLabel}
                   </span>
-                  <button
-                    onClick={() => remove(s.id)}
-                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
-                  >
-                    <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(s.id)} label="删除订阅" />
                 </li>
               );
             })}
@@ -962,16 +948,12 @@ function ItemPanel({ store }: { store: DataStore }) {
                   <button
                     onClick={() => toggleStatus(i)}
                     title="点击切换状态"
+                    aria-label={`当前状态：${statusCfg.label}，点击切换`}
                     className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${statusCfg.color} hover:opacity-80`}
                   >
                     {statusCfg.label}
                   </button>
-                  <button
-                    onClick={() => remove(i.id)}
-                    className="opacity-0 group-hover:opacity-100 h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:bg-danger/10 hover:text-danger transition-all"
-                  >
-                    <Icon icon="ri:delete-bin-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(i.id)} label="删除物品" />
                 </li>
               );
             })}

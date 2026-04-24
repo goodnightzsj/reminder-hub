@@ -11,6 +11,7 @@ import type {
 import type { AppConfig } from "./preferences";
 import { useToast } from "./ui/Toast";
 import { DeferredSkeleton, Skeleton, TodoListSkeleton } from "./ui/Skeleton";
+import { ConfirmDeleteButton } from "./ui/ConfirmDelete";
 
 type Tab = "overview" | "todo" | "anniversary" | "subscription" | "item" | "settings";
 
@@ -214,12 +215,7 @@ function TodoScreen({ store }: { store: DataStore }) {
                 >
                   {t.title}
                 </span>
-                <button
-                  onClick={() => remove(t.id)}
-                  className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
-                >
-                  <Icon icon="ri:close-line" className="h-4 w-4" />
-                </button>
+                <ConfirmDeleteButton onConfirm={() => remove(t.id)} label="删除待办" />
               </li>
             ))}
           </ul>
@@ -483,12 +479,7 @@ function AnniversaryScreen({ store }: { store: DataStore }) {
                   <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
                     {cd.label}
                   </span>
-                  <button
-                    onClick={() => remove(a.id)}
-                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
-                  >
-                    <Icon icon="ri:close-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(a.id)} label="删除纪念日" />
                 </li>
               );
             })}
@@ -741,12 +732,7 @@ function SubscriptionScreen({ store }: { store: DataStore }) {
                   <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${badgeClass}`}>
                     {badgeLabel}
                   </span>
-                  <button
-                    onClick={() => remove(s.id)}
-                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
-                  >
-                    <Icon icon="ri:close-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(s.id)} label="删除订阅" />
                 </li>
               );
             })}
@@ -995,16 +981,12 @@ function ItemScreen({ store }: { store: DataStore }) {
                   </div>
                   <button
                     onClick={() => toggleStatus(i)}
+                    aria-label={`当前状态：${statusCfg.label}，点击切换`}
                     className={`tap-scale text-[11px] px-2 py-0.5 rounded-full font-medium ${statusCfg.color}`}
                   >
                     {statusCfg.label}
                   </button>
-                  <button
-                    onClick={() => remove(i.id)}
-                    className="tap-scale h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground active:bg-danger/10 active:text-danger"
-                  >
-                    <Icon icon="ri:close-line" className="h-4 w-4" />
-                  </button>
+                  <ConfirmDeleteButton onConfirm={() => remove(i.id)} label="删除物品" />
                 </li>
               );
             })}
