@@ -27,3 +27,9 @@ Plan.md
 !**/drizzle/*.sql
 .ace-tool/
 **/dist/
+# --- trellis local (do not commit) ---
+.trellis/
+.claude/
+.codex/
+.agents/
+AGENTS.md
