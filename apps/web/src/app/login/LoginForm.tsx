@@ -56,6 +56,23 @@ export function LoginForm() {
             </p>
 
             <form action={formAction} className="animate-slide-up stagger-4" aria-label="管理密码登录">
+              {/*
+                Hidden username so Chromium/Edge's password manager treats this
+                site as its own credential entry instead of trying to "update"
+                a similar-looking entry from another subdomain on 9962510.xyz.
+                The server action ignores this field; only `password` is read.
+                Style: sr-only (visually hidden, still discoverable by browsers).
+              */}
+              <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                value="reminder-admin@9962510.xyz"
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
+                className="sr-only"
+              />
               <label htmlFor="login-password" className="sr-only">
                 管理密码
               </label>
