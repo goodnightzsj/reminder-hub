@@ -10,24 +10,13 @@ export function PWARegister() {
 
     const register = async () => {
       try {
-        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-        // When a new SW takes control, reload once so the user sees fresh assets.
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
-        });
-        reg.addEventListener("updatefound", () => {
-          const worker = reg.installing;
-          if (!worker) return;
-          worker.addEventListener("statechange", () => {
-            if (worker.state === "installed" && navigator.serviceWorker.controller) {
-              // New SW installed and there's an existing controller - prompt update.
-              worker.postMessage("SKIP_WAITING");
-            }
-          });
-        });
+        await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        // 注意：不在 controllerchange 里 window.location.reload()。
+        // sw.js install 已经 self.skipWaiting()，activate 又 clients.claim()，
+        // 加上 DevTools 的 "Update on reload" 会形成
+        //   reload → SW 升级 → claim → controllerchange → reload → ...
+        // 的死循环。新版 SW 在下次正常导航后接管即可，无需强刷。
+        // 需要"提示用户有新版"时，应在 UI 显示横幅而非偷偷自动 reload。
       } catch {
         // SW registration failures are non-fatal.
       }
