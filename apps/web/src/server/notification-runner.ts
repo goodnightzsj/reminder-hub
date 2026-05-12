@@ -91,11 +91,27 @@ export async function runNotificationsForChannel(
         updatedAt: now,
       });
     } catch (err) {
-      // Most likely a duplicate ID collision (already inserted by another run).
+      // Duplicate ID — a delivery row already exists for this candidate.
       if (!isSqliteConstraintError(err)) throw err;
-      skipped += 1;
-      console.warn("[notify] delivery deduped", { channel, deliveryId, itemId: candidate.itemId });
-      continue;
+      const existing = await db
+        .select({ status: notificationDeliveries.status })
+        .from(notificationDeliveries)
+        .where(eq(notificationDeliveries.id, deliveryId))
+        .limit(1);
+      if (existing[0]?.status !== NOTIFICATION_DELIVERY_STATUS.FAILED) {
+        // Already SENT (or SENDING — in flight). Don't re-send.
+        skipped += 1;
+        console.warn("[notify] delivery deduped", { channel, deliveryId, itemId: candidate.itemId });
+        continue;
+      }
+      // A previous attempt FAILED (transient channel hiccup, expired token,
+      // …). Reset to SENDING and retry. The candidate stops being collected
+      // once it falls outside the lookback window, so this is bounded.
+      await db
+        .update(notificationDeliveries)
+        .set({ status: NOTIFICATION_DELIVERY_STATUS.SENDING, error: null, updatedAt: now })
+        .where(eq(notificationDeliveries.id, deliveryId));
+      console.warn("[notify] retrying previously failed delivery", { channel, deliveryId, itemId: candidate.itemId });
     }
 
     try {

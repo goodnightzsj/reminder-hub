@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import "server-only";
 
 import { and, desc, eq, inArray } from "drizzle-orm";
@@ -16,6 +18,7 @@ import { revalidateTags } from "./revalidate";
  * 数组越靠前的项目会获得越新的时间戳（在 desc 排序下更靠前）。
  */
 export async function reorderTodos(ids: string[]) {
+  await requireAuth();
   if (ids.length === 0) return;
 
   const items = await db
@@ -92,6 +95,7 @@ async function moveTodoByOffset(id: string, offset: -1 | 1) {
  * 上移一个 Todo（与相邻项交换时间戳）
  */
 export async function moveTodoUp(id: string) {
+  await requireAuth();
   await moveTodoByOffset(id, -1);
 }
 
@@ -99,5 +103,6 @@ export async function moveTodoUp(id: string) {
  * 下移一个 Todo（与相邻项交换时间戳）
  */
 export async function moveTodoDown(id: string) {
+  await requireAuth();
   await moveTodoByOffset(id, 1);
 }

@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
@@ -44,6 +46,7 @@ function revalidateSubscriptionListOnly() {
 }
 
 export async function createSubscription(formData: FormData) {
+  await requireAuth();
   const result = await subscriptionUpsertSchema.safeParseAsync(formData);
   if (!result.success) redirectFlashError(SUBSCRIPTIONS_PATH);
   const data = result.data;
@@ -72,6 +75,7 @@ export async function createSubscription(formData: FormData) {
 }
 
 export async function updateSubscription(formData: FormData) {
+  await requireAuth();
     const result = await subscriptionUpsertSchema.safeParseAsync(formData);
     if (!result.success) redirectFlashError(SUBSCRIPTIONS_PATH);
     const data = result.data;
@@ -104,6 +108,7 @@ export async function updateSubscription(formData: FormData) {
 }
 
 export async function setSubscriptionArchived(formData: FormData) {
+  await requireAuth();
   const result = subscriptionArchiveSchema.safeParse(formData);
   if (!result.success) return;
   const { id, isArchived } = result.data;
@@ -122,6 +127,7 @@ export async function setSubscriptionArchived(formData: FormData) {
 }
 
 export async function renewSubscription(formData: FormData) {
+  await requireAuth();
   const result = subscriptionIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -163,6 +169,7 @@ export async function renewSubscription(formData: FormData) {
 }
 
 export async function deleteSubscription(formData: FormData) {
+  await requireAuth();
   const result = subscriptionIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -189,6 +196,7 @@ export async function deleteSubscription(formData: FormData) {
 }
 
 export async function restoreSubscription(formData: FormData) {
+  await requireAuth();
   const result = subscriptionIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;

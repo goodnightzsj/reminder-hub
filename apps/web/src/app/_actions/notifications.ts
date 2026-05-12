@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { redirect } from "next/navigation";
 import { ZodError } from "zod";
 
@@ -74,6 +76,7 @@ async function validateAndUpsertSettings(
 
 
 export async function updateTelegramSettings(formData: FormData) {
+  await requireAuth();
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await telegramSettingsSchema.parseAsync(data);
     const { telegramEnabled: enabled, telegramBotToken: token, telegramChatId: chatId } = parsed;
@@ -93,6 +96,7 @@ export async function updateTelegramSettings(formData: FormData) {
 }
 
 export async function updateWebhookSettings(formData: FormData) {
+  await requireAuth();
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await webhookSettingsSchema.parseAsync(data);
     const { webhookEnabled: enabled, webhookUrl } = parsed;
@@ -109,6 +113,7 @@ export async function updateWebhookSettings(formData: FormData) {
 }
 
 export async function updateWecomSettings(formData: FormData) {
+  await requireAuth();
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await wecomSettingsSchema.parseAsync(data);
     const { wecomEnabled: enabled, wecomPushType, wecomWebhookUrl, wecomCorpId, wecomAgentId, wecomAppSecret, wecomToUser } = parsed;
@@ -136,6 +141,7 @@ export async function updateWecomSettings(formData: FormData) {
 }
 
 export async function updateFeishuSettings(formData: FormData) {
+  await requireAuth();
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await feishuSettingsSchema.parseAsync(data);
     const { feishuEnabled: enabled, feishuWebhookUrl, feishuSignSecret } = parsed;
@@ -156,6 +162,7 @@ export async function updateFeishuSettings(formData: FormData) {
 }
 
 export async function updateEmailSettings(formData: FormData) {
+  await requireAuth();
   await validateAndUpsertSettings(formData, async (data, existing) => {
     const parsed = await emailSettingsSchema.parseAsync(data);
     const { 
@@ -224,26 +231,32 @@ async function runNotificationsForChannelAndRedirect(channel: NotificationChanne
 }
 
 export async function runTelegramNotifications() {
+  await requireAuth();
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.TELEGRAM);
 }
 
 export async function runWebhookNotifications() {
+  await requireAuth();
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.WEBHOOK);
 }
 
 export async function runWecomNotifications() {
+  await requireAuth();
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.WECOM);
 }
 
 export async function runFeishuNotifications() {
+  await requireAuth();
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.FEISHU);
 }
 
 export async function runEmailNotifications() {
+  await requireAuth();
   await runNotificationsForChannelAndRedirect(NOTIFICATION_CHANNEL.EMAIL);
 }
 
 export async function runAllNotifications() {
+  await requireAuth();
   const results = await runAllNotificationsInOrder(NOTIFICATION_CHANNELS);
 
   const summary = results
@@ -258,6 +271,7 @@ export async function runAllNotifications() {
 }
 
 export async function clearFailedDeliveries(formData: FormData) {
+  await requireAuth();
   const result = notificationClearSchema.safeParse(formData);
   if (!result.success) {
       redirect(SETTINGS_PATH);

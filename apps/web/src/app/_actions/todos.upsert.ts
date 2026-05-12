@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -19,6 +21,7 @@ import { redirectWithTodoAction } from "./todos.helpers";
 import { revalidateTags } from "./revalidate";
 
 export async function createTodo(formData: FormData) {
+  await requireAuth();
   const result = await todoUpsertSchema.safeParseAsync(formData);
   if (!result.success) {
     // console.error("Validation failed", result.error);
@@ -52,6 +55,7 @@ export async function createTodo(formData: FormData) {
 }
 
 export async function updateTodo(formData: FormData) {
+  await requireAuth();
   const result = await todoUpsertSchema.safeParseAsync(formData);
   if (!result.success) return;
   const data = result.data;

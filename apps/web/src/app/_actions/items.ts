@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
@@ -34,6 +36,7 @@ function revalidateItemListOnly() {
 }
 
 export async function createItem(formData: FormData) {
+  await requireAuth();
   const result = await itemUpsertSchema.safeParseAsync(formData);
   if (!result.success) redirectFlashError(ITEMS_PATH);
   const data = result.data;
@@ -57,6 +60,7 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(formData: FormData) {
+  await requireAuth();
   const result = await itemUpsertSchema.safeParseAsync(formData);
   if (!result.success) redirectFlashError(ITEMS_PATH);
   const data = result.data;
@@ -85,6 +89,7 @@ export async function updateItem(formData: FormData) {
 }
 
 export async function setItemStatus(formData: FormData) {
+  await requireAuth();
   const result = itemStatusSchema.safeParse(formData);
   if (!result.success) return;
   const { id, status, redirectTo } = result.data;
@@ -101,6 +106,7 @@ export async function setItemStatus(formData: FormData) {
 }
 
 export async function deleteItem(formData: FormData) {
+  await requireAuth();
   const result = itemIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -128,6 +134,7 @@ export async function deleteItem(formData: FormData) {
 }
 
 export async function restoreItem(formData: FormData) {
+  await requireAuth();
   const result = itemIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;

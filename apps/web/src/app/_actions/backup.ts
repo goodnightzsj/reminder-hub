@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { db } from "@/server/db";
 import { setAppDateReminderTime, setAppTimeZone } from "@/server/db/settings";
 import {
@@ -26,6 +28,7 @@ import {
 import { forEachChunk, getRunChanges } from "./backup.utils";
 
 export async function importBackupOverwrite(formData: FormData) {
+  await requireAuth();
   const backup = await parseBackupUploadOrRedirect(formData);
   const dateReminderTime = parseBackupDateReminderTimeOrRedirect(backup);
 
@@ -113,6 +116,7 @@ export async function importBackupOverwrite(formData: FormData) {
 }
 
 export async function importBackupMerge(formData: FormData) {
+  await requireAuth();
   const backup = await parseBackupUploadOrRedirect(formData);
   const {
     todoRows,

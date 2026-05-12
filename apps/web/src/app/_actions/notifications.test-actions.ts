@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { redirect } from "next/navigation";
 
 import {
@@ -38,21 +40,26 @@ async function sendTestForChannel(channel: NotificationChannel) {
 }
 
 export async function sendTestTelegram() {
+  await requireAuth();
   await sendTestForChannel(NOTIFICATION_CHANNEL.TELEGRAM);
 }
 
 export async function sendTestWebhook() {
+  await requireAuth();
   await sendTestForChannel(NOTIFICATION_CHANNEL.WEBHOOK);
 }
 
 export async function sendTestWecom() {
+  await requireAuth();
   await sendTestForChannel(NOTIFICATION_CHANNEL.WECOM);
 }
 
 export async function sendTestFeishu() {
+  await requireAuth();
   await sendTestForChannel(NOTIFICATION_CHANNEL.FEISHU);
 }
 
 export async function sendTestEmail() {
+  await requireAuth();
   await sendTestForChannel(NOTIFICATION_CHANNEL.EMAIL);
 }

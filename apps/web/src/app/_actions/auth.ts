@@ -60,8 +60,14 @@ export async function setAdminPassword(
     return { error: "两次输入的密码不一致" };
   }
 
-  const hash = hashPassword(password);
   const existing = await getAppSettings();
+  if (existing.adminPasswordHash) {
+    // A password is already set — this "first-run" action must not be usable
+    // to silently overwrite it / take over the session. Use changeAdminPassword.
+    return { error: "访问密码已设置，请使用「修改密码」" };
+  }
+
+  const hash = hashPassword(password);
 
   await db
     .insert(appSettings)

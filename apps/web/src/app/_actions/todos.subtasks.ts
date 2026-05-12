@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -18,6 +20,7 @@ import {
 import { revalidateTodoDetailAndHome } from "./todos.helpers";
 
 export async function createSubtask(formData: FormData) {
+  await requireAuth();
   const result = await subtaskCreateSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { todoId, title } = result.data;
@@ -34,6 +37,7 @@ export async function createSubtask(formData: FormData) {
 }
 
 export async function toggleSubtask(formData: FormData) {
+  await requireAuth();
   const result = await subtaskToggleSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, todoId, isDone } = result.data;
@@ -50,6 +54,7 @@ export async function toggleSubtask(formData: FormData) {
 }
 
 export async function deleteSubtask(formData: FormData) {
+  await requireAuth();
   const result = await subtaskIdSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, todoId } = result.data;
@@ -62,6 +67,7 @@ export async function deleteSubtask(formData: FormData) {
 }
 
 export async function updateSubtask(formData: FormData) {
+  await requireAuth();
   const result = await subtaskUpdateSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, todoId, title } = result.data;

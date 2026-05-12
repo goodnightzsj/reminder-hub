@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -23,6 +25,7 @@ import { revalidateTodoAfterDelete, revalidateTodoDetailAndHome } from "./todos.
 import { redirectWithTodoAction } from "./todos.helpers";
 
 export async function toggleTodo(formData: FormData) {
+  await requireAuth();
   const result = await todoToggleSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, isDone } = result.data;
@@ -113,6 +116,7 @@ export async function toggleTodo(formData: FormData) {
 }
 
 export async function deleteTodo(formData: FormData) {
+  await requireAuth();
   const result = await todoIdSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -150,6 +154,7 @@ export async function deleteTodo(formData: FormData) {
 }
 
 export async function restoreTodo(formData: FormData) {
+  await requireAuth();
   const result = await todoIdSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -169,6 +174,7 @@ export async function restoreTodo(formData: FormData) {
 }
 
 export async function setTodoArchived(formData: FormData) {
+  await requireAuth();
   const result = await todoArchiveSchema.safeParseAsync(formData);
   if (!result.success) return;
   const { id, isArchived } = result.data;

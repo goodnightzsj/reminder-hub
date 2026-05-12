@@ -1,6 +1,8 @@
 
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { db } from "@/server/db";
 import { getAppSettings, setAppDateReminderTime, setAppTimeZone, SETTINGS_ID } from "@/server/db/settings";
 import {
@@ -43,6 +45,7 @@ const CLEAR_ALL_DATA_PATHS = [
 ] as const;
 
 export async function updateTimeZone(formData: FormData) {
+  await requireAuth();
   const result = await timeZoneSchema.safeParseAsync(formData);
   if (!result.success) {
       if (result.error.issues.some(i => i.path.includes("timeZone") && i.message === "Invalid timezone")) {
@@ -59,6 +62,7 @@ export async function updateTimeZone(formData: FormData) {
 }
 
 export async function updateDateReminderTime(formData: FormData) {
+  await requireAuth();
   const result = await dateReminderTimeSchema.safeParseAsync(formData);
   
   if (!result.success) {
@@ -76,6 +80,7 @@ export async function updateDateReminderTime(formData: FormData) {
 }
 
 export async function updateInternalSchedulerSettings(formData: FormData) {
+  await requireAuth();
   const result = await internalSchedulerSettingsSchema.safeParseAsync(formData);
   if (!result.success) {
     redirectSettingsError("validation-failed");
@@ -129,6 +134,7 @@ export async function updateInternalSchedulerSettings(formData: FormData) {
 }
 
 export async function clearAllData() {
+  await requireAuth();
   db.transaction((tx) => {
     tx.delete(notificationDeliveries).run();
     tx.delete(digestDeliveries).run();

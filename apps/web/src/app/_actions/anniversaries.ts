@@ -1,5 +1,7 @@
 "use server";
 
+import { requireAuth } from "@/server/auth";
+
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
@@ -33,6 +35,7 @@ function revalidateAnniversaryListOnly() {
 }
 
 export async function createAnniversary(formData: FormData) {
+  await requireAuth();
   const result = anniversaryCreateSchema.safeParse(formData);
   
   if (!result.success) {
@@ -57,6 +60,7 @@ export async function createAnniversary(formData: FormData) {
 }
 
 export async function updateAnniversary(formData: FormData) {
+  await requireAuth();
   const result = anniversaryUpdateSchema.safeParse(formData);
   
   if (!result.success) {
@@ -86,6 +90,7 @@ export async function updateAnniversary(formData: FormData) {
 
 
 export async function setAnniversaryArchived(formData: FormData) {
+  await requireAuth();
   const result = anniversaryArchiveSchema.safeParse(formData);
   if (!result.success) return;
   const { id, isArchived } = result.data;
@@ -104,6 +109,7 @@ export async function setAnniversaryArchived(formData: FormData) {
 }
 
 export async function deleteAnniversary(formData: FormData) {
+  await requireAuth();
   const result = anniversaryIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
@@ -130,6 +136,7 @@ export async function deleteAnniversary(formData: FormData) {
 }
 
 export async function restoreAnniversary(formData: FormData) {
+  await requireAuth();
   const result = anniversaryIdSchema.safeParse(formData);
   if (!result.success) return;
   const { id, redirectTo } = result.data;
