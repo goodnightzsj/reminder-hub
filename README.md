@@ -4,7 +4,35 @@
 
 ## 界面预览
 
-![Reminder Hub Web UI](assets/screenshots/web-ui.png)
+仪表盘 — 今日聚焦、剩余待办 / 今日完成 / 一周待办 / 活跃订阅 速览、即将到来、订阅支出与物品性价比：
+
+![Dashboard](assets/screenshots/dashboard.png)
+
+<details>
+<summary>更多页面截图（Todo / 纪念日 / 订阅 / 物品 / 年度回顾 / 设置 / 登录）</summary>
+
+### Todo 待办（优先级 / 分类 / 子任务 / 循环 / 进行中·已完成·废纸篓）
+![Todo](assets/screenshots/todo.png)
+
+### 纪念日（公历 / 农历，每年自动重复，倒计时）
+![Anniversaries](assets/screenshots/anniversaries.png)
+
+### 订阅（月付 / 年付周期，日均成本、下次续费、到期倒计时）
+![Subscriptions](assets/screenshots/subscriptions.png)
+
+### 物品（按状态 使用中 / 闲置 / 淘汰，日均成本 = 总价 / 已使用天数）
+![Items](assets/screenshots/items.png)
+
+### 年度回顾（年度概览、本周新增、亮点、分类/优先级分布、年度节奏、各类目分布）
+![Year Review](assets/screenshots/year-review.png)
+
+### 设置（外观主题、访问密码、通知渠道 Telegram/Webhook/企业微信/飞书/邮箱、系统内定时任务、备份与恢复）
+![Settings](assets/screenshots/settings.png)
+
+### 访问密码登录
+![Login](assets/screenshots/login.png)
+
+</details>
 
 ## 项目定位
 
