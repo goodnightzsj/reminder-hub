@@ -8,6 +8,7 @@ import { serializeSubscription } from "@/server/api/serializers";
 import { db } from "@/server/db";
 import { subscriptions } from "@/server/db/schema";
 import { subscriptionCycleUnitValues, type SubscriptionCycleUnit } from "@/lib/subscriptions";
+import { parseDateString } from "@/server/date";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +52,18 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   if (typeof body.cycleUnit === "string" && (subscriptionCycleUnitValues as readonly string[]).includes(body.cycleUnit)) {
     patch.cycleUnit = body.cycleUnit as SubscriptionCycleUnit;
   }
-  if (typeof body.cycleInterval === "number" && body.cycleInterval > 0) patch.cycleInterval = body.cycleInterval;
-  if (typeof body.nextRenewDate === "string") patch.nextRenewDate = body.nextRenewDate;
+  if (body.cycleInterval !== undefined) {
+    if (!(typeof body.cycleInterval === "number" && Number.isInteger(body.cycleInterval) && body.cycleInterval >= 1 && body.cycleInterval <= 120)) {
+      return apiErrors.badRequest("cycleInterval must be an integer between 1 and 120");
+    }
+    patch.cycleInterval = body.cycleInterval;
+  }
+  if (body.nextRenewDate !== undefined) {
+    if (typeof body.nextRenewDate !== "string" || !parseDateString(body.nextRenewDate.trim())) {
+      return apiErrors.badRequest("nextRenewDate must be YYYY-MM-DD");
+    }
+    patch.nextRenewDate = body.nextRenewDate.trim();
+  }
   if (typeof body.autoRenew === "boolean") patch.autoRenew = body.autoRenew;
   if (Array.isArray(body.remindOffsetsDays)) {
     patch.remindOffsetsDays = JSON.stringify(

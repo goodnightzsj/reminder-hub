@@ -135,10 +135,19 @@ async function scheduleNextDigestRun() {
   if (!nextUtc) return;
 
   const delayMs = Math.max(0, nextUtc.getTime() - Date.now());
-  const timer = setTimeout(async () => {
-    const startedAt = new Date();
-    await runDigestsOnce(startedAt);
-    await scheduleNextDigestRun();
+  const timer = setTimeout(() => {
+    // Never let this async setTimeout callback reject unhandled — an error in
+    // runDigestsOnce / the recursive re-arm (e.g. getAppSettings throwing on a
+    // locked DB) would otherwise crash the Node process (unhandledRejection).
+    void (async () => {
+      const startedAt = new Date();
+      try {
+        await runDigestsOnce(startedAt);
+      } catch {
+        // runDigestsOnce already logs; swallow so we still re-arm the timer.
+      }
+      await scheduleNextDigestRun();
+    })().catch(() => {});
   }, delayMs);
 
   digestTimer = timer;

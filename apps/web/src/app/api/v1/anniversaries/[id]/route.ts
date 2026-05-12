@@ -8,6 +8,8 @@ import { serializeAnniversary } from "@/server/api/serializers";
 import { db } from "@/server/db";
 import { anniversaries } from "@/server/db/schema";
 import { anniversaryDateTypeValues, type AnniversaryDateType } from "@/lib/anniversary";
+import { parseDateString } from "@/server/date";
+import { parseMonthDayString } from "@/server/anniversary";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +47,27 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     if (!t) return apiErrors.badRequest("title cannot be empty");
     patch.title = t;
   }
-  if (typeof body.date === "string") patch.date = body.date;
   if (typeof body.category === "string") patch.category = body.category;
   if (typeof body.dateType === "string" && (anniversaryDateTypeValues as readonly string[]).includes(body.dateType)) {
     patch.dateType = body.dateType as AnniversaryDateType;
+  }
+  if (body.date !== undefined) {
+    if (typeof body.date !== "string") return apiErrors.badRequest("date must be a string");
+    const dateStr = body.date.trim();
+    // Validate against the *effective* dateType (the one being set, else the stored one):
+    // solar = YYYY-MM-DD, lunar = M-D. A bad value disables the reminder + corrupts sorting.
+    const effectiveType = (patch.dateType ?? existing.dateType) as AnniversaryDateType;
+    const ok = effectiveType === "lunar" ? !!parseMonthDayString(dateStr) : !!parseDateString(dateStr);
+    if (!ok) {
+      return apiErrors.badRequest(
+        effectiveType === "lunar" ? "date must be M-D for a lunar anniversary" : "date must be YYYY-MM-DD",
+      );
+    }
+    patch.date = dateStr;
+  } else if (patch.dateType !== undefined && patch.dateType !== existing.dateType) {
+    // dateType changed but date wasn't — the stored date won't match the new
+    // type's format (YYYY-MM-DD vs M-D). Require an explicit date alongside it.
+    return apiErrors.badRequest("changing dateType requires a matching `date` (YYYY-MM-DD for solar, M-D for lunar)");
   }
   if (typeof body.isLeapMonth === "boolean") patch.isLeapMonth = body.isLeapMonth;
   if (Array.isArray(body.remindOffsetsDays)) {

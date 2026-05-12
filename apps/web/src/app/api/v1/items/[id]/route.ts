@@ -8,6 +8,7 @@ import { serializeItem } from "@/server/api/serializers";
 import { db } from "@/server/db";
 import { items } from "@/server/db/schema";
 import { itemStatusValues, type ItemStatus } from "@/lib/items";
+import { parseDateString } from "@/server/date";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,15 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   }
   if (typeof body.priceCents === "number" || body.priceCents === null) patch.priceCents = body.priceCents as number | null;
   if (typeof body.currency === "string") patch.currency = body.currency;
-  if (typeof body.purchasedDate === "string" || body.purchasedDate === null) patch.purchasedDate = body.purchasedDate as string | null;
+  if (body.purchasedDate !== undefined) {
+    if (body.purchasedDate === null || (typeof body.purchasedDate === "string" && body.purchasedDate.trim() === "")) {
+      patch.purchasedDate = null;
+    } else if (typeof body.purchasedDate === "string" && parseDateString(body.purchasedDate.trim())) {
+      patch.purchasedDate = body.purchasedDate.trim();
+    } else {
+      return apiErrors.badRequest("purchasedDate must be YYYY-MM-DD");
+    }
+  }
   if (typeof body.category === "string" || body.category === null) patch.category = body.category as string | null;
   if (typeof body.status === "string" && (itemStatusValues as readonly string[]).includes(body.status)) {
     patch.status = body.status as ItemStatus;
