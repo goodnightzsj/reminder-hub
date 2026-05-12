@@ -28,6 +28,14 @@ function enumOrUndefined(value: unknown, allowed: readonly string[]): string | u
   return typeof value === "string" && allowed.includes(value) ? value : undefined;
 }
 
+/** A subscription cycleInterval must be a positive integer (the form clamps it
+ * to 1..120). A fractional value makes addMonthsClampedToDateString emit a
+ * malformed date like "2024-8.5-15" which then permanently disables the
+ * renewal reminder; 0 / negatives make the "renew" action a no-op. */
+function cycleIntervalOrOne(value: unknown): number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 120 ? value : 1;
+}
+
 /**
  * Sync protocol (Last-Write-Wins by updated_at):
  *
@@ -236,7 +244,7 @@ async function applySubscriptionChange(row: AnyRecord) {
     category: typeof row.category === "string" ? row.category : undefined,
     currency: typeof row.currency === "string" ? row.currency : undefined,
     cycleUnit: enumOrUndefined(row.cycleUnit, subscriptionCycleUnitValues),
-    cycleInterval: typeof row.cycleInterval === "number" ? row.cycleInterval : 1,
+    cycleInterval: cycleIntervalOrOne(row.cycleInterval),
     nextRenewDate,
     autoRenew: row.autoRenew !== false,
     remindOffsetsDays: jsonStringifyArray(row.remindOffsetsDays),

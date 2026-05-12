@@ -76,7 +76,10 @@ export async function POST(request: NextRequest) {
     category: typeof body.category === "string" ? body.category : DEFAULT_SUBSCRIPTION_CATEGORY,
     currency: typeof body.currency === "string" ? body.currency : DEFAULT_CURRENCY,
     cycleUnit,
-    cycleInterval: typeof body.cycleInterval === "number" && body.cycleInterval > 0 ? body.cycleInterval : 1,
+    cycleInterval:
+      typeof body.cycleInterval === "number" && Number.isInteger(body.cycleInterval) && body.cycleInterval >= 1 && body.cycleInterval <= 120
+        ? body.cycleInterval
+        : 1,
     nextRenewDate,
     autoRenew: body.autoRenew !== false,
     remindOffsetsDays: JSON.stringify(remindOffsetsDays),
