@@ -10,6 +10,7 @@ import { db } from "@/server/db";
 import { items } from "@/server/db/schema";
 import { DEFAULT_ITEM_STATUS, itemStatusValues, type ItemStatus } from "@/lib/items";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { parseDateString } from "@/server/date";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,11 @@ export async function POST(request: NextRequest) {
     ? (body.status as ItemStatus)
     : DEFAULT_ITEM_STATUS;
 
+  const purchasedDate = typeof body.purchasedDate === "string" && body.purchasedDate.trim() ? body.purchasedDate.trim() : null;
+  if (purchasedDate !== null && !parseDateString(purchasedDate)) {
+    return apiErrors.badRequest("purchasedDate must be YYYY-MM-DD");
+  }
+
   const id = typeof body.id === "string" && body.id ? body.id : randomUUID();
   const now = new Date();
 
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
     name,
     priceCents: typeof body.priceCents === "number" ? body.priceCents : null,
     currency: typeof body.currency === "string" ? body.currency : DEFAULT_CURRENCY,
-    purchasedDate: typeof body.purchasedDate === "string" ? body.purchasedDate : null,
+    purchasedDate,
     category: typeof body.category === "string" ? body.category : null,
     status,
     usageCount: typeof body.usageCount === "number" ? body.usageCount : 0,

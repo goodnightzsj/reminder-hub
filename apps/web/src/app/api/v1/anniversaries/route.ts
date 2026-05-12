@@ -9,6 +9,8 @@ import { serializeAnniversary } from "@/server/api/serializers";
 import { db } from "@/server/db";
 import { anniversaries } from "@/server/db/schema";
 import { DEFAULT_ANNIVERSARY_DATE_TYPE, anniversaryDateTypeValues, type AnniversaryDateType } from "@/lib/anniversary";
+import { parseDateString } from "@/server/date";
+import { parseMonthDayString } from "@/server/anniversary";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +54,15 @@ export async function POST(request: NextRequest) {
   const dateType = typeof body.dateType === "string" && (anniversaryDateTypeValues as readonly string[]).includes(body.dateType)
     ? (body.dateType as AnniversaryDateType)
     : DEFAULT_ANNIVERSARY_DATE_TYPE;
+
+  // Solar anniversaries store a full YYYY-MM-DD; lunar ones store M-D. A
+  // malformed value here means the reminder never fires (the occurrence-date
+  // helpers return null) and the year-review/digest sorting breaks — reject it.
+  if (dateType === "lunar") {
+    if (!parseMonthDayString(date)) return apiErrors.badRequest("date must be M-D for a lunar anniversary");
+  } else if (!parseDateString(date)) {
+    return apiErrors.badRequest("date must be YYYY-MM-DD");
+  }
 
   const remindOffsetsDays = Array.isArray(body.remindOffsetsDays)
     ? body.remindOffsetsDays.filter((n) => typeof n === "number" && Number.isFinite(n))

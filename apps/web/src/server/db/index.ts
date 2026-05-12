@@ -17,6 +17,13 @@ fs.mkdirSync(path.dirname(databaseFilePath), { recursive: true });
 
 const sqlite = new Database(databaseFilePath);
 sqlite.pragma("foreign_keys = ON");
+// WAL: readers don't block the writer and vice-versa — matches this app's
+// "foreground page renders read, background scheduler / digest runner write"
+// shape. Without it (default journal_mode=DELETE) a background batch write
+// blocks every page request for the busy-timeout window.
+sqlite.pragma("journal_mode = WAL");
+sqlite.pragma("synchronous = NORMAL");
+sqlite.pragma("busy_timeout = 5000");
 
 export const db = drizzle(sqlite, { schema });
 

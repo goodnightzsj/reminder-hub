@@ -12,8 +12,21 @@ import {
 } from "@/server/api/serializers";
 import { db } from "@/server/db";
 import { anniversaries, items, subscriptions, todos } from "@/server/db/schema";
+import { todoPriorityValues } from "@/lib/todo";
+import { anniversaryDateTypeValues } from "@/lib/anniversary";
+import { subscriptionCycleUnitValues } from "@/lib/subscriptions";
+import { itemStatusValues } from "@/lib/items";
+import { parseDateString } from "@/server/date";
+import { parseMonthDayString } from "@/server/anniversary";
 
 export const dynamic = "force-dynamic";
+
+/** Return the string only if it's one of `allowed`; otherwise undefined
+ * (so onConflictDoUpdate leaves the column / the insert uses the DB default
+ * instead of writing a bogus enum value the rest of the app can't handle). */
+function enumOrUndefined(value: unknown, allowed: readonly string[]): string | undefined {
+  return typeof value === "string" && allowed.includes(value) ? value : undefined;
+}
 
 /**
  * Sync protocol (Last-Write-Wins by updated_at):
@@ -138,7 +151,7 @@ async function applyTodoChange(row: AnyRecord) {
     title: typeof row.title === "string" ? row.title : "",
     description: typeof row.description === "string" ? row.description : null,
     taskType: typeof row.taskType === "string" ? row.taskType : undefined,
-    priority: typeof row.priority === "string" ? row.priority : undefined,
+    priority: enumOrUndefined(row.priority, todoPriorityValues),
     tags: jsonStringifyArray(row.tags),
     dueAt: parseIsoDate(row.dueAt),
     reminderOffsetsMinutes: jsonStringifyArray(row.reminderOffsetsMinutes),
@@ -172,13 +185,20 @@ async function applyAnniversaryChange(row: AnyRecord) {
   const existing = await db.select({ updatedAt: anniversaries.updatedAt }).from(anniversaries).where(eq(anniversaries.id, id)).get();
   if (existing && existing.updatedAt && existing.updatedAt >= updatedAt) return;
 
+  const dateType = enumOrUndefined(row.dateType, anniversaryDateTypeValues);
+  const dateStr = typeof row.date === "string" ? row.date.trim() : "";
+  // Drop the row rather than write a date the occurrence helpers can't parse
+  // (which would silently disable the reminder + corrupt year-review sorting).
+  const dateOk = (dateType === "lunar") ? !!parseMonthDayString(dateStr) : !!parseDateString(dateStr);
+  if (!dateOk) return;
+
   const values = {
     id,
     title: typeof row.title === "string" ? row.title : "",
     category: typeof row.category === "string" ? row.category : undefined,
-    dateType: typeof row.dateType === "string" ? row.dateType : undefined,
+    dateType,
     isLeapMonth: row.isLeapMonth === true,
-    date: typeof row.date === "string" ? row.date : "",
+    date: dateStr,
     remindOffsetsDays: jsonStringifyArray(row.remindOffsetsDays),
     isArchived: row.isArchived === true,
     archivedAt: parseIsoDate(row.archivedAt),
@@ -205,6 +225,9 @@ async function applySubscriptionChange(row: AnyRecord) {
   const existing = await db.select({ updatedAt: subscriptions.updatedAt }).from(subscriptions).where(eq(subscriptions.id, id)).get();
   if (existing && existing.updatedAt && existing.updatedAt >= updatedAt) return;
 
+  const nextRenewDate = typeof row.nextRenewDate === "string" ? row.nextRenewDate.trim() : "";
+  if (!parseDateString(nextRenewDate)) return;  // skip rows with an unparseable renew date
+
   const values = {
     id,
     name: typeof row.name === "string" ? row.name : "",
@@ -212,9 +235,9 @@ async function applySubscriptionChange(row: AnyRecord) {
     priceCents: typeof row.priceCents === "number" ? row.priceCents : null,
     category: typeof row.category === "string" ? row.category : undefined,
     currency: typeof row.currency === "string" ? row.currency : undefined,
-    cycleUnit: typeof row.cycleUnit === "string" ? row.cycleUnit : undefined,
+    cycleUnit: enumOrUndefined(row.cycleUnit, subscriptionCycleUnitValues),
     cycleInterval: typeof row.cycleInterval === "number" ? row.cycleInterval : 1,
-    nextRenewDate: typeof row.nextRenewDate === "string" ? row.nextRenewDate : "",
+    nextRenewDate,
     autoRenew: row.autoRenew !== false,
     remindOffsetsDays: jsonStringifyArray(row.remindOffsetsDays),
     icon: typeof row.icon === "string" ? row.icon : null,
@@ -244,14 +267,19 @@ async function applyItemChange(row: AnyRecord) {
   const existing = await db.select({ updatedAt: items.updatedAt }).from(items).where(eq(items.id, id)).get();
   if (existing && existing.updatedAt && existing.updatedAt >= updatedAt) return;
 
+  const purchasedDate =
+    typeof row.purchasedDate === "string" && row.purchasedDate.trim() && parseDateString(row.purchasedDate.trim())
+      ? row.purchasedDate.trim()
+      : null;
+
   const values = {
     id,
     name: typeof row.name === "string" ? row.name : "",
     priceCents: typeof row.priceCents === "number" ? row.priceCents : null,
     currency: typeof row.currency === "string" ? row.currency : undefined,
-    purchasedDate: typeof row.purchasedDate === "string" ? row.purchasedDate : null,
+    purchasedDate,
     category: typeof row.category === "string" ? row.category : null,
-    status: typeof row.status === "string" ? row.status : undefined,
+    status: enumOrUndefined(row.status, itemStatusValues),
     usageCount: typeof row.usageCount === "number" ? row.usageCount : 0,
     targetDailyCostCents: typeof row.targetDailyCostCents === "number" ? row.targetDailyCostCents : null,
     deletedAt: parseIsoDate(row.deletedAt),

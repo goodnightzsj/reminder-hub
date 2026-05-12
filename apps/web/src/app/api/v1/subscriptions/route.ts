@@ -15,6 +15,7 @@ import {
   type SubscriptionCycleUnit,
 } from "@/lib/subscriptions";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { parseDateString } from "@/server/date";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
   if (!name) return apiErrors.badRequest("name required");
   const nextRenewDate = typeof body.nextRenewDate === "string" ? body.nextRenewDate.trim() : "";
   if (!nextRenewDate) return apiErrors.badRequest("nextRenewDate required");
+  if (!parseDateString(nextRenewDate)) return apiErrors.badRequest("nextRenewDate must be YYYY-MM-DD");
 
   const cycleUnit = typeof body.cycleUnit === "string" && (subscriptionCycleUnitValues as readonly string[]).includes(body.cycleUnit)
     ? (body.cycleUnit as SubscriptionCycleUnit)
